@@ -1,0 +1,108 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!74 &7400000
+AnimationClip:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: sprint-falling-land
+  serializedVersion: 7
+  m_Legacy: 0
+  m_Compressed: 0
+  m_UseHighQualityCurve: 1
+  m_RotationCurves: []
+  m_CompressedRotationCurves: []
+  m_EulerCurves: []
+  m_PositionCurves: []
+  m_ScaleCurves: []
+  m_FloatCurves: []
+  m_PPtrCurves:
+  - serializedVersion: 2
+    curve:
+    - time: 0
+      value: {fileID: 1065417158, guid: 241ae84a5c30a304caaf6cb25c650203, type: 3}
+    - time: 0.083333336
+      value: {fileID: 481894687, guid: 02596f91eb649304b86fbe19ebec2705, type: 3}
+    - time: 0.16666667
+      value: {fileID: -1410021130, guid: 1e89418d49a657144a2ee60b1b131d37, type: 3}
+    - time: 0.25
+      value: {fileID: -956062245, guid: 9e31d11ddb5bce143957cf5604352b80, type: 3}
+    - time: 0.33333334
+      value: {fileID: -1657181554, guid: 6d40ac6242704774ea575dbcdd9be282, type: 3}
+    - time: 0.41666666
+      value: {fileID: 415291069, guid: 21b1af5549a68f843a97bca38bcf92ed, type: 3}
+    - time: 0.5
+      value: {fileID: 255451277, guid: 26294c750d7929643b59c88079ea00d1, type: 3}
+    - time: 0.5833333
+      value: {fileID: -1184021417, guid: 2117ff4f4d68673408929d9425302f15, type: 3}
+    - time: 0.6666667
+      value: {fileID: 46446483, guid: f29e928b106c05640b1ed2d4c30f1c68, type: 3}
+    - time: 0.75
+      value: {fileID: -1348673388, guid: 0e9218ed430e63b4cb81d323b903aed8, type: 3}
+    - time: 0.8333333
+      value: {fileID: 975425637, guid: 585ff9a9d552e5c419c1c20c89059985, type: 3}
+    - time: 0.9166667
+      value: {fileID: 246876251, guid: a1974551eef39034ca9e9ea3637dceaa, type: 3}
+    - time: 1
+      value: {fileID: -1969999020, guid: 18dc6841f857dde43bb348bf60d990e7, type: 3}
+    attribute: m_Sprite
+    path: 
+    classID: 212
+    script: {fileID: 0}
+    flags: 2
+  m_SampleRate: 12
+  m_WrapMode: 0
+  m_Bounds:
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 0, y: 0, z: 0}
+  m_ClipBindingConstant:
+    genericBindings:
+    - serializedVersion: 2
+      path: 0
+      attribute: 0
+      script: {fileID: 0}
+      typeID: 212
+      customType: 23
+      isPPtrCurve: 1
+      isIntCurve: 0
+      isSerializeReferenceCurve: 0
+    pptrCurveMapping:
+    - {fileID: 1065417158, guid: 241ae84a5c30a304caaf6cb25c650203, type: 3}
+    - {fileID: 481894687, guid: 02596f91eb649304b86fbe19ebec2705, type: 3}
+    - {fileID: -1410021130, guid: 1e89418d49a657144a2ee60b1b131d37, type: 3}
+    - {fileID: -956062245, guid: 9e31d11ddb5bce143957cf5604352b80, type: 3}
+    - {fileID: -1657181554, guid: 6d40ac6242704774ea575dbcdd9be282, type: 3}
+    - {fileID: 415291069, guid: 21b1af5549a68f843a97bca38bcf92ed, type: 3}
+    - {fileID: 255451277, guid: 26294c750d7929643b59c88079ea00d1, type: 3}
+    - {fileID: -1184021417, guid: 2117ff4f4d68673408929d9425302f15, type: 3}
+    - {fileID: 46446483, guid: f29e928b106c05640b1ed2d4c30f1c68, type: 3}
+    - {fileID: -1348673388, guid: 0e9218ed430e63b4cb81d323b903aed8, type: 3}
+    - {fileID: 975425637, guid: 585ff9a9d552e5c419c1c20c89059985, type: 3}
+    - {fileID: 246876251, guid: a1974551eef39034ca9e9ea3637dceaa, type: 3}
+    - {fileID: -1969999020, guid: 18dc6841f857dde43bb348bf60d990e7, type: 3}
+  m_AnimationClipSettings:
+    serializedVersion: 2
+    m_AdditiveReferencePoseClip: {fileID: 0}
+    m_AdditiveReferencePoseTime: 0
+    m_StartTime: 0
+    m_StopTime: 1.0833334
+    m_OrientationOffsetY: 0
+    m_Level: 0
+    m_CycleOffset: 0
+    m_HasAdditiveReferencePose: 0
+    m_LoopTime: 1
+    m_LoopBlend: 0
+    m_LoopBlendOrientation: 0
+    m_LoopBlendPositionY: 0
+    m_LoopBlendPositionXZ: 0
+    m_KeepOriginalOrientation: 0
+    m_KeepOriginalPositionY: 1
+    m_KeepOriginalPositionXZ: 0
+    m_HeightFromFeet: 0
+    m_Mirror: 0
+  m_EditorCurves: []
+  m_EulerEditorCurves: []
+  m_HasGenericRootTransform: 0
+  m_HasMotionFloatCurves: 0
+  m_Events: []
