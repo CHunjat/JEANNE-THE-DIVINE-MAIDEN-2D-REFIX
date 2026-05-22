@@ -1,0 +1,35 @@
+{
+    "version": 1,
+    "name": "UIControls",
+    "maps": [
+        {
+            "name": "UI",
+            "id": "2d513c1b-10a6-4398-8984-75c0b6f422cd",
+            "actions": [
+                {
+                    "name": "Pause",
+                    "type": "Button",
+                    "id": "e8c8f494-8417-4557-b405-3a0c5efa13da",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "6b6fcd43-a66a-4aca-abee-c77207aee1ff",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pause",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
