@@ -149,27 +149,41 @@ public class PlayerController : MonoBehaviour
     {
         if (cd == null) return false;
 
-        // 2D Physics2D BoxCast 사용
         Vector2 center = cd.bounds.center;
-        Vector2 halfExtents = new Vector2(cd.bounds.extents.x * 0.9f, 0.1f);
-        float maxDistance = cd.bounds.extents.y + 0.03f;
 
-        slopeHit = Physics2D.BoxCast(center, halfExtents, 0f, Vector2.down, maxDistance, groundLayer);
+        // 폭을 캐릭터 80%로 줄여서 모서리 오작동 방지
+        Vector2 boxSize = new Vector2(cd.bounds.size.x * 0.8f, 0.1f);
+
+        // 여유 거리(Buffer)를 0.15f로 늘려서 중심축이 붕 떠도 바닥을 놓치지 않음
+        float maxDistance = cd.bounds.extents.y + 0.15f;
+
+        slopeHit = Physics2D.BoxCast(center, boxSize, 0f, Vector2.down, maxDistance, groundLayer);
 
         if (slopeHit.collider != null)
         {
-            float angle = Vector2.Angle(Vector2.up, slopeHit.normal);
+            // 박스가 땅속에 파묻혀서 시작될 경우 각도가 튀는 버그 방어
+            if (slopeHit.normal == Vector2.zero) return true;
 
+            float angle = Vector2.Angle(Vector2.up, slopeHit.normal);
             return angle > 0.1f && angle <= maxSlopeAngle;
         }
         return false;
     }
 
     // 2. 가고자 하는 방향(Vector3)을 경사면에 맞춰 꺾어주는 함수
-    public Vector2 GetSlopeMoveDirection(Vector2 direction) // Vector2로 전환
+    public Vector2 GetSlopeMoveDirection(Vector2 direction)
     {
-        // 2D 프로젝트에 맞춰 수정
-        return Vector2.Perpendicular(slopeHit.normal).normalized * (direction.x > 0 ? 1 : -1);
+        // 1. 비탈길의 각도를 구함
+        Vector2 tangent = Vector2.Perpendicular(slopeHit.normal).normalized;
+
+        // 2. [가장 중요] 탄젠트의 X값과 내 입력(direction.x)의 부호가 다르면 무조건 뒤집는다.
+        // 이렇게 하면 입구에서 튕길 일이 없습니다.
+        if (tangent.x * direction.x < 0)
+        {
+            tangent = -tangent;
+        }
+
+        return tangent;
     }
 
 
@@ -198,7 +212,13 @@ public class PlayerController : MonoBehaviour
         if (cd == null) return false;
         Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
 
-        return Physics2D.BoxCast(rayStartPos, groundCheckSize / 2, 0f, Vector2.down, groundCheckDistance + 0.1f, groundLayer).collider != null;
+        // [중요] BoxCast는 전체 크기(groundCheckSize)를 사용해야 합니다.
+        var hit = Physics2D.BoxCast(rayStartPos, groundCheckSize, 0f, Vector2.down, groundCheckDistance + 0.1f, groundLayer);
+
+        // 비탈길에 있으면 무조건 Grounded로 인정 (안전장치)
+        if (OnSlope()) return true;
+
+        return hit.collider != null;
     }
 
     private void OnDrawGizmos()

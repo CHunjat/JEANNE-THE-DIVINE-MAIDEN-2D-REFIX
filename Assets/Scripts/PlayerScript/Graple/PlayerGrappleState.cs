@@ -123,7 +123,7 @@ public class PlayerGrappleState : PlayerState
             // 공중에서 진입했거나, 공중 비행 중 연타로 재진입했을 때 (공중 연타 버그 방어막)
             currentShieldPoint = player.AirShieldPoint; // 공중용 발사체 앵커 포인트 할당
             isPulling = true;                           // 공중은 선딜레이 없이 즉시 견인(Pulling) 시작
-            player.animator.SetBool(player.anim_Grapple, false); // 지상 애니메이션용 파라미터 Off
+            //player.animator.SetBool(player.anim_Grapple, false); // 지상 애니메이션용 파라미터 Off
 
             // 와이어 렌더러 활성화 및 시작점(방패 위치), 끝점(타겟 위치) 실시간 매핑
             if (player.grappleLine != null && currentShieldPoint != null)
