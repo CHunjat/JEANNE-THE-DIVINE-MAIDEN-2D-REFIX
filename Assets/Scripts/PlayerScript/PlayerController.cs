@@ -155,22 +155,33 @@ public class PlayerController : MonoBehaviour
 
         Vector2 center = cd.bounds.center;
         float rayLength = cd.bounds.extents.y + 0.3f;
-        slopeHit = Physics2D.Raycast(center, Vector2.down, rayLength, GetCurrentGroundMask());
+
+        // ★ [핵심 복구] 질문자님의 마스크 로직을 다시 가져옵니다.
+        LayerMask currentMask = GetCurrentGroundMask();
+
+        // 1순위: 현재 마스크에 계단(Stairs)이 활성화되어 있을 때만 계단 우선 검사!
+        // 평지 달릴 때는 계단 충돌이 꺼져있으므로 이 블록은 건너뛰고 완벽하게 통과합니다.
+        if ((currentMask & stairsLayer) != 0)
+        {
+            slopeHit = Physics2D.Raycast(center, Vector2.down, rayLength, stairsLayer);
+            if (slopeHit.collider != null)
+            {
+                float angle = Vector2.Angle(Vector2.up, slopeHit.normal);
+                if (isSprinting && Mathf.Abs(rb.linearVelocity.y) < 0.1f && angle < 15f) return false;
+                return angle > 0.1f && angle <= maxSlopeAngle;
+            }
+        }
+
+        // 2순위: 그 다음 일반 평지(Ground) 검사
+        slopeHit = Physics2D.Raycast(center, Vector2.down, rayLength, groundLayer);
 
         if (slopeHit.collider != null)
         {
             float angle = Vector2.Angle(Vector2.up, slopeHit.normal);
-
-            // [핵심 해결]
-            // 스프린트 중이고, 수직 속도가 거의 0이라면 (바닥에 잘 붙어 달리는 중)
-            // 각도가 30도 이하인 경사는 '비탈길'이 아니라 '평지'로 취급하여 통과시킵니다.
-            if (isSprinting && Mathf.Abs(rb.linearVelocity.y) < 0.1f && angle < 30f)
-            {
-                return false;
-            }
-
+            if (isSprinting && Mathf.Abs(rb.linearVelocity.y) < 0.1f && angle < 15f) return false;
             return angle > 0.1f && angle <= maxSlopeAngle;
         }
+
         return false;
     }
 

@@ -85,7 +85,7 @@ public class PlayerIdleState : PlayerState
         base.PhysicsUpdate();
 
         // 🔥 비탈길 미끄러짐 방지 로직
-        if (player.OnSlope())
+        if (player.OnSlope() || player.IsOnStairs())
         {
             player.rb.gravityScale = 0f; // 2D gravityScale 차단
             player.SetVelocity(0f, 0f);   // 완전 정지
