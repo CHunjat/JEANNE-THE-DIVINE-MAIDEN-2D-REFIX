@@ -5,8 +5,11 @@ public class PlayerLandState : PlayerState
     public PlayerLandState(PlayerController player, PlayerStateMachine stateMachine, string animName)
         : base(player, stateMachine, animName) { }
 
+
     public override void Enter()
     {
+        player.ToggleStairsCollision(true);
+
         stateTimer = 0f;
         player.ResetLandTimer();
 
@@ -52,6 +55,11 @@ public class PlayerLandState : PlayerState
     {
         base.PhysicsUpdate();
 
+        if (stateTimer < 0.2f)
+        {
+            player.SetVelocity(0f, 0f);
+            return;
+        }
         if (player.isSprinting)
         {
             float dir = player.isFacingRight ? 1f : -1f;

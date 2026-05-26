@@ -7,6 +7,13 @@ public class PlayerMoveState : PlayerState
 
     public override void Enter()
     {
+        // ★ 내 발밑이 계단이 아닐 때(평지일 때)만 계단을 통과하도록 물리 충돌 OFF
+        if (!player.IsOnStairs())
+        {
+            player.ToggleStairsCollision(false);
+            Physics2D.SyncTransforms();
+        }
+
         stateTimer = 0f;
         player.wasSprinting = false;
 
@@ -16,7 +23,6 @@ public class PlayerMoveState : PlayerState
             {
                 player.animator.Play(player.anim_SprintStart);
             }
-
             player.isJumpCut = false;
         }
         else
@@ -120,7 +126,7 @@ public class PlayerMoveState : PlayerState
     {
         base.PhysicsUpdate();
         float xInput = player.inputReader.MoveValue.x;
-
+        bool isSlope = player.OnSlope();
         if (xInput != 0)
         {
             player.FlipController(xInput);

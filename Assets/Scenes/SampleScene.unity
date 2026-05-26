@@ -161,7 +161,7 @@ GameObject:
   - component: {fileID: 107610619}
   - component: {fileID: 107610618}
   - component: {fileID: 107610617}
-  m_Layer: 7
+  m_Layer: 10
   m_Name: Square (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -202,7 +202,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0, y: -0.17853352}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -212,7 +212,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 1, y: 0.64293295}
   m_EdgeRadius: 0
 --- !u!212 &107610618
 SpriteRenderer:
@@ -282,8 +282,8 @@ Transform:
   m_GameObject: {fileID: 107610616}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.30070576, w: 0.953717}
-  m_LocalPosition: {x: -54.2021, y: 2.2207, z: 0}
-  m_LocalScale: {x: 9.330308, y: 0.63059163, z: 1}
+  m_LocalPosition: {x: -46.2667, y: 7.3765, z: 0}
+  m_LocalScale: {x: 28.70469, y: 0.63059163, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1439,8 +1439,8 @@ Transform:
   m_GameObject: {fileID: 1179070331}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -65.8997, y: 4.7602, z: 0}
-  m_LocalScale: {x: 35.840057, y: 0.7805, z: 1}
+  m_LocalPosition: {x: -73.38, y: 10.27, z: 0}
+  m_LocalScale: {x: 35.840057, y: 0.98499095, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1577,6 +1577,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9af4766af41f756438df53b03aa84435, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  stairsLayer:
+    serializedVersion: 2
+    m_Bits: 1024
   inputReader: {fileID: 11400000, guid: 5cda0293055f24b4f96f59fb4593a1bc, type: 2}
   rb: {fileID: 1199457216}
   cd: {fileID: 1199457215}

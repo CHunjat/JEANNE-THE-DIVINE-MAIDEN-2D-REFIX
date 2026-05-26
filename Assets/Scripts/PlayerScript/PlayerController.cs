@@ -5,6 +5,10 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+
+    [Header("Layer Settings")]
+    public LayerMask stairsLayer; // 이 줄이 있는지 확인하세요!
+
     [Header("Input Data")]
     public InputReader inputReader;
 
@@ -142,7 +146,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("비탈길(Slope) 세팅")]
     public float maxSlopeAngle = 45f;
-    private RaycastHit2D slopeHit; // 2D로 전환
+    public RaycastHit2D slopeHit; // 2D로 전환
 
     // 1. 비탈길인지 확인하고 경사면 정보(slopeHit)를 업데이트함
     public bool OnSlope()
@@ -150,21 +154,21 @@ public class PlayerController : MonoBehaviour
         if (cd == null) return false;
 
         Vector2 center = cd.bounds.center;
-
-        // 폭을 캐릭터 80%로 줄여서 모서리 오작동 방지
-        Vector2 boxSize = new Vector2(cd.bounds.size.x * 0.8f, 0.1f);
-
-        // 여유 거리(Buffer)를 0.15f로 늘려서 중심축이 붕 떠도 바닥을 놓치지 않음
-        float maxDistance = cd.bounds.extents.y + 0.15f;
-
-        slopeHit = Physics2D.BoxCast(center, boxSize, 0f, Vector2.down, maxDistance, groundLayer);
+        float rayLength = cd.bounds.extents.y + 0.3f;
+        slopeHit = Physics2D.Raycast(center, Vector2.down, rayLength, GetCurrentGroundMask());
 
         if (slopeHit.collider != null)
         {
-            // 박스가 땅속에 파묻혀서 시작될 경우 각도가 튀는 버그 방어
-            if (slopeHit.normal == Vector2.zero) return true;
-
             float angle = Vector2.Angle(Vector2.up, slopeHit.normal);
+
+            // [핵심 해결]
+            // 스프린트 중이고, 수직 속도가 거의 0이라면 (바닥에 잘 붙어 달리는 중)
+            // 각도가 30도 이하인 경사는 '비탈길'이 아니라 '평지'로 취급하여 통과시킵니다.
+            if (isSprinting && Mathf.Abs(rb.linearVelocity.y) < 0.1f && angle < 30f)
+            {
+                return false;
+            }
+
             return angle > 0.1f && angle <= maxSlopeAngle;
         }
         return false;
@@ -210,12 +214,18 @@ public class PlayerController : MonoBehaviour
     public bool IsGrounded()
     {
         if (cd == null) return false;
+
+        if (StateMachine != null)
+        {
+            // 착지 모션 중이거나 대쉬 중일 때의 예외 처리
+            if (StateMachine.CurrentState == LandState) return true;
+        }
+
         Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
 
-        // [중요] BoxCast는 전체 크기(groundCheckSize)를 사용해야 합니다.
-        var hit = Physics2D.BoxCast(rayStartPos, groundCheckSize, 0f, Vector2.down, groundCheckDistance + 0.1f, groundLayer);
+        // 방금 만든 GetCurrentGroundMask()를 사용
+        var hit = Physics2D.BoxCast(rayStartPos, groundCheckSize, 0f, Vector2.down, groundCheckDistance + 0.1f, GetCurrentGroundMask());
 
-        // 비탈길에 있으면 무조건 Grounded로 인정 (안전장치)
         if (OnSlope()) return true;
 
         return hit.collider != null;
@@ -272,6 +282,24 @@ public class PlayerController : MonoBehaviour
     public PlayerGuardOffState GuardOffState { get; private set; }
     public PlayerGrappleState GrappleState { get; private set; }
 
+
+    public LayerMask GetGroundCheckMask() => groundLayer | stairsLayer;
+
+    public void ToggleStairsCollision(bool enable)
+    {
+        int playerLayer = LayerMask.NameToLayer("Player");
+        int stairsLayerIdx = LayerMask.NameToLayer("Stairs");
+        Physics2D.IgnoreLayerCollision(playerLayer, stairsLayerIdx, !enable);
+    }
+
+    public bool IsOnStairs()
+    {
+        if (cd == null) return false;
+
+        // 발밑 0.3f 까지 넉넉하게 박스캐스트를 쏴서 계단 위에 있는지 확실히 판별
+        var hit = Physics2D.BoxCast(cd.bounds.center, cd.bounds.size, 0f, Vector2.down, 0.3f, stairsLayer);
+        return hit.collider != null;
+    }
 
     private void Awake()
     {
@@ -369,6 +397,28 @@ public class PlayerController : MonoBehaviour
     {
         rb.linearVelocity = new Vector2(x, y);
     }
+
+    public LayerMask GetCurrentGroundMask()
+    {
+        LayerMask mask = groundLayer;
+
+        // 현재 유니티 물리 엔진에서 플레이어와 계단이 충돌 가능한 상태인지 확인
+        int playerLayer = LayerMask.NameToLayer("Player");
+        int stairsLayerIdx = LayerMask.NameToLayer("Stairs");
+        bool isCollisionEnabled = !Physics2D.GetIgnoreLayerCollision(playerLayer, stairsLayerIdx);
+
+        if (StateMachine != null)
+        {
+            // 물리 충돌이 켜져 있거나(계단 위), 공중(AirState)일 때만 계단을 감지!
+            if (isCollisionEnabled || StateMachine.CurrentState == AirState)
+            {
+                mask |= stairsLayer;
+            }
+        }
+        return mask;
+    }
+
+
 
     public void FlipController(float xInput)
     {
