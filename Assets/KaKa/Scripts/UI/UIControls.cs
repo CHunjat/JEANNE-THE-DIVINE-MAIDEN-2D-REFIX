@@ -100,6 +100,15 @@ public partial class @UIControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""RotateSkill"",
+                    ""type"": ""Button"",
+                    ""id"": ""d9dbf122-61cd-4fe9-8d4d-7cbf5bf2467f"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -113,6 +122,17 @@ public partial class @UIControls: IInputActionCollection2, IDisposable
                     ""action"": ""Pause"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4c22f15a-2a3f-4bf0-868f-6f71b076a435"",
+                    ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""RotateSkill"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -122,6 +142,7 @@ public partial class @UIControls: IInputActionCollection2, IDisposable
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Pause = m_UI.FindAction("Pause", throwIfNotFound: true);
+        m_UI_RotateSkill = m_UI.FindAction("RotateSkill", throwIfNotFound: true);
     }
 
     ~@UIControls()
@@ -203,6 +224,7 @@ public partial class @UIControls: IInputActionCollection2, IDisposable
     private readonly InputActionMap m_UI;
     private List<IUIActions> m_UIActionsCallbackInterfaces = new List<IUIActions>();
     private readonly InputAction m_UI_Pause;
+    private readonly InputAction m_UI_RotateSkill;
     /// <summary>
     /// Provides access to input actions defined in input action map "UI".
     /// </summary>
@@ -218,6 +240,10 @@ public partial class @UIControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "UI/Pause".
         /// </summary>
         public InputAction @Pause => m_Wrapper.m_UI_Pause;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/RotateSkill".
+        /// </summary>
+        public InputAction @RotateSkill => m_Wrapper.m_UI_RotateSkill;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -247,6 +273,9 @@ public partial class @UIControls: IInputActionCollection2, IDisposable
             @Pause.started += instance.OnPause;
             @Pause.performed += instance.OnPause;
             @Pause.canceled += instance.OnPause;
+            @RotateSkill.started += instance.OnRotateSkill;
+            @RotateSkill.performed += instance.OnRotateSkill;
+            @RotateSkill.canceled += instance.OnRotateSkill;
         }
 
         /// <summary>
@@ -261,6 +290,9 @@ public partial class @UIControls: IInputActionCollection2, IDisposable
             @Pause.started -= instance.OnPause;
             @Pause.performed -= instance.OnPause;
             @Pause.canceled -= instance.OnPause;
+            @RotateSkill.started -= instance.OnRotateSkill;
+            @RotateSkill.performed -= instance.OnRotateSkill;
+            @RotateSkill.canceled -= instance.OnRotateSkill;
         }
 
         /// <summary>
@@ -308,5 +340,12 @@ public partial class @UIControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnPause(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "RotateSkill" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnRotateSkill(InputAction.CallbackContext context);
     }
 }

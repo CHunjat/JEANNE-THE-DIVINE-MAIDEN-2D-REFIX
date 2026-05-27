@@ -5,6 +5,7 @@ using System; // Action을 쓰기 위해 필요합니다!
 [CreateAssetMenu(fileName = "UIInputReader", menuName = "Game/UI Input Reader")]
 public class UIInputReader : ScriptableObject, UIControls.IUIActions
 {
+    public event Action OnRotateSkillPressed;
     private UIControls controls;
 
     // "ESC 키가 눌렸을 때" 사방에 알려줄 이벤트 방송국을 세웁니다.
@@ -25,6 +26,16 @@ public class UIInputReader : ScriptableObject, UIControls.IUIActions
         if (controls != null)
         {
             controls.UI.Disable();
+        }
+    }
+
+    public void OnRotateSkill(InputAction.CallbackContext context)
+    {
+        // 키를 꾹 누르고 있을 때 여러 번 실행되지 않도록, 
+        // "딱 누르는 순간(Started)"에만 알림벨을 한 번 울립니다.
+        if (context.started)
+        {
+            OnRotateSkillPressed?.Invoke();
         }
     }
 
