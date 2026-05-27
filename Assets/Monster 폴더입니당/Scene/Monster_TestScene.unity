@@ -565,8 +565,9 @@ GameObject:
   - component: {fileID: 359215839}
   - component: {fileID: 359215838}
   - component: {fileID: 359215837}
-  - component: {fileID: 359215836}
   - component: {fileID: 359215840}
+  - component: {fileID: 359215842}
+  - component: {fileID: 359215841}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -574,20 +575,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &359215836
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 359215835}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bcd8b41aa139591448fbecbf0f72d4de, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DummyPlayer
-  rb: {fileID: 0}
-  sr: {fileID: 0}
 --- !u!61 &359215837
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -702,7 +689,7 @@ Transform:
   m_GameObject: {fileID: 359215835}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -55.75, y: 5.94, z: 0}
+  m_LocalPosition: {x: -73.84, y: 5.94, z: 0}
   m_LocalScale: {x: 1, y: 0.79, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -723,7 +710,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 0
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -735,6 +722,37 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
+--- !u!114 &359215841
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359215835}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f5952b300bdf5e4cb8259178a8d8cbe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TempPlayerAttack
+  attackDamage: 30
+  attackRange: 2
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 1024
+--- !u!114 &359215842
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359215835}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a4dd177b17825e478a493fd420b532a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
+  maxHp: 200
+  currentHp: 0
 --- !u!1 &730459476
 GameObject:
   m_ObjectHideFlags: 0
@@ -884,9 +902,11 @@ GameObject:
   - component: {fileID: 983019065}
   - component: {fileID: 983019064}
   - component: {fileID: 983019066}
+  - component: {fileID: 983019067}
+  - component: {fileID: 983019068}
   m_Layer: 10
   m_Name: MidBoss_Spider
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -971,6 +991,46 @@ CapsuleCollider2D:
   m_Offset: {x: 9.91, y: 1.38}
   m_Size: {x: 10.33, y: 4.84}
   m_Direction: 1
+--- !u!114 &983019067
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 983019063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edcfbb182945e7c488beebb4e8e25e3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MidBoss
+  maxHp: 300
+  currentHp: 0
+  moveSpeed: 3.04
+  attackDamage: 0
+  detectRange: 0
+  attackRange: 0
+  currentState: 0
+  currentPhase: 1
+  phase2HpRatio: 0.7
+  parryPassDuration: 1.5
+--- !u!114 &983019068
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 983019063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72f7208789d753640b52d8f646d89493, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern1
+  cooldown: 3
+  attackRadius: 2
+  damageRatio: 1
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 64
 --- !u!1 &1104381236
 GameObject:
   m_ObjectHideFlags: 0
