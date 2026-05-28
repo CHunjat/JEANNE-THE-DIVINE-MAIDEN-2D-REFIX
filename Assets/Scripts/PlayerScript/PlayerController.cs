@@ -5,6 +5,10 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+
+    [Header("Layer Settings")]
+    public LayerMask stairsLayer; // 이 줄이 있는지 확인하세요!
+
     [Header("Input Data")]
     public InputReader inputReader;
 
@@ -137,36 +141,83 @@ public class PlayerController : MonoBehaviour
     [Header("Grapple Animation")]
     public string anim_Grapple = "GrappleStart"; // 방금 주신 스프라이트 애니메이션 이름
 
+    [Header("밑점프 감지 타이머")]
+    public Collider2D ignoredDropCollider;
+
+
+
 
     // 상태 선언
 
     [Header("비탈길(Slope) 세팅")]
     public float maxSlopeAngle = 45f;
-    private RaycastHit2D slopeHit; // 2D로 전환
+    public RaycastHit2D slopeHit; // 2D로 전환
 
     // 1. 비탈길인지 확인하고 경사면 정보(slopeHit)를 업데이트함
+
+    private bool isCurrentlyOnStairs = false; // ★ 추가: 상태 기억 변수
     public bool OnSlope()
     {
         if (cd == null) return false;
 
         Vector2 center = cd.bounds.center;
+        float rayLength = cd.bounds.extents.y + 0.3f;
 
-        // 폭을 캐릭터 80%로 줄여서 모서리 오작동 방지
-        Vector2 boxSize = new Vector2(cd.bounds.size.x * 0.8f, 0.1f);
+        RaycastHit2D closestHit = default;
+        float minDist = float.MaxValue;
 
-        // 여유 거리(Buffer)를 0.15f로 늘려서 중심축이 붕 떠도 바닥을 놓치지 않음
-        float maxDistance = cd.bounds.extents.y + 0.15f;
+        LayerMask currentMask = GetCurrentGroundMask();
 
-        slopeHit = Physics2D.BoxCast(center, boxSize, 0f, Vector2.down, maxDistance, groundLayer);
+        // ★ 한 번의 RaycastAll로 바닥과 계단을 동시에 모두 가져옵니다.
+        RaycastHit2D[] hits = Physics2D.RaycastAll(center, Vector2.down, rayLength, currentMask);
 
-        if (slopeHit.collider != null)
+        foreach (var hit in hits)
         {
-            // 박스가 땅속에 파묻혀서 시작될 경우 각도가 튀는 버그 방어
-            if (slopeHit.normal == Vector2.zero) return true;
+            // 통과 중인 투명 발판은 철저히 무시
+            if (hit.collider != null && hit.collider != ignoredDropCollider)
+            {
+                // 1. 현재 기록된 최소 거리보다 확실하게 가깝다면? 갱신!
+                if (hit.distance < minDist - 0.01f)
+                {
+                    minDist = hit.distance;
+                    closestHit = hit;
+                }
+                // 2. ★ [핵심] 두 콜라이더의 거리가 거의 똑같다면? (경계선에 완벽히 겹쳤을 때)
+                else if (Mathf.Abs(hit.distance - minDist) <= 0.01f)
+                {
+                    if (closestHit.collider != null)
+                    {
+                        float currentAngle = Vector2.Angle(Vector2.up, hit.normal);
+                        float previousAngle = Vector2.Angle(Vector2.up, closestHit.normal);
 
-            float angle = Vector2.Angle(Vector2.up, slopeHit.normal);
-            return angle > 0.1f && angle <= maxSlopeAngle;
+                        // 둘 중 각도가 더 평평한 놈(평지)을 강제로 우선순위로 삼습니다!
+                        if (currentAngle < previousAngle)
+                        {
+                            minDist = hit.distance;
+                            closestHit = hit;
+                        }
+                    }
+                }
+            }
         }
+
+        // 최종 선택된 바닥의 각도를 판별
+        if (closestHit.collider != null)
+        {
+            float angle = Vector2.Angle(Vector2.up, closestHit.normal);
+
+            // 완벽한 평지(각도 0.1 이하)라면 비탈길(Slope) 취급 안 함!
+            if (angle <= 0.1f) return false;
+
+            if (isSprinting && Mathf.Abs(rb.linearVelocity.y) < 0.1f && angle < 15f) return false;
+
+            if (angle > 0.1f && angle <= maxSlopeAngle)
+            {
+                slopeHit = closestHit;
+                return true; // 정상적인 비탈길 인정
+            }
+        }
+
         return false;
     }
 
@@ -209,16 +260,32 @@ public class PlayerController : MonoBehaviour
 
     public bool IsGrounded()
     {
+        
         if (cd == null) return false;
+
+        if (StateMachine != null)
+        {
+            // 착지 모션 중이거나 대쉬 중일 때의 예외 처리
+            if (StateMachine.CurrentState == LandState) return true;
+        }
+
         Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
 
-        // [중요] BoxCast는 전체 크기(groundCheckSize)를 사용해야 합니다.
-        var hit = Physics2D.BoxCast(rayStartPos, groundCheckSize, 0f, Vector2.down, groundCheckDistance + 0.1f, groundLayer);
+        // 방금 만든 GetCurrentGroundMask()를 사용
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(rayStartPos, groundCheckSize, 0f, Vector2.down, groundCheckDistance + 0.1f, GetCurrentGroundMask());
 
-        // 비탈길에 있으면 무조건 Grounded로 인정 (안전장치)
+        foreach (var hit in hits)
+        {
+            // 감지된 놈이 내가 지금 통과 중인 그 발판(ignoredDropCollider)이 아니라면? -> 진짜 땅이다!
+            if (hit.collider != null && hit.collider != ignoredDropCollider)
+            {
+                return true;
+            }
+        }
+
         if (OnSlope()) return true;
 
-        return hit.collider != null;
+        return false;
     }
 
     private void OnDrawGizmos()
@@ -272,6 +339,30 @@ public class PlayerController : MonoBehaviour
     public PlayerGuardOffState GuardOffState { get; private set; }
     public PlayerGrappleState GrappleState { get; private set; }
 
+    public PlayerDropState DropState { get; private set; }
+    public LayerMask GetGroundCheckMask() => groundLayer | stairsLayer;
+
+    public void ToggleStairsCollision(bool enable)
+    {
+        int playerLayer = LayerMask.NameToLayer("Player");
+        int stairsLayerIdx = LayerMask.NameToLayer("Stairs");
+        Physics2D.IgnoreLayerCollision(playerLayer, stairsLayerIdx, !enable);
+    }
+
+    public bool IsOnStairs()
+    {
+        if (cd == null) return false;
+
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(cd.bounds.center, cd.bounds.size, 0f, Vector2.down, 0.3f, stairsLayer);
+        foreach (var hit in hits)
+        {
+            if (hit.collider != null && hit.collider != ignoredDropCollider)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private void Awake()
     {
@@ -309,6 +400,8 @@ public class PlayerController : MonoBehaviour
         GuardState = new PlayerGuardState(this, StateMachine, anim_GuardNormal);
         GuardOffState = new PlayerGuardOffState(this, StateMachine, anim_GuardOff);
         GrappleState = new PlayerGrappleState(this, StateMachine, anim_Grapple);
+
+        DropState = new PlayerDropState(this, StateMachine, "Falling");
 
         rb = GetComponent<Rigidbody2D>(); // 2D로 변경
         cd = GetComponent<BoxCollider2D>(); // 2D로 변경
@@ -369,6 +462,28 @@ public class PlayerController : MonoBehaviour
     {
         rb.linearVelocity = new Vector2(x, y);
     }
+
+    public LayerMask GetCurrentGroundMask()
+    {
+        LayerMask mask = groundLayer;
+
+        // 현재 유니티 물리 엔진에서 플레이어와 계단이 충돌 가능한 상태인지 확인
+        int playerLayer = LayerMask.NameToLayer("Player");
+        int stairsLayerIdx = LayerMask.NameToLayer("Stairs");
+        bool isCollisionEnabled = !Physics2D.GetIgnoreLayerCollision(playerLayer, stairsLayerIdx);
+
+        if (StateMachine != null)
+        {
+            // 물리 충돌이 켜져 있거나(계단 위), 공중(AirState)일 때만 계단을 감지!
+            if (isCollisionEnabled || StateMachine.CurrentState == AirState)
+            {
+                mask |= stairsLayer;
+            }
+        }
+        return mask;
+    }
+
+
 
     public void FlipController(float xInput)
     {
@@ -550,5 +665,34 @@ public class PlayerController : MonoBehaviour
             // 그래플 상태로 즉시 전이!
             StateMachine.ChangeState(GrappleState);
         }
+    }
+
+    // 통과 가능한 계단이나 원웨이 플랫폼의 콜라이더를 찾아 반환합니다.
+    public Collider2D GetDropThroughCollider()
+    {
+        float rayLength = cd.bounds.extents.y + 0.3f;
+        Vector2 rayOrigin = cd.bounds.center;
+
+        Collider2D targetDropCol = null;
+
+        // 1. 계단(Stairs) 우선 확인
+        RaycastHit2D stairHit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, stairsLayer);
+        if (stairHit.collider != null)
+        {
+            targetDropCol = stairHit.collider;
+        }
+        else
+        {
+            // 2. 원웨이 플랫폼(Platform) 확인
+            RaycastHit2D groundHit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, groundLayer);
+            if (groundHit.collider != null && groundHit.collider.GetComponent<PlatformEffector2D>() != null)
+            {
+                targetDropCol = groundHit.collider;
+            }
+        }
+
+        // ★ 공간 높이 제한 로직 완전 삭제! 
+        // 찾았으면 공간이 좁든 넓든 무조건 통과할 콜라이더를 넘겨줍니다.
+        return targetDropCol;
     }
 }

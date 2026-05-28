@@ -9,6 +9,7 @@ public class PlayerAirState : PlayerState
 
     public override void Enter()
     {
+        player.ToggleStairsCollision(true);
         // base.Enter(); 절대 사용 금지!
         stateTimer = 0;
 

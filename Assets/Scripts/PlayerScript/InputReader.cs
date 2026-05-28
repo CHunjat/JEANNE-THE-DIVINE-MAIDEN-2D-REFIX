@@ -180,7 +180,6 @@ public class InputReader : ScriptableObject, PlayerControls.IPlayerActions
         {
             bool value = _grapplePressed;
             _grapplePressed = false; // 읽어가자마자 꺼버림! (점프랑 동일)
-            Debug.Log("그래플");
 
             return value;
         }
