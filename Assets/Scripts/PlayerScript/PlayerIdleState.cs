@@ -62,19 +62,32 @@ public class PlayerIdleState : PlayerState
             stateMachine.ChangeState(player.DashState);
             return;
         }
-
-
-        //점프
-        if (player.inputReader.JumpPressed && player.IsGrounded())
-        {
-            player.inputReader.JumpPressed = false; // 입력 초기화
-            stateMachine.ChangeState(player.JumpState);
-            return;
-        }
-
-        if (player.inputReader.MoveValue.x != 0)
+        if (xInput != 0)
         {
             stateMachine.ChangeState(player.MoveState);
+            return; // ★ MoveState로 넘어가면 여기서 즉시 끊어줘야 안전합니다!
+        }
+
+        // ★ [점프 로직 완벽 통합] (과거 점프 코드 삭제됨)
+        bool isJumpBtnPressed = player.inputReader.JumpPressed;
+
+        if (isJumpBtnPressed && player.IsGrounded())
+        {
+            if (player.inputReader.MoveValue.y < -0.5f)
+            {
+                Collider2D dropCol = player.GetDropThroughCollider();
+                if (dropCol != null)
+                {
+                    player.wasSprinting = false;
+                    stateMachine.ChangeState(player.DropState); // 밑점프 실행!
+                    return;
+                }
+            }
+
+            // 조건 미달 시 일반 점프
+            player.wasSprinting = false;
+            stateMachine.ChangeState(player.JumpState);
+            return;
         }
 
 
@@ -83,9 +96,9 @@ public class PlayerIdleState : PlayerState
     public override void PhysicsUpdate()
     {
         base.PhysicsUpdate();
-
+        bool isHovering = player.slopeHit.collider != null && player.slopeHit.distance > 0.05f;
         // 🔥 비탈길 미끄러짐 방지 로직
-        if (player.OnSlope() || player.IsOnStairs())
+        if (player.OnSlope() || player.IsOnStairs() && isHovering)
         {
             player.rb.gravityScale = 0f; // 2D gravityScale 차단
             player.SetVelocity(0f, 0f);   // 완전 정지
