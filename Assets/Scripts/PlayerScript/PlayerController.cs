@@ -160,64 +160,50 @@ public class PlayerController : MonoBehaviour
     {
         if (cd == null) return false;
 
-        Vector2 center = cd.bounds.center;
         float rayLength = cd.bounds.extents.y + 0.3f;
-
-        RaycastHit2D closestHit = default;
-        float minDist = float.MaxValue;
-
         LayerMask currentMask = GetCurrentGroundMask();
 
-        // ★ 한 번의 RaycastAll로 바닥과 계단을 동시에 모두 가져옵니다.
-        RaycastHit2D[] hits = Physics2D.RaycastAll(center, Vector2.down, rayLength, currentMask);
+        // 기존 hits 로직 그대로 사용하되, 가장 가까운 놈을 잡는 방식을 "약간의 여유"를 둠
+        RaycastHit2D[] hits = Physics2D.RaycastAll(cd.bounds.center, Vector2.down, rayLength, currentMask);
+
+        RaycastHit2D bestHit = default;
+        float minDist = float.MaxValue;
 
         foreach (var hit in hits)
         {
-            // 통과 중인 투명 발판은 철저히 무시
             if (hit.collider != null && hit.collider != ignoredDropCollider)
             {
-                // 1. 현재 기록된 최소 거리보다 확실하게 가깝다면? 갱신!
-                if (hit.distance < minDist - 0.01f)
+                // ★ 핵심: 현재 저장된 slopeHit(이전 프레임의 비탈길)이 있다면, 
+                // 거리가 아주 크게 변하지 않는 이상 그대로 유지함 (0.1f 오차 허용)
+                if (slopeHit.collider != null && hit.collider == slopeHit.collider)
+                {
+                    bestHit = hit;
+                    break; // 같은 콜라이더라면 고민할 필요도 없이 유지
+                }
+
+                // 새로운 콜라이더라면 거리 비교
+                if (hit.distance < minDist)
                 {
                     minDist = hit.distance;
-                    closestHit = hit;
-                }
-                // 2. ★ [핵심] 두 콜라이더의 거리가 거의 똑같다면? (경계선에 완벽히 겹쳤을 때)
-                else if (Mathf.Abs(hit.distance - minDist) <= 0.01f)
-                {
-                    if (closestHit.collider != null)
-                    {
-                        float currentAngle = Vector2.Angle(Vector2.up, hit.normal);
-                        float previousAngle = Vector2.Angle(Vector2.up, closestHit.normal);
-
-                        // 둘 중 각도가 더 평평한 놈(평지)을 강제로 우선순위로 삼습니다!
-                        if (currentAngle < previousAngle)
-                        {
-                            minDist = hit.distance;
-                            closestHit = hit;
-                        }
-                    }
+                    bestHit = hit;
                 }
             }
         }
 
-        // 최종 선택된 바닥의 각도를 판별
-        if (closestHit.collider != null)
+        if (bestHit.collider != null)
         {
-            float angle = Vector2.Angle(Vector2.up, closestHit.normal);
+            float angle = Vector2.Angle(Vector2.up, bestHit.normal);
 
-            // 완벽한 평지(각도 0.1 이하)라면 비탈길(Slope) 취급 안 함!
+            // 평지(0.1도 이하)는 비탈길 아님
             if (angle <= 0.1f) return false;
 
-            if (isSprinting && Mathf.Abs(rb.linearVelocity.y) < 0.1f && angle < 15f) return false;
-
+            // 비탈길 범위
             if (angle > 0.1f && angle <= maxSlopeAngle)
             {
-                slopeHit = closestHit;
-                return true; // 정상적인 비탈길 인정
+                slopeHit = bestHit; // 판정 고정
+                return true;
             }
         }
-
         return false;
     }
 
@@ -455,7 +441,24 @@ public class PlayerController : MonoBehaviour
     }
     public void ResetDashCooldown() => dashCooltimer = dashcooltime;
     public void ResetLandTimer() => landTimer = landDashDelay;
-    private void FixedUpdate() => StateMachine.CurrentState.PhysicsUpdate();
+    private void FixedUpdate()
+    {
+        StateMachine.CurrentState.PhysicsUpdate();
+
+    // [핵심 추가] 내리막길 스프린트 시 튀어오름 방지
+    if (isSprinting && OnSlope())
+    {
+        // 1. 현재 속도를 경사면 방향으로 강제 정렬 (Vector Projection)
+        // 오르막/내리막 상관없이, 현재 타고 있는 경사면(slopeHit)의 각도로 속도를 강제로 꺾습니다.
+        Vector2 slopeDir = GetSlopeMoveDirection(rb.linearVelocity.normalized);
+        float currentSpeed = rb.linearVelocity.magnitude;
+        rb.linearVelocity = slopeDir * currentSpeed;
+
+        // 2. 강제 다운포스 (30으로도 안 되면 50까지 올려보세요)
+        rb.AddForce(Vector2.down * 50f, ForceMode2D.Force);
+    }
+
+    }
 
     // 2D 리지드바디이므로 Vector2를 사용
     public void SetVelocity(float x, float y)

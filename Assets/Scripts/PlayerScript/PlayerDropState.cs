@@ -40,7 +40,7 @@ public class PlayerDropState : PlayerState
         // 2. 떨어지기 시작하도록 아주 잠깐(0.1초) 대기
         yield return new WaitForSeconds(0.1f);
 
-        // 3. ★ [밀려남 방지 핵심] 타임아웃 완전 삭제! (무한 존버)
+       
         // 두 콜라이더 사이의 실제 기하학적 거리를 계산하여, 
         // 머리나 몸통이 단 1픽셀이라도 겹쳐(Overlapped) 있다면 영원히 대기합니다.
         while (playerCol != null && platformCol != null && Physics2D.Distance(playerCol, platformCol).isOverlapped)
