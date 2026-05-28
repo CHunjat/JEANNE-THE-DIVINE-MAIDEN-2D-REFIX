@@ -1,96 +1,139 @@
 using UnityEngine;
-using DG.Tweening; // ◀ DOTween을 쓰기 위해 반드시 추가!
+using DG.Tweening;
 
 public class SkillRotationManager : MonoBehaviour
 {
     [Header("Skill Data (Logic)")]
-    [Tooltip("기획자 아저씨가 만든 스킬 데이터 SO 3개를 넣는 곳")]
     public SkillData[] skills = new SkillData[3];
 
     [Header("Skill Slots (UI)")]
-    [Tooltip("하이라키의 CurSkill, PreSkill, NextSkill 오브젝트들을 넣는 곳")]
     public SkillSlotUI[] skillSlots = new SkillSlotUI[3];
 
     [Header("Input Reader Connection")]
-    [Tooltip("방금 업데이트한 UIInputReader 에셋을 연결하는 곳")]
     public UIInputReader uiInputReader;
 
-    // 에디터에 배치된 초기 UI 원들의 좌표와 크기를 기억해둘 비밀 주머니
-    private Vector3[] slotPositions = new Vector3[3];
-    private Vector3[] slotScales = new Vector3[3];
+    [Header("Curve Settings")]
+    [Tooltip("곡선 연출의 크기 (값이 클수록 더 둥글게 바깥으로 휨)")]
+    public float curveOffset = 80f;
+
+    // 📌 하이라키에 배치해 둔 예쁜 초기 좌표와 크기를 기억할 배열
+    private Vector2[] targetAnchorPositions = new Vector2[3];
+    private Vector3[] targetScales = new Vector3[3];
+    private bool isRotating = false;
 
     private void OnEnable()
     {
-        // 🔔 인풋 리더의 R키 알림벨에 내 회전 함수(OnRotateInputPressed)를 연결!
         if (uiInputReader != null)
             uiInputReader.OnRotateSkillPressed += OnRotateInputPressed;
     }
 
     private void OnDisable()
     {
-        // 🔕 오브젝트가 꺼질 때는 리크(오류) 방지를 위해 연결을 끊어줍니다.
         if (uiInputReader != null)
             uiInputReader.OnRotateSkillPressed -= OnRotateInputPressed;
     }
 
     private void Start()
     {
-        // 게임이 시작되면 하이라키에 이쁘게 배치해 둔 UI 원들의 초기 '위치'와 '크기'를 먼저 기억합니다.
+        // 1. 에디터 씬 뷰에서 이쁘게 배치한 [0]Cur, [1]Next, [2]Pre의 원래 좌표를 기억
         for (int i = 0; i < skillSlots.Length; i++)
         {
-            slotPositions[i] = skillSlots[i].transform.localPosition;
-            slotScales[i] = skillSlots[i].transform.localScale;
+            if (skillSlots[i] != null)
+            {
+                RectTransform rect = skillSlots[i].GetComponent<RectTransform>();
+                if (rect != null)
+                {
+                    targetAnchorPositions[i] = rect.anchoredPosition;
+                }
+                targetScales[i] = skillSlots[i].transform.localScale;
+            }
         }
 
-        // 시작하자마자 데이터에 맞게 이미지와 코스트 글자를 먼저 채워줍니다.
+        // 2. 초기 UI 새로고침
         UpdateAllSlotsUI();
     }
 
-    // R키 알림벨이 울리면 실행되는 함수
     private void OnRotateInputPressed()
     {
-        RotateSkillData();    // 1. 순환 알고리즘으로 알맹이 데이터 교체
-        PlayRotationVisual(); // 2. DOTween으로 껍데기(원 오브젝트) 회전 연출
+        // 데이터가 비어있거나 트윈 중이면 작동 방지 (Null 에러 차단)
+        if (isRotating || skills[0] == null || skills[1] == null || skills[2] == null) return;
+
+        isRotating = true;
+
+        // 1. 데이터 알맹이와 슬롯 오브젝트 순서 스왑
+        RotateSkillDataAndSlots();
+
+        // 2. 둥근 곡선 트윈 연출 시작!
+        PlayCurveRotationVisual();
     }
 
-    // 🔄 [순환 알고리즘] 1번은 2번으로, 2번은 3번으로, 3번은 1번으로!
-    private void RotateSkillData()
+    private void RotateSkillDataAndSlots()
     {
-        // 0번(현재 메인) 데이터를 잠시 임시 주머니에 대피시킵니다.
-        SkillData temp = skills[0];
+        // [A] 데이터 순환
+        SkillData tempData = skills[0];
+        skills[0] = skills[1];
+        skills[1] = skills[2];
+        skills[2] = tempData;
 
-        // 데이터를 한 칸씩 앞으로 밀어줍니다.
-        skills[0] = skills[1]; // PreSkill 자리에 있던 데이터가 CurSkill로!
-        skills[1] = skills[2]; // NextSkill 자리에 있던 데이터가 PreSkill로!
-        skills[2] = temp;      // 대피시켰던 원래 CurSkill 데이터가 NextSkill로!
+        // [B] UI 오브젝트 순환
+        SkillSlotUI tempSlot = skillSlots[0];
+        skillSlots[0] = skillSlots[1];
+        skillSlots[1] = skillSlots[2];
+        skillSlots[2] = tempSlot;
     }
 
-    // ✨ DOTween 회전 연출 함수
-    private void PlayRotationVisual()
+    private void PlayCurveRotationVisual()
     {
+        float duration = 0.35f;
+
         for (int i = 0; i < skillSlots.Length; i++)
         {
-            // R키를 연타했을 때 트윈 연출이 꼬이지 않도록 이전에 돌던 연출을 즉시 종료시킵니다.
+            if (skillSlots[i] == null) continue;
+
+            RectTransform rect = skillSlots[i].GetComponent<RectTransform>();
+            if (rect == null) continue;
+
             skillSlots[i].transform.DOKill();
 
-            // 기억해 둔 타겟 좌표로 0.25초 동안 부드럽게 미끄러지듯 이동시킵니다. (OutQuad 곡선 적용)
-            skillSlots[i].transform.DOLocalMove(slotPositions[i], 0.25f).SetEase(Ease.OutQuad);
+            // 🎯 삼각함수 하이브리드 방식: 
+            // 시작점(현재 위치)에서 목적지(targetAnchorPositions[i])로 직선 이동하되,
+            // 중간 경로에 Sin 함수를 섞어 바깥쪽으로 불룩하게 호(Arc)를 그리게 만듭니다.
+            Vector2 startPos = rect.anchoredPosition;
+            Vector2 endPos = targetAnchorPositions[i];
 
-            // 메인 위치로 이동하는 슬롯은 크기가 커지고, 서브 위치로 가는 슬롯은 작아지도록 크기도 트윈해 줍니다.
-            skillSlots[i].transform.DOScale(slotScales[i], 0.25f).SetEase(Ease.OutQuad);
+            DOTween.To(() => 0f, t => {
+                // t는 0에서 1까지 흐르는 시간 비율
+                // 직선 보간 위치 계산
+                Vector2 currentLinearPos = Vector2.Lerp(startPos, endPos, t);
+
+                // 🔥 [삼각함수 구간] 호를 그리기 위한 Sin 오프셋 계산 (0도 ~ 180도)
+                // 이동하는 도중 정중앙(t=0.5)일 때 가장 바깥쪽으로 불룩해집니다.
+                float sinOffset = Mathf.Sin(t * Mathf.PI) * curveOffset;
+
+                // 왼쪽 방향으로 볼록한 반원을 그리도록 X축에 오프셋 가산
+                rect.anchoredPosition = new Vector2(currentLinearPos.x - sinOffset, currentLinearPos.y);
+
+            }, 1f, duration).SetEase(Ease.OutQuad);
+
+            // 크기도 자연스럽게 타겟 크기로 조절
+            skillSlots[i].transform.DOScale(targetScales[i], duration).SetEase(Ease.OutQuad);
         }
 
-        // ⏱️ 원들이 자리를 찾아 이동하는 시간(0.25초)이 끝나는 타이밍에 맞춰
-        // 알맹이 글자와 이미지를 새 데이터로 싹 동기화(새로고침) 해줍니다!
-        DOVirtual.DelayedCall(0.25f, UpdateAllSlotsUI);
+        // 연출 완료 후 데이터 동기화 및 락 해제
+        DOVirtual.DelayedCall(duration, () => {
+            UpdateAllSlotsUI();
+            isRotating = false;
+        });
     }
 
-    // 모든 슬롯의 UI 그래픽을 현재 데이터 배열 상태로 새로고침하는 함수
     private void UpdateAllSlotsUI()
     {
         for (int i = 0; i < skillSlots.Length; i++)
         {
-            skillSlots[i].UpdateSlot(skills[i]);
+            if (skillSlots[i] != null && skills[i] != null)
+            {
+                skillSlots[i].UpdateSlot(skills[i]);
+            }
         }
     }
 }

@@ -33,8 +33,10 @@ public class UIInputReader : ScriptableObject, UIControls.IUIActions
     {
         // 키를 꾹 누르고 있을 때 여러 번 실행되지 않도록, 
         // "딱 누르는 순간(Started)"에만 알림벨을 한 번 울립니다.
+
         if (context.started)
         {
+            Debug.Log("<color=cyan>💻 R키 신호가 리더로 들어왔습니다!</color>");
             OnRotateSkillPressed?.Invoke();
         }
     }
