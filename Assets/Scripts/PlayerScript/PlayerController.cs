@@ -316,9 +316,11 @@ public class PlayerController : MonoBehaviour
         {
             Vector2 slopeDir = GetSlopeMoveDirection(rb.linearVelocity.normalized);
             float currentSpeed = rb.linearVelocity.magnitude;
-            rb.linearVelocity = slopeDir * currentSpeed;
-
-            rb.AddForce(Vector2.down * 50f, ForceMode2D.Force);
+            if (StateMachine.CurrentState != JumpState)
+            {
+                rb.linearVelocity = slopeDir * currentSpeed;
+                rb.AddForce(Vector2.down * 50f, ForceMode2D.Force);
+            }
         }
 
         if (IsPureGrounded() && !OnSlope())
@@ -336,7 +338,7 @@ public class PlayerController : MonoBehaviour
             bool isBodyInside = Physics2D.OverlapBox(cd.bounds.center, cd.bounds.size * 0.9f, 0f, stairsLayer) != null;
 
             // 2. 발밑에 계단이 있는지 확인 (안착할 땅이 있는가?)
-            bool isStairUnder = Physics2D.BoxCast(new Vector2(cd.bounds.center.x, cd.bounds.min.y), new Vector2(cd.bounds.size.x * 0.7f, 0.1f), 0f, Vector2.down, 1.5f, stairsLayer).collider != null;
+            bool isStairUnder = Physics2D.BoxCast(new Vector2(cd.bounds.center.x, cd.bounds.min.y), new Vector2(cd.bounds.size.x * 0.7f, 0.1f), 0f, Vector2.down, 3f, stairsLayer).collider != null;
 
             // [순위 1] 대시 중일 때 -> 무조건 통과 (대시가 최우선)
             if (StateMachine.CurrentState == DashState)
@@ -585,43 +587,46 @@ public class PlayerController : MonoBehaviour
     // 통과 가능한 계단이나 원웨이 플랫폼의 콜라이더를 찾아 반환합니다.
     public Collider2D GetDropThroughCollider()
     {
-        float rayLength = cd.bounds.extents.y + 0.3f;
-        Vector2 rayOrigin = cd.bounds.center;
-
         Collider2D targetDropCol = null;
 
-        // 1. 계단(Stairs) 우선 확인
-        RaycastHit2D stairHit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, stairsLayer);
-        if (stairHit.collider != null)
+        // 1. ★ [핵심 수정] 만약 현재 비탈길(계단)을 밟고 있다면, 
+        // 겹쳐있는 윗평지를 무시하고 무조건 현재 밟고 있는 계단을 통과 1순위로 지정!
+        if (OnSlope() && slopeHit.collider != null)
         {
-            targetDropCol = stairHit.collider;
+            targetDropCol = slopeHit.collider;
         }
         else
         {
-            // 2. 원웨이 플랫폼(Platform) 확인
-            RaycastHit2D groundHit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, groundLayer);
-            if (groundHit.collider != null && groundHit.collider.GetComponent<PlatformEffector2D>() != null)
+            float rayLength = cd.bounds.extents.y + 0.3f;
+            Vector2 rayOrigin = cd.bounds.center;
+
+            // 2. 계단(Stairs) 우선 확인
+            RaycastHit2D stairHit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, stairsLayer);
+            if (stairHit.collider != null)
             {
-                targetDropCol = groundHit.collider;
+                targetDropCol = stairHit.collider;
+            }
+            else
+            {
+                // 3. 원웨이 플랫폼(Platform) 확인
+                RaycastHit2D groundHit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, groundLayer);
+                if (groundHit.collider != null && groundHit.collider.GetComponent<PlatformEffector2D>() != null)
+                {
+                    targetDropCol = groundHit.collider;
+                }
             }
         }
 
-        // 3. ★ [핵심 추가] 겹침/좁은 공간 밑점프 강제 취소 로직
+        // 3. ★ 겹침/좁은 공간 밑점프 강제 취소 로직 (기존 그대로 유지)
         if (targetDropCol != null)
         {
-            // 플레이어 발바닥 위치
             Vector2 footPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y);
-            // 플레이어 너비보다 살짝 좁게 쏴서 옆 벽면이 긁히지 않게 조절
             Vector2 checkSize = new Vector2(cd.bounds.size.x * 0.8f, 0.1f);
 
-            // 발밑 0.4f 이내의 좁은 거리에 다른 바닥이나 비탈길이 있는지 확인
-            // (0.4f 수치는 기획에 맞게 0.3f ~ 0.5f 등으로 조절하시면 됩니다)
-            RaycastHit2D[] hits = Physics2D.BoxCastAll(footPos, checkSize, 0f, Vector2.down, 0.4f, groundLayer | stairsLayer);
+            RaycastHit2D[] hits = Physics2D.BoxCastAll(footPos, checkSize, 0f, Vector2.down, 0.3f, groundLayer | stairsLayer);
 
             foreach (var hit in hits)
             {
-                // 감지된 콜라이더가 '현재 통과하려는 바로 그 발판(targetDropCol)'이 아닐 경우
-                // => 즉, 바로 밑에 겹쳐있는 비탈길이나 다른 좁은 바닥이 존재한다는 뜻!
                 if (hit.collider != null && hit.collider != targetDropCol)
                 {
                     Debug.Log("공간이 너무 좁아 밑점프를 취소합니다!");

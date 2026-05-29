@@ -8,6 +8,8 @@ public class PlayerJumpState : PlayerState
 
     public override void Enter()
     {
+
+
         // 1. 스프린트 점프 판별 (지상에서 스프린트 중일 때 첫 점프만 해당)
         // 이미 공중이거나 점프 카운트를 소모했다면 스프린트 점프 로직을 타지 않게 합니다.
         bool isFirstSprintJump = player.isSprinting && player.IsGrounded();
@@ -33,6 +35,7 @@ public class PlayerJumpState : PlayerState
         // 2. 비탈길 점프 로직
         if (player.OnSlope())
         {
+            player.rb.linearVelocity = new Vector2(player.rb.linearVelocity.x, 0f);
             float moveDirX = xInput != 0 ? Mathf.Sign(xInput) : (player.isFacingRight ? 1f : -1f);
             Vector2 slopeMoveDir = player.GetSlopeMoveDirection(new Vector2(moveDirX, 0)); // Vector2로 변경
 
@@ -71,7 +74,7 @@ public class PlayerJumpState : PlayerState
             // 방향키를 떼고 있다면: 관성을 끊고 제자리 수직 점프로 전환!
             player.rb.linearVelocity = new Vector2(0f, finalJumpForce); // Vector2로 변경
         }
-
+        float finalXVelocity = (Mathf.Abs(xInput) > 0.1f) ? player.rb.linearVelocity.x : 0f;
         // 최종 속도 적용
         player.rb.linearVelocity = new Vector2(player.rb.linearVelocity.x, finalJumpForce); // Vector2로 변경
     }
