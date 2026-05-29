@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Ground
   - Wall
+  - Enemy
   layers:
   - Default
   - TransparentFX
@@ -17,8 +18,8 @@ TagManager:
   - Ground
   - Wall
   - grappleLayer
-  - Stairs
-  - PlayerPass
+  - Enemy
+  - 
   - 
   - 
   - 
