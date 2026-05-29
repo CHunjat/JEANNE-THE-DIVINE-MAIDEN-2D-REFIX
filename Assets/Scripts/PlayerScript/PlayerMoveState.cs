@@ -10,7 +10,6 @@ public class PlayerMoveState : PlayerState
         // ★ 내 발밑이 계단이 아닐 때(평지일 때)만 계단을 통과하도록 물리 충돌 OFF
         if (!player.IsOnStairs())
         {
-            player.ToggleStairsCollision(false);
             Physics2D.SyncTransforms();
         }
 
@@ -141,11 +140,6 @@ public class PlayerMoveState : PlayerState
         {
             float angle = Vector2.Angle(Vector2.up, player.slopeHit.normal);
             if (angle < 15f) isSlope = false;
-        }
-
-        if (!isSlope && !player.IsOnStairs())
-        {
-            player.ToggleStairsCollision(false);
         }
 
 
