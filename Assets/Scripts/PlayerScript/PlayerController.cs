@@ -316,20 +316,52 @@ public class PlayerController : MonoBehaviour
         {
             Vector2 slopeDir = GetSlopeMoveDirection(rb.linearVelocity.normalized);
             float currentSpeed = rb.linearVelocity.magnitude;
-            rb.linearVelocity = slopeDir * currentSpeed;
-
-            rb.AddForce(Vector2.down * 50f, ForceMode2D.Force);
+            if (StateMachine.CurrentState != JumpState)
+            {
+                rb.linearVelocity = slopeDir * currentSpeed;
+                rb.AddForce(Vector2.down * 50f, ForceMode2D.Force);
+            }
         }
 
-        if (ignoredDropCollider != null && IsGrounded())
+        if (IsPureGrounded() && !OnSlope())
         {
             ToggleStairsCollision(false);
         }
-
-        if (IsGrounded() && !OnSlope() && !IsOnStairs())
+        else if (StateMachine.CurrentState == DropState)
         {
             ToggleStairsCollision(false);
         }
+        // ★ 수정 3: AirState(낙하) 시 안착 로직 (겹침 방지)
+        else if (StateMachine.CurrentState == AirState)
+        {
+            // 캐릭터 몸통이 계단과 겹쳐있는지 간단히 확인 (0.95f로 약간 작게 해서 오작동 방지)
+            bool isBodyInside = Physics2D.OverlapBox(cd.bounds.center, cd.bounds.size * 0.9f, 0f, stairsLayer) != null;
+
+            // 2. 발밑에 계단이 있는지 확인 (안착할 땅이 있는가?)
+            bool isStairUnder = Physics2D.BoxCast(new Vector2(cd.bounds.center.x, cd.bounds.min.y), new Vector2(cd.bounds.size.x * 0.7f, 0.1f), 0f, Vector2.down, 3f, stairsLayer).collider != null;
+
+            // [순위 1] 대시 중일 때 -> 무조건 통과 (대시가 최우선)
+            if (StateMachine.CurrentState == DashState)
+            {
+                ToggleStairsCollision(false);
+            }
+            // [순위 2] 몸통이 계단 안에 겹쳐 있을 때 -> 무조건 통과 (밑점프든, 점프 중이든 끼임 방지)
+            else if (isBodyInside)
+            {
+                ToggleStairsCollision(false);
+            }
+            // [순위 3] 몸통은 밖으로 나왔는데, 발밑에 계단이 있을 때 -> 안착! (계단 위 착지 성공)
+            else if (isStairUnder)
+            {
+                ToggleStairsCollision(true);
+            }
+            // [순위 4] 그 외 허공
+            else
+            {
+                ToggleStairsCollision(false);
+            }
+        }
+
 
     }
 
@@ -555,29 +587,54 @@ public class PlayerController : MonoBehaviour
     // 통과 가능한 계단이나 원웨이 플랫폼의 콜라이더를 찾아 반환합니다.
     public Collider2D GetDropThroughCollider()
     {
-        float rayLength = cd.bounds.extents.y + 0.3f;
-        Vector2 rayOrigin = cd.bounds.center;
-
         Collider2D targetDropCol = null;
 
-        // 1. 계단(Stairs) 우선 확인
-        RaycastHit2D stairHit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, stairsLayer);
-        if (stairHit.collider != null)
+        // 1. ★ [핵심 수정] 만약 현재 비탈길(계단)을 밟고 있다면, 
+        // 겹쳐있는 윗평지를 무시하고 무조건 현재 밟고 있는 계단을 통과 1순위로 지정!
+        if (OnSlope() && slopeHit.collider != null)
         {
-            targetDropCol = stairHit.collider;
+            targetDropCol = slopeHit.collider;
         }
         else
         {
-            // 2. 원웨이 플랫폼(Platform) 확인
-            RaycastHit2D groundHit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, groundLayer);
-            if (groundHit.collider != null && groundHit.collider.GetComponent<PlatformEffector2D>() != null)
+            float rayLength = cd.bounds.extents.y + 0.3f;
+            Vector2 rayOrigin = cd.bounds.center;
+
+            // 2. 계단(Stairs) 우선 확인
+            RaycastHit2D stairHit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, stairsLayer);
+            if (stairHit.collider != null)
             {
-                targetDropCol = groundHit.collider;
+                targetDropCol = stairHit.collider;
+            }
+            else
+            {
+                // 3. 원웨이 플랫폼(Platform) 확인
+                RaycastHit2D groundHit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, groundLayer);
+                if (groundHit.collider != null && groundHit.collider.GetComponent<PlatformEffector2D>() != null)
+                {
+                    targetDropCol = groundHit.collider;
+                }
             }
         }
 
-        // ★ 공간 높이 제한 로직 완전 삭제! 
-        // 찾았으면 공간이 좁든 넓든 무조건 통과할 콜라이더를 넘겨줍니다.
+        // 3. ★ 겹침/좁은 공간 밑점프 강제 취소 로직 (기존 그대로 유지)
+        if (targetDropCol != null)
+        {
+            Vector2 footPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y);
+            Vector2 checkSize = new Vector2(cd.bounds.size.x * 0.8f, 0.1f);
+
+            RaycastHit2D[] hits = Physics2D.BoxCastAll(footPos, checkSize, 0f, Vector2.down, 0.3f, groundLayer | stairsLayer);
+
+            foreach (var hit in hits)
+            {
+                if (hit.collider != null && hit.collider != targetDropCol)
+                {
+                    Debug.Log("공간이 너무 좁아 밑점프를 취소합니다!");
+                    return null; // 밑점프 차단
+                }
+            }
+        }
+
         return targetDropCol;
     }
 
