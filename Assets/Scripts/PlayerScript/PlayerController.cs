@@ -316,11 +316,10 @@ public class PlayerController : MonoBehaviour
         {
             Vector2 slopeDir = GetSlopeMoveDirection(rb.linearVelocity.normalized);
             float currentSpeed = rb.linearVelocity.magnitude;
-            if (StateMachine.CurrentState != JumpState)
-            {
+            
                 rb.linearVelocity = slopeDir * currentSpeed;
                 rb.AddForce(Vector2.down * 50f, ForceMode2D.Force);
-            }
+            
         }
 
         if (IsPureGrounded() && !OnSlope())
@@ -338,7 +337,7 @@ public class PlayerController : MonoBehaviour
             bool isBodyInside = Physics2D.OverlapBox(cd.bounds.center, cd.bounds.size * 0.9f, 0f, stairsLayer) != null;
 
             // 2. 발밑에 계단이 있는지 확인 (안착할 땅이 있는가?)
-            bool isStairUnder = Physics2D.BoxCast(new Vector2(cd.bounds.center.x, cd.bounds.min.y), new Vector2(cd.bounds.size.x * 0.7f, 0.1f), 0f, Vector2.down, 3f, stairsLayer).collider != null;
+            bool isStairUnder = Physics2D.BoxCast(new Vector2(cd.bounds.center.x, cd.bounds.min.y), new Vector2(cd.bounds.size.x * 0.7f, 0.1f), 0f, Vector2.down, 3.0f, stairsLayer).collider != null;
 
             // [순위 1] 대시 중일 때 -> 무조건 통과 (대시가 최우선)
             if (StateMachine.CurrentState == DashState)
@@ -587,55 +586,55 @@ public class PlayerController : MonoBehaviour
     // 통과 가능한 계단이나 원웨이 플랫폼의 콜라이더를 찾아 반환합니다.
     public Collider2D GetDropThroughCollider()
     {
-        Collider2D targetDropCol = null;
+        float rayLength = cd.bounds.extents.y + 0.4f;
+        Vector2 rayOrigin = cd.bounds.center;
 
-        // 1. ★ [핵심 수정] 만약 현재 비탈길(계단)을 밟고 있다면, 
-        // 겹쳐있는 윗평지를 무시하고 무조건 현재 밟고 있는 계단을 통과 1순위로 지정!
-        if (OnSlope() && slopeHit.collider != null)
-        {
-            targetDropCol = slopeHit.collider;
-        }
-        else
-        {
-            float rayLength = cd.bounds.extents.y + 0.3f;
-            Vector2 rayOrigin = cd.bounds.center;
+        // 1. 발밑을 훑어서 감지된 모든 후보를 가져옴
+        RaycastHit2D[] hits = Physics2D.RaycastAll(rayOrigin, Vector2.down, rayLength, stairsLayer | groundLayer);
 
-            // 2. 계단(Stairs) 우선 확인
-            RaycastHit2D stairHit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, stairsLayer);
-            if (stairHit.collider != null)
+        // 2. 가장 가까운 타겟을 찾는데, ignoredDropCollider는 절대 제외!
+        Collider2D bestTarget = null;
+        float closestDist = float.MaxValue;
+
+        foreach (var hit in hits)
+        {
+            if (hit.collider == null || hit.collider == cd || hit.collider == ignoredDropCollider)
+                continue; // 밟고 있는 계단은 무조건 거름!
+
+            // 이제 남은 놈들 중 진짜로 내가 내려가야 할 타겟을 찾음
+            if (hit.distance < closestDist)
             {
-                targetDropCol = stairHit.collider;
-            }
-            else
-            {
-                // 3. 원웨이 플랫폼(Platform) 확인
-                RaycastHit2D groundHit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, groundLayer);
-                if (groundHit.collider != null && groundHit.collider.GetComponent<PlatformEffector2D>() != null)
-                {
-                    targetDropCol = groundHit.collider;
-                }
+                closestDist = hit.distance;
+                bestTarget = hit.collider;
             }
         }
 
-        // 3. ★ 겹침/좁은 공간 밑점프 강제 취소 로직 (기존 그대로 유지)
-        if (targetDropCol != null)
+        // 3. 만약 비탈길 위에 있다면, 비탈길이 최우선 타겟이어야 함 (안전장치)
+        if (OnSlope() && slopeHit.collider != null && slopeHit.collider != ignoredDropCollider)
+        {
+            return slopeHit.collider;
+        }
+
+        if (bestTarget != null)
         {
             Vector2 footPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y);
             Vector2 checkSize = new Vector2(cd.bounds.size.x * 0.8f, 0.1f);
 
-            RaycastHit2D[] hits = Physics2D.BoxCastAll(footPos, checkSize, 0f, Vector2.down, 0.3f, groundLayer | stairsLayer);
+            // 아래쪽을 검사해서 target 이외의 다른 장애물(ground, stairs)이 있으면 취소
+            RaycastHit2D[] checkHits = Physics2D.BoxCastAll(footPos, checkSize, 0f, Vector2.down, 0.3f, groundLayer | stairsLayer);
 
-            foreach (var hit in hits)
+            foreach (var hit in checkHits)
             {
-                if (hit.collider != null && hit.collider != targetDropCol)
+                if (hit.collider != null && hit.collider != bestTarget)
                 {
                     Debug.Log("공간이 너무 좁아 밑점프를 취소합니다!");
-                    return null; // 밑점프 차단
+                    return null; // 안전장치: 좁으면 통과 불가
                 }
             }
         }
 
-        return targetDropCol;
+
+        return bestTarget;
     }
 
     public bool OnSlope()
@@ -769,6 +768,36 @@ public class PlayerController : MonoBehaviour
         DrawWallGizmo(1f);
         DrawWallGizmo(-1f);
 
+    }
+
+    public bool CheckLandingSurface(out Collider2D hitCollider)
+    {
+        hitCollider = null;
+
+        // 1. 플레이어 발바닥 기준점
+        Vector2 footPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y);
+        Vector2 checkSize = new Vector2(cd.bounds.size.x * 0.7f, 0.1f);
+
+        // 2. 밑점프 시에는 현재 밟고 있는 콜라이더(ignoredDropCollider)를 무시해야 함
+        // 레이어 마스크를 이용해 Ground와 Stairs를 한 번에 검사
+        LayerMask landingMask = groundLayer | stairsLayer;
+
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(footPos, checkSize, 0f, Vector2.down, 0.6f, landingMask);
+
+        foreach (var hit in hits)
+        {
+            // 내 몸뚱이(Player)랑 겹친 건 제외
+            if (hit.collider == cd) continue;
+
+            // 밑점프 중이라면, 지금 통과 중인 계단(ignoredDropCollider)은 무시!
+            if (StateMachine.CurrentState == DropState && hit.collider == ignoredDropCollider)
+                continue;
+
+            // 위에 조건 다 통과했으면 이게 진짜 착지할 바닥!
+            hitCollider = hit.collider;
+            return true;
+        }
+        return false;
     }
 
     private void DrawWallGizmo(float dir)

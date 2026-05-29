@@ -74,7 +74,6 @@ public class PlayerJumpState : PlayerState
             // 방향키를 떼고 있다면: 관성을 끊고 제자리 수직 점프로 전환!
             player.rb.linearVelocity = new Vector2(0f, finalJumpForce); // Vector2로 변경
         }
-        float finalXVelocity = (Mathf.Abs(xInput) > 0.1f) ? player.rb.linearVelocity.x : 0f;
         // 최종 속도 적용
         player.rb.linearVelocity = new Vector2(player.rb.linearVelocity.x, finalJumpForce); // Vector2로 변경
     }

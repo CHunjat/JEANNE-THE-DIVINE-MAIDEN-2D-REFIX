@@ -10,23 +10,46 @@ public class PlayerDropState : PlayerState
     {
         base.Enter();
 
-        // 1. 통과할 발판 콜라이더 가져오기
+        // 1. 발판 찾기
         Collider2D dropCol = player.GetDropThroughCollider();
+
+        // 2. [핵심] 내 머리 위에 닿아있는 콜라이더 찾기 (이게 윗천장)
+        // OverlapBox로 내 캐릭터 범위 바로 위를 체크해서 Ground 레이어인 놈을 찾음
+        Collider2D ceilingCol = Physics2D.OverlapBox(player.cd.bounds.center + Vector3.up * 0.2f, player.cd.bounds.size * 0.8f, 0f, LayerMask.GetMask("Ground"));
 
         if (dropCol != null)
         {
-            // 2. 약간의 위치 보정 (나인솔즈 특유의 '쑥' 빠지는 느낌)
-            player.transform.position -= new Vector3(0f, 0.3f, 0f);
-
-            // 3. 바닥 센서 투시용 콜라이더 등록
             player.ignoredDropCollider = dropCol;
+            player.transform.position -= new Vector3(0f, 0.5f, 0f);
 
-            // 4. 충돌 무시 코루틴 실행
-            player.StartCoroutine(DisableCollisionRoutine(dropCol));
+            // 3. 발판과 윗천장을 동시에 무시하는 코루틴 호출
+            player.StartCoroutine(DisableCollisionRoutine(dropCol, ceilingCol));
+        }
+        stateMachine.ChangeState(player.AirState);
+    }
+
+    private IEnumerator DisableCollisionRoutine(Collider2D platformCol, Collider2D ceilingCol)
+    {
+        // 발판 무시
+        Physics2D.IgnoreCollision(player.cd, platformCol, true);
+
+        // [중요] 머리에 닿은 윗천장(Ground)도 같이 무시!
+        if (ceilingCol != null) Physics2D.IgnoreCollision(player.cd, ceilingCol, true);
+
+        // 0.3초간 무조건 통과 유지
+        yield return new WaitForSeconds(0.4f);
+
+        // 완전히 빠져나올 때까지 대기
+        while (player.cd != null && platformCol != null && platformCol.IsTouching(player.cd))
+        {
+            yield return null;
         }
 
-        // 볼일 끝났으니 바로 공중 상태(AirState)로 전환해서 낙하 물리 적용!
-        stateMachine.ChangeState(player.AirState);
+        // 복구 (둘 다)
+        Physics2D.IgnoreCollision(player.cd, platformCol, false);
+        if (ceilingCol != null) Physics2D.IgnoreCollision(player.cd, ceilingCol, false);
+
+        player.ignoredDropCollider = null;
     }
 
     // 발판과의 충돌을 껐다가, "완전히 빠져나왔을 때만" 다시 켜주는 코루틴
@@ -38,7 +61,7 @@ public class PlayerDropState : PlayerState
         Physics2D.IgnoreCollision(playerCol, platformCol, true);
 
         // 2. 떨어지기 시작하도록 아주 잠깐(0.1초) 대기
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(0.3f);
 
        
         // 두 콜라이더 사이의 실제 기하학적 거리를 계산하여, 
