@@ -287,28 +287,31 @@ public class PlayerController : MonoBehaviour
         bool isMidAir = StateMachine.CurrentState == JumpState ||
                         StateMachine.CurrentState == AirState ||
                         StateMachine.CurrentState == DropState ||
-                        StateMachine.CurrentState == DashState;
+                        StateMachine.CurrentState == DashState ||
+                        (StateMachine.CurrentState == LandState && isSprinting);
         #endregion
+        bool isAttacking = StateMachine.CurrentState is PlayerAttackState;
 
-        if (Mathf.Abs(inputReader.MoveValue.x) < 0.1f && IsGrounded() && !isMidAir)
+
+        if (!isAttacking)
         {
-            if (OnSlope())
+            if (Mathf.Abs(inputReader.MoveValue.x) < 0.1f && IsGrounded() && !isMidAir)
             {
-                // 비탈길: 관성을 완전히 죽이고, 중력을 0으로 꺼서 제자리에 못 박음
-                rb.linearVelocity = Vector2.zero;
-                rb.gravityScale = 0f;
+                if (OnSlope())
+                {
+                    rb.linearVelocity = Vector2.zero;
+                    rb.gravityScale = 0f;
+                }
+                else
+                {
+                    rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+                    rb.gravityScale = defaultGravityScale;
+                }
             }
             else
             {
-                // 평지: 미끄러짐(X축 관성)만 없애고 중력(Y축)은 유지
-                rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
                 rb.gravityScale = defaultGravityScale;
             }
-        }
-        else
-        {
-            // 이동 중이거나 공중이면 중력을 즉시 원래대로 복구
-            rb.gravityScale = defaultGravityScale;
         }
 
         // [핵심 추가] 내리막길 스프린트 시 튀어오름 방지
@@ -586,22 +589,22 @@ public class PlayerController : MonoBehaviour
     // 통과 가능한 계단이나 원웨이 플랫폼의 콜라이더를 찾아 반환합니다.
     public Collider2D GetDropThroughCollider()
     {
-        float rayLength = cd.bounds.extents.y + 0.4f;
-        Vector2 rayOrigin = cd.bounds.center;
+        // 1. [핵심] 레이저 시작점을 '중앙'이 아니라 '발바닥 0.1f 위'로 내립니다!
+        // 윗천장에 머리가 닿아있어도 절대 윗천장을 타겟으로 잘못 잡지 않게 합니다.
+        Vector2 rayOrigin = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
+        float rayLength = 0.5f; // 발바닥 기준이므로 길이는 0.5면 충분함
 
-        // 1. 발밑을 훑어서 감지된 모든 후보를 가져옴
         RaycastHit2D[] hits = Physics2D.RaycastAll(rayOrigin, Vector2.down, rayLength, stairsLayer | groundLayer);
 
-        // 2. 가장 가까운 타겟을 찾는데, ignoredDropCollider는 절대 제외!
         Collider2D bestTarget = null;
         float closestDist = float.MaxValue;
 
         foreach (var hit in hits)
         {
             if (hit.collider == null || hit.collider == cd || hit.collider == ignoredDropCollider)
-                continue; // 밟고 있는 계단은 무조건 거름!
 
-            // 이제 남은 놈들 중 진짜로 내가 내려가야 할 타겟을 찾음
+                continue;
+
             if (hit.distance < closestDist)
             {
                 closestDist = hit.distance;
@@ -609,30 +612,36 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // 3. 만약 비탈길 위에 있다면, 비탈길이 최우선 타겟이어야 함 (안전장치)
+        // 2. 비탈길 안전장치 (기존 유지)
         if (OnSlope() && slopeHit.collider != null && slopeHit.collider != ignoredDropCollider)
         {
-            return slopeHit.collider;
+            bestTarget = slopeHit.collider;
         }
 
+        // 3. ★ 겹침/좁은 공간 밑점프 강제 취소 로직 (깐깐하게 조율된 버전)
         if (bestTarget != null)
         {
             Vector2 footPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y);
-            Vector2 checkSize = new Vector2(cd.bounds.size.x * 0.8f, 0.1f);
 
-            // 아래쪽을 검사해서 target 이외의 다른 장애물(ground, stairs)이 있으면 취소
-            RaycastHit2D[] checkHits = Physics2D.BoxCastAll(footPos, checkSize, 0f, Vector2.down, 0.3f, groundLayer | stairsLayer);
+            // 🔧 조율 포인트 1: 너비 (기존 0.8f -> 0.95f로 늘려서 구멍이 넓을 때만 허용)
+            float checkWidth = cd.bounds.size.x * 1.3f;
+            Vector2 checkSize = new Vector2(checkWidth, 0.1f);
+
+            // 🔧 조율 포인트 2: 깊이 (기존 0.3f -> 0.45f로 늘려서 층간 간격이 넉넉해야 허용)
+            float checkDistance = 1.0f;
+
+            // 아래쪽을 검사해서 target 이외의 다른 장애물(바닥/벽)이 하나라도 걸리면 취소!
+            RaycastHit2D[] checkHits = Physics2D.BoxCastAll(footPos, checkSize, 0f, Vector2.down, checkDistance, groundLayer | stairsLayer);
 
             foreach (var hit in checkHits)
             {
                 if (hit.collider != null && hit.collider != bestTarget)
                 {
-                    Debug.Log("공간이 너무 좁아 밑점프를 취소합니다!");
-                    return null; // 안전장치: 좁으면 통과 불가
+                    Debug.Log("공간이 좁거나 애매하여 밑점프를 깐깐하게 차단합니다!");
+                    return null; // 가차 없이 취소됨
                 }
             }
         }
-
 
         return bestTarget;
     }
@@ -746,6 +755,7 @@ public class PlayerController : MonoBehaviour
             // 감지된 놈이 내가 지금 통과 중인 그 발판(ignoredDropCollider)이 아니라면? -> 진짜 땅이다!
             if (hit.collider != null && hit.collider != ignoredDropCollider)
             {
+
                 return true;
             }
         }

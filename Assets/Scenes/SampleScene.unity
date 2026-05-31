@@ -652,7 +652,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -45.080006, y: 12.383184, z: -10}
+  m_LocalPosition: {x: -45.080006, y: 12.591185, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1263,7 +1263,7 @@ Transform:
   m_GameObject: {fileID: 942376641}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -45.080006, y: 12.383184, z: -10}
+  m_LocalPosition: {x: -45.080006, y: 12.591185, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1567,7 +1567,7 @@ BoxCollider2D:
   m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 758fbb5437db122468647b8b10be415d, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -1591,7 +1591,7 @@ BoxCollider2D:
   m_UsedByEffector: 1
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0.33056974}
+  m_Offset: {x: 0, y: 0.38894668}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -1601,7 +1601,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 0.33886048}
+  m_Size: {x: 1, y: 0.3667323}
   m_EdgeRadius: 0
 --- !u!1 &1199457208
 GameObject:
@@ -1714,7 +1714,7 @@ Transform:
   m_GameObject: {fileID: 1199457208}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -45.08, y: 10.08, z: 0}
+  m_LocalPosition: {x: -45.08, y: 10.288, z: 0}
   m_LocalScale: {x: 0.6, y: 0.6, z: 0.6}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -1751,8 +1751,8 @@ MonoBehaviour:
   jumpForce: 8
   airDeceleration: 1
   MaxJumpCount: 2
-  groundCheckSize: {x: 0.77, y: 0.01}
-  groundCheckDistance: 0.02
+  groundCheckSize: {x: 0.65, y: 0.01}
+  groundCheckDistance: 0.01
   groundLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -1762,7 +1762,7 @@ MonoBehaviour:
   wallLayer:
     serializedVersion: 2
     m_Bits: 256
-  WallCheckSize: {x: 0.05, y: 1.56}
+  WallCheckSize: {x: 0.02, y: 1.5}
   sprintSpeed: 12
   isSprinting: 0
   wasSprinting: 0

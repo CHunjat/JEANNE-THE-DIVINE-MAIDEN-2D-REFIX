@@ -38,51 +38,53 @@ public class PlayerDashAttackState : PlayerAttackState
         float facingDir = player.isFacingRight ? 1f : -1f;
         float normalizedTime = GetNormalizedTime();
 
+
         // ----------------------------------------------------
         // 🔥 [비탈길 전용 상수 로직]
         // ----------------------------------------------------
         if (player.OnSlope())
         {
-            player.rb.gravityScale = 0f; // 2D gravityScale 사용 (중력 끄기)
+            player.rb.gravityScale = 0f; // 중력 끄기
 
-            // 1. 공격 전반부 (0% ~ 80%): 상수 속도로 밀기
-            // 찌르기와 마찬가지로 계산 오차를 줄이기 위해 상수를 강제 주입합니다.
             if (normalizedTime < 0.8f)
             {
-                Vector2 moveDir = new Vector2(facingDir, 0f); // Vector2로 전환
+                Vector2 moveDir = new Vector2(facingDir, 0f);
                 Vector2 slopeMoveDir = player.GetSlopeMoveDirection(moveDir);
 
-                float finalSpeed = slopeFixedSpeed;
-                if (slopeMoveDir.y < 0)
+                // X축과 Y축의 속도를 분리해서 제어합니다.
+                float finalSpeedX = slopeFixedSpeed;
+                float finalSpeedY = slopeFixedSpeed;
+
+                if (slopeMoveDir.y < 0) // 내리막
                 {
-                    // 내리막일 때 속도를 약 20~30% 줄여서 평지와 체감 속도를 맞춥니다.
-                    finalSpeed = slopeFixedSpeed * 0.45f;
+                    finalSpeedX = slopeFixedSpeed * 0.45f;
+                    finalSpeedY = slopeFixedSpeed * 0.45f;
                 }
                 else if (slopeMoveDir.y > 0) // 오르막
                 {
-                    finalSpeed = slopeFixedSpeed * 1.6f;  // 오르막이 답답하면 여기서 속도를 가산
+                    // ⚡ [개발자님 아이디어 적용] 오르막 밀착 로직
+                    // Y축(올라가는 힘)은 시원하게 유지하되, X축(앞으로 가는 힘)을 줄여서 계단에 바짝 붙게 만듭니다.
+                    finalSpeedX = slopeFixedSpeed * 1.0f; // 1.6f -> 1.0f로 깎아서 가로 튀어나감 방지
+                    finalSpeedY = slopeFixedSpeed * 1.6f;
                 }
 
-                // 3타와 동일한 자석 수치 및 하향 압력(-4f) 적용
                 float downwardStickiness = slopeMoveDir.y < 0 ? 2.0f : 1.0f;
+                float extraDownForce = slopeMoveDir.y < 0 ? 4f : 2f;
 
+                // 분리된 X, Y 속도를 각각 적용
                 player.SetVelocity(
-                    slopeMoveDir.x * finalSpeed,
-                    (slopeMoveDir.y * finalSpeed * downwardStickiness) - 4f
+                    slopeMoveDir.x * finalSpeedX,
+                    (slopeMoveDir.y * finalSpeedY * downwardStickiness) - extraDownForce
                 );
             }
-            // 2. 후딜레이 (80% ~ 100%): 3타급 0,0 쐐기
             else
             {
                 player.SetVelocity(0f, 0f);
             }
         }
-        // ----------------------------------------------------
-        // ⚡ [평지 전용 가변 로직] - 평지는 부드러운 감속 유지
-        // ----------------------------------------------------
         else
         {
-            player.rb.gravityScale = 1f; // 2D gravityScale 사용 (평지 Gravity 복구)
+            player.rb.gravityScale = 1f; // 평지 Gravity 복구
 
             if (normalizedTime < 0.5f)
             {
@@ -99,6 +101,7 @@ public class PlayerDashAttackState : PlayerAttackState
             }
         }
     }
+    
 
     public override void LogicUpdate()
     {
