@@ -53,9 +53,24 @@ public abstract class EnemyFSM : EnemyBase
     protected EnemyState GetCurrentState() => currentState;
 
     // 각 상태별 동작 함수 - 자식 클래스(NormalMonster, MidBoss 등)에서 내용을 채움
-    protected virtual void OnIdle() { }
-    protected virtual void OnChase() { }
-    protected virtual void OnAttack() { }
-    protected virtual void OnHit() { }
-    protected virtual void OnDead() { }
+    protected virtual void OnIdle() // 대기 상태
+    {
+        
+    }
+    protected virtual void OnChase()   // 추격 상태
+    {
+
+    }
+    protected virtual void OnAttack()  // 공격 상태
+    { 
+
+    }
+    protected virtual void OnHit()     // 피격 상태
+    { 
+
+    }
+    protected virtual void OnDead()    // 사망 상태
+    { 
+    
+    }
 }
