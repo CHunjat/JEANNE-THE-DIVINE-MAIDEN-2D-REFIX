@@ -288,15 +288,14 @@ public class PlayerController : MonoBehaviour
         bool isMidAir = StateMachine.CurrentState == JumpState ||
                         StateMachine.CurrentState == AirState ||
                         StateMachine.CurrentState == DropState ||
-                        StateMachine.CurrentState == DashState ||
-                        (StateMachine.CurrentState == LandState && isSprinting);
+                        StateMachine.CurrentState == DashState;
         #endregion
         bool isAttacking = StateMachine.CurrentState is PlayerAttackState;
-
+        bool isSprintLanding = StateMachine.CurrentState == LandState && isSprinting;
 
         if (!isAttacking)
         {
-            if (Mathf.Abs(inputReader.MoveValue.x) < 0.1f && IsGrounded() && !isMidAir)
+            if (Mathf.Abs(inputReader.MoveValue.x) < 0.1f && IsGrounded() && !isMidAir && !isSprintLanding)
             {
                 if (OnSlope())
                 {
@@ -320,11 +319,13 @@ public class PlayerController : MonoBehaviour
         {
             Vector2 slopeDir = GetSlopeMoveDirection(rb.linearVelocity.normalized);
             float currentSpeed = rb.linearVelocity.magnitude;
-            
+            if (StateMachine.CurrentState != JumpState)
+            {
                 rb.linearVelocity = slopeDir * currentSpeed;
                 rb.AddForce(Vector2.down * 50f, ForceMode2D.Force);
-            
+            }
         }
+
 
         if (IsPureGrounded() && !OnSlope())
         {
