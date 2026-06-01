@@ -37,35 +37,41 @@ public class PlayerAirState : PlayerState
 
 
 
-        // [착지 판정 및 모서리 텔레포트]
+        // [착지 판정 및텔레포트]
         if (player.IsGrounded())
         {
-            // 1. 땅에 닿았으니, 물리 연산을 잠시 정지 (고스트 상태)
+            // 🔥 [핵심 안전장치] 이미 LandState라면, 루프를 막기 위해 함수를 즉시 종료합니다.
+            if (stateMachine.CurrentState == player.LandState) return;
+
+            // 1. 땅에 닿았으니, 물리 연산을 잠시 정지
             player.rb.simulated = false;
 
             // 2. 이제 안전하게 지형 위로 정렬 (텔레포트)
             RaycastHit2D hit = Physics2D.BoxCast(player.cd.bounds.center, player.groundCheckSize * 1.2f, 0f, Vector2.down, 0.5f, player.GetGroundCheckMask());
+
             if (hit.collider != null && hit.collider != player.ignoredDropCollider)
             {
                 float surfaceY = hit.point.y;
                 float footY = player.cd.bounds.min.y;
 
-                //점프 애매할때 윗땅에 올라타지는판정
-                if (footY < surfaceY && (surfaceY - footY) < 0.7f)
+                // 경사면 위로 안착시키는 텔레포트 로직
+                if (footY < surfaceY && (surfaceY - footY) < 0.6f)
                 {
-                    player.transform.position += new Vector3(0f, (surfaceY - footY) + 0.02f, 0f);
+                    // [중요] 살짝 아주 조금만 더 띄워서 겹침 현상(물리 엔진 튕겨내기) 방지
+                    player.transform.position += new Vector3(0f, (surfaceY - footY) + 0.05f, 0f);
                 }
             }
 
-            // 3. 다시 물리 연산 켜기 (이제 캐릭터는 정렬된 위치에서 정상적으로 존재함)
+            // 3. 다시 물리 연산 켜기
             player.rb.simulated = true;
 
-            // 4. 착지 상태로 전환
+            // 4. 착지 상태로 전환 (이 명령은 딱 한 번만 실행됩니다)
             if (player.OnSlope())
             {
                 player.rb.gravityScale = 0f;
                 player.SetVelocity(0f, 0f);
             }
+
             stateMachine.ChangeState(player.LandState);
             return;
         }

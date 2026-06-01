@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    public bool ignoreSlopeDetection = false;
 
     [Header("Layer Settings")]
     public LayerMask stairsLayer; // 이 줄이 있는지 확인하세요!
@@ -624,11 +625,11 @@ public class PlayerController : MonoBehaviour
             Vector2 footPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y);
 
             // 🔧 조율 포인트 1: 너비 (기존 0.8f -> 0.95f로 늘려서 구멍이 넓을 때만 허용)
-            float checkWidth = cd.bounds.size.x * 1.3f;
+            float checkWidth = cd.bounds.size.x * 0.6f;
             Vector2 checkSize = new Vector2(checkWidth, 0.1f);
 
             // 🔧 조율 포인트 2: 깊이 (기존 0.3f -> 0.45f로 늘려서 층간 간격이 넉넉해야 허용)
-            float checkDistance = 1.0f;
+            float checkDistance = 0.6f;
 
             // 아래쪽을 검사해서 target 이외의 다른 장애물(바닥/벽)이 하나라도 걸리면 취소!
             RaycastHit2D[] checkHits = Physics2D.BoxCastAll(footPos, checkSize, 0f, Vector2.down, checkDistance, groundLayer | stairsLayer);
@@ -648,7 +649,7 @@ public class PlayerController : MonoBehaviour
 
     public bool OnSlope()
     {
-        if (cd == null) return false;
+        if (cd == null || ignoreSlopeDetection) return false; // 🔥 밑점프 중이면 아예 판정 안 함!
 
         float rayLength = cd.bounds.extents.y + 0.3f;
         LayerMask currentMask = GetCurrentGroundMask();

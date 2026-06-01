@@ -15,7 +15,7 @@ public class PlayerDropState : PlayerState
         if (dropCol != null)
         {
             player.ignoredDropCollider = dropCol;
-
+            player.ignoreSlopeDetection = true; // 🔥 비탈길 자석 끄기! (허공 툭 걸림 방지)
             // ⚡ [핵심 수정] 0.15f는 너무 깊어 가까운 계단을 건너뛰게 만듭니다.
             // 딱 땅에서 발만 떨어지도록 0.02f만 내립니다.
             player.transform.position -= new Vector3(0f, 0.1f, 0f);
@@ -23,7 +23,7 @@ public class PlayerDropState : PlayerState
             // 약간의 하강 속도를 주어 중력이 부드럽게 바로 먹히도록 합니다.
             player.SetVelocity(player.rb.linearVelocity.x, -2f);
 
-            player.StartCoroutine(DisableCollisionRoutine(dropCol));
+            player.StartCoroutine(DisableSlopeAndCollision(dropCol));
         }
 
         // 즉시 AirState로 넘겨야 PlayerController의 계단 안착(isStairUnder) 로직이
@@ -31,30 +31,24 @@ public class PlayerDropState : PlayerState
         stateMachine.ChangeState(player.AirState);
     }
 
-    private IEnumerator DisableCollisionRoutine(Collider2D platformCol)
+    private IEnumerator DisableSlopeAndCollision(Collider2D platformCol)
     {
         Collider2D playerCol = player.cd;
-
-        // 1. 내가 방금 뚫고 내려가려는 '그 발판 하나'만 확실하게 충돌을 끕니다.
         Physics2D.IgnoreCollision(playerCol, platformCol, true);
 
-        // 2. 타이머(WaitForSeconds) 삭제! 
-        // 캐릭터가 그 발판에서 완전히 빠져나올 때까지 대기 (위로 튕김 완벽 방지)
+        // 0.2초 정도는 밑점프 상태이므로 비탈길 자석을 끕니다.
+        // 0.2초면 캐릭터가 충분히 발판을 뚫고 내려가서 툭 걸릴 일이 없습니다.
+        yield return new WaitForSeconds(0.2f);
+
+        player.ignoreSlopeDetection = false; // 🔥 다시 자석 켜기! (착지 시 안착 보장)
+
+        // 발판 빠져나올 때까지 기다림
         while (playerCol != null && platformCol != null && Physics2D.Distance(playerCol, platformCol).isOverlapped)
         {
             yield return null;
         }
 
-        // 3. 완전히 빠져나왔을 때 복구
-        if (playerCol != null && platformCol != null)
-        {
-            Physics2D.IgnoreCollision(playerCol, platformCol, false);
-        }
-
-        // 4. 완벽하게 빠져나온 후 널 초기화
-        if (player.ignoredDropCollider == platformCol)
-        {
-            player.ignoredDropCollider = null;
-        }
+        Physics2D.IgnoreCollision(playerCol, platformCol, false);
+        if (player.ignoredDropCollider == platformCol) player.ignoredDropCollider = null;
     }
 }
