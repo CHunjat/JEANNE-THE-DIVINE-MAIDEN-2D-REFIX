@@ -35,20 +35,25 @@ public class PlayerDashState : PlayerState
     {
         base.PhysicsUpdate();
 
-        // 기본 대쉬 방향 (수평) - Vector2로 전환
+        // 1. 대시 방향 설정
         Vector2 dashVec = new Vector2(dashDirection, 0f);
+        float finalDashSpeed = player.dashSpeed;
 
-        // 🔥 버그 수정 핵심 로직
-        // 1. 지상에서 대쉬를 시작했고 2. 현재 비탈길 위라면 경사면 보정 적용
-        // 공중에서 대쉬하다가 비탈길에 닿은 경우는 보정을 하지 않아야 위로 튀지 않습니다.
-        if (startedGrounded && player.OnSlope())
+        // 2. 비탈길 판정 시 (중요: 내려가는 중이든 올라가는 중이든 비탈길이면 꺾어야 함)
+        if (player.OnSlope())
         {
+            // 3. 경사면의 기울기(Tangent)를 가져와서 대시 벡터를 그 각도로 바꿉니다.
+            // 이렇게 하면 대시 벡터가 수평이 아니라 '비탈길 각도'가 되어, 바닥을 타고 내려갑니다.
             dashVec = player.GetSlopeMoveDirection(dashVec);
+
+            // 내리막(y < 0)이라면 감속하지 않고 가속도를 실어줘야 '스으윽-' 미끄러집니다.
+            // 만약 너무 빠르면 여기만 살짝 조정하세요.
+
+            finalDashSpeed = player.dashSpeed * (dashVec.y < 0 ? 1.0f : 0.6f);
         }
 
-        // 공중 대쉬 상태에서 비탈길에 충돌하면 자연스럽게 멈추거나 슬라이딩하도록
-        // 수직 속도(y)에 중력을 끄고 대쉬 속도만 주입
-        player.SetVelocity(dashVec.x * player.dashSpeed, dashVec.y * player.dashSpeed);
+        // 4. 적용
+        player.SetVelocity(dashVec.x * finalDashSpeed, dashVec.y * finalDashSpeed);
     }
 
     public override void LogicUpdate()
@@ -91,7 +96,10 @@ public class PlayerDashState : PlayerState
     private void FinishDash()
     {
         player.ResetDashCooldown();
-
+        if (player.OnSlope())
+        {
+            player.rb.linearVelocity = new Vector2(player.rb.linearVelocity.x, 0f);
+        }
         if (player.IsGrounded() || player.OnSlope())
         {
             if (Mathf.Abs(player.inputReader.MoveValue.x) > 0.1f)

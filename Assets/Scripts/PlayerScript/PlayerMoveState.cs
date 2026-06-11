@@ -38,10 +38,23 @@ public class PlayerMoveState : PlayerState
         player.HandleGrappleInput();
         if (stateMachine.CurrentState == player.GrappleState) return;
 
-        if (!player.IsGrounded())
+        if (player.IsGrounded())
         {
-            stateMachine.ChangeState(player.AirState);
-            return;
+            player.groundedTimer = player.groundedGraceTime;
+        }
+        else
+        {
+            player.groundedTimer -= Time.deltaTime;
+        }
+
+        // groundedTimer가 0보다 크면 아직 땅에 있는 것과 다름없음 (상태 전환 안 함)
+        if (player.groundedTimer <= 0)
+        {
+            if (!player.IsGrounded())
+            {
+                stateMachine.ChangeState(player.AirState);
+                return;
+            }
         }
 
         float xInput = player.inputReader.MoveValue.x;
@@ -131,65 +144,94 @@ public class PlayerMoveState : PlayerState
     {
         base.PhysicsUpdate();
         float xInput = player.inputReader.MoveValue.x;
-
-        //비탈길 bool 판정
         bool isSlope = player.OnSlope();
 
-        //비탈길 스프린트 각도가 15도 이하이면 평지로 취급해서 비탈길에서 스프린트 타고 평지로 내려와도 계속 비탈길 재진입되는거 방지
+        // 스프린트 각도 보정 유지
         if (isSlope && player.isSprinting)
         {
             float angle = Vector2.Angle(Vector2.up, player.slopeHit.normal);
             if (angle < 15f) isSlope = false;
         }
 
-
-        // 이동 방향 뒤집기
         if (xInput != 0) player.FlipController(xInput);
-
-        float currentSpeed = player.isSprinting ? player.sprintSpeed : player.moveSpeed;
-
-        // 1. 비탈길 판정
-
-        if (isSlope)
+        float currentSpeed;
+        if (player.isSprinting)
         {
-            // [비탈길 모드 진입]
-            player.rb.gravityScale = 0f;
-
-            // [핵심]움직이는 중이라면 경사면 이동, 멈춰있다면(xInput == 0) 속도 0으로 고정해서 슬라이딩 방지!
-            if (xInput != 0)
+            if (isSlope && xInput != 0)
             {
+                // 비탈길에서 움직이는 중이라면: 위로 가는지 아래로 가는지 체크
                 Vector2 moveDir = new Vector2(xInput, 0f);
-                Vector2 slopeMoveDir = player.GetSlopeMoveDirection(moveDir);
-                player.SetVelocity(slopeMoveDir.x * currentSpeed, slopeMoveDir.y * currentSpeed);
-            }
-            else
-            {
-                bool isHovering = player.slopeHit.collider != null && player.slopeHit.distance > 0.05f;
-                if (!isHovering)
+                Vector2 dir = player.GetSlopeMoveDirection(moveDir);
+
+                if (dir.y > 0)
                 {
-                    // 완전히 땅에 닿았을 때만 속도 고정
-                    player.SetVelocity(0f, 0f);
+                    currentSpeed = 8.4f; // 오르막 제한 속도
                 }
                 else
                 {
-                    // 허공이면 중력을 켜서 떨어지게 함
-                    player.rb.gravityScale = 1f;
-                    player.SetVelocity(0f, player.rb.linearVelocity.y);
+                    currentSpeed = player.sprintSpeed;
                 }
+            }
+            else
+            {
+                currentSpeed = player.sprintSpeed;
             }
         }
         else
         {
-            // [평지 모드 진입]
+            currentSpeed = player.moveSpeed; // 일반 이동 (4.2f)
+        }
+
+        if (isSlope)
+        {
+            player.rb.gravityScale = 0f;
+
+            if (xInput != 0)
+            {
+                Vector2 moveDir = new Vector2(xInput, 0f);
+                Vector2 slopeMoveDir = player.GetSlopeMoveDirection(moveDir);
+
+                // ★ [해결책] 모서리 직전 정점(Crest) 감지 및 Y축 벡터 강제 고정
+                // 비탈길 콜라이더의 상단 끝(bounds.max.y)까지의 거리를 계산
+                float slopeTopY = player.slopeHit.collider.bounds.max.y;
+                float playerBottomY = player.cd.bounds.min.y;
+
+                // 발밑이 정점 근처(0.2f 이내)에 도달했다면 위로 미는 힘을 강제로 죽임
+                if (playerBottomY >= slopeTopY - 0.2f && slopeMoveDir.y > 0)
+                {
+                    if (player.isSprinting)
+                    {
+
+
+                        slopeMoveDir.y *= 0.3f;
+                    }
+                    else
+                    {
+                        // [걷기 상태]
+                        // 기존처럼 Y축 힘을 0으로 만들어 올라타지는 것 방지
+                        slopeMoveDir.y = 0;
+                    }
+                }
+
+                player.SetVelocity(slopeMoveDir.x * currentSpeed, slopeMoveDir.y * currentSpeed);
+            }
+            else
+            {
+                // 정지 시
+                bool isHovering = player.slopeHit.collider != null && player.slopeHit.distance > 0.05f;
+                if (!isHovering) player.SetVelocity(0f, 0f);
+                else { player.rb.gravityScale = 1f; player.SetVelocity(0f, player.rb.linearVelocity.y); }
+            }
+        }
+        else
+        {
+            // [평지 모드]
             player.rb.gravityScale = 1f;
 
-            // 관성 유지 (내리막에서 얻은 가속도가 있다면 그대로 평지 질주)
-            player.SetVelocity(xInput * currentSpeed, player.rb.linearVelocity.y);
+            // ★ [안착감 보정] 비탈길 이탈 시점의 Y속도 보정
+            // 위로 튀려는 속도가 남아있다면 즉시 0으로 깎아서 툭 떨어지는 느낌 제거
             float velY = player.rb.linearVelocity.y;
-            if (velY > 0f)
-            {
-                velY = 0f;
-            }
+            if (velY > 0.1f) velY = 0f;
 
             player.SetVelocity(xInput * currentSpeed, velY);
         }

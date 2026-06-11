@@ -5,6 +5,9 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    public float groundedGraceTime = 0.8f; // 공중 판정 유예 시간
+    public float groundedTimer;
+
     public bool ignoreSlopeDetection = false;
 
     [Header("Layer Settings")]
@@ -626,12 +629,11 @@ public class PlayerController : MonoBehaviour
             Vector2 footPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y);
 
             // 🔧 조율 포인트 1: 너비 (기존 0.8f -> 0.95f로 늘려서 구멍이 넓을 때만 허용)
-            float checkWidth = cd.bounds.size.x * 0.6f;
+            float checkWidth = cd.bounds.size.x * 1.2f;
             Vector2 checkSize = new Vector2(checkWidth, 0.1f);
 
             // 🔧 조율 포인트 2: 깊이 (기존 0.3f -> 0.45f로 늘려서 층간 간격이 넉넉해야 허용)
-            float checkDistance = 0.6f;
-
+            float checkDistance = isSprinting ? 1.5f : 0.4f;
             // 아래쪽을 검사해서 target 이외의 다른 장애물(바닥/벽)이 하나라도 걸리면 취소!
             RaycastHit2D[] checkHits = Physics2D.BoxCastAll(footPos, checkSize, 0f, Vector2.down, checkDistance, groundLayer | stairsLayer);
 
@@ -686,13 +688,21 @@ public class PlayerController : MonoBehaviour
         {
             float angle = Vector2.Angle(Vector2.up, bestHit.normal);
 
-            // 평지(0.1도 이하)는 비탈길 아님
             if (angle <= 0.1f) return false;
 
-            // 비탈길 범위
             if (angle > 0.1f && angle <= maxSlopeAngle)
             {
-                slopeHit = bestHit; // 판정 고정
+                // ★ [핵심] 모서리 제외 필터 (Edge Detection)
+                // 콜라이더의 좌우 끝단(min.x, max.x)으로부터 margin 만큼은 경사로 판정에서 제외합니다.
+                // 이렇게 하면 모서리 끝에 도달했을 때 OnSlope가 false를 반환하여 평지로 전환됩니다.
+                float margin = 0.5f;
+                if (bestHit.point.x <= bestHit.collider.bounds.min.x + margin ||
+                    bestHit.point.x >= bestHit.collider.bounds.max.x - margin)
+                {
+                    return false; // 모서리이므로 경사로 취급 안 함!
+                }
+
+                slopeHit = bestHit;
                 return true;
             }
         }
@@ -712,7 +722,7 @@ public class PlayerController : MonoBehaviour
             tangent = -tangent;
         }
 
-        return tangent;
+        return tangent * 0.95f;
     }
 
 

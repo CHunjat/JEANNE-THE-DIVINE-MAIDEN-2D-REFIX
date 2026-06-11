@@ -51,8 +51,20 @@ public class PlayerLandState : PlayerState
                 Vector2 moveDir = new Vector2(dir, 0f);
                 Vector2 slopeMoveDir = player.GetSlopeMoveDirection(moveDir);
 
-                // 경사면 방향으로 전속력 이동
-                player.rb.linearVelocity = slopeMoveDir * currentSpeed;
+
+                // 경사면 방향구르기 예외처리
+                float rollSpeed = currentSpeed;
+                if (slopeMoveDir.y > 0)
+                {
+                    rollSpeed = 8.0f; // 오르막 제한 속도
+                }
+                else
+                {
+                    rollSpeed = player.sprintSpeed; // 내리막은 그대로 풀스피드
+                }
+
+                // 제한된 속도(rollSpeed)로 적용
+                player.rb.linearVelocity = slopeMoveDir * rollSpeed;
 
                 // 🔥 [수정 2: 잃어버린 50f 접착제 부활!] 
                 // 컨트롤러에서 꺼져버린 50f의 다운포스를 여기서 직접 꽂아버립니다.
