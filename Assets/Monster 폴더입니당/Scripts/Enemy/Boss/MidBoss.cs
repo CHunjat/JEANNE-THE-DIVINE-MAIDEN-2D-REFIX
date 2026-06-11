@@ -95,7 +95,7 @@ public class MidBoss : EnemyFSM
         // 플레이어 쪽으로 고개 돌리기 (EnemyBase의 함수 호출)
         FlipTowardsPlayer();
 
-        // Y축(위아래)은 무시하고 X축(좌우) 방향만 계산해서 이동 (땅 파고들기 방지)
+        // Y축(위아래)은 무시하고 X축(좌우) 방향만 계산해서 이동 (땅 파고들기, 공중부양 방지)
         if (player != null)
         {
             float moveDirX = Mathf.Sign(player.position.x - transform.position.x);
