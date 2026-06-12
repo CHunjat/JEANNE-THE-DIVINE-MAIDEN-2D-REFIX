@@ -6,6 +6,8 @@ public class PlayerDashAttackState : PlayerAttackState
     // 🔥 비탈길 전용 상수 속도 (찌르기보다 조금 더 빠른 느낌으로 설정)
     private float slopeFixedSpeed = 4f;
 
+    private float airborneTimer;
+
     public PlayerDashAttackState(PlayerController player, PlayerStateMachine stateMachine, string animName)
         : base(player, stateMachine, animName) { }
 
@@ -13,6 +15,8 @@ public class PlayerDashAttackState : PlayerAttackState
     {
         base.Enter();
         comboInputRegistered = false;
+
+        airborneTimer = 0f; // 진입 시 타이머 초기화
 
         if (player.OnSlope())
         {
@@ -137,11 +141,21 @@ public class PlayerDashAttackState : PlayerAttackState
     {
         base.LogicUpdate();
 
-        // 내리막 팅김 방지 가드
         if (!player.IsGrounded() && !player.OnSlope())
         {
-            stateMachine.ChangeState(player.AirState);
-            return;
+            airborneTimer += Time.deltaTime;
+
+            // 0.15초 이상 확실하게 허공에 있을 때만 절벽에서 떨어진 것으로 간주하고 AirState로 전환
+            if (airborneTimer > 0.15f)
+            {
+                stateMachine.ChangeState(player.AirState);
+                return;
+            }
+        }
+        else
+        {
+            // 바닥에 닿아있다면 타이머 즉시 리셋 (다시 단차를 만나도 0.15초 유예 보장)
+            airborneTimer = 0f;
         }
     }
 
