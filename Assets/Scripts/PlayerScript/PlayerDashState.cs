@@ -35,24 +35,62 @@ public class PlayerDashState : PlayerState
     {
         base.PhysicsUpdate();
 
-        // 1. 대시 방향 설정
         Vector2 dashVec = new Vector2(dashDirection, 0f);
         float finalDashSpeed = player.dashSpeed;
 
-        // 2. 비탈길 판정 시 (중요: 내려가는 중이든 올라가는 중이든 비탈길이면 꺾어야 함)
-        if (player.OnSlope())
+        // 1. [핵심 1] 발 밑을 넓게 스캔해서 '평지(각도 0)'가 있는지 독자적으로 찾습니다.
+        bool detectedFlatGround = false;
+
+        // 캐릭터 사이즈만큼 넓게 레이를 쏴서 윗평지가 발밑에 들어왔는지 확인
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(player.cd.bounds.center, player.cd.bounds.size * 0.9f, 0f, Vector2.down, 0.3f, player.GetCurrentGroundMask());
+
+        foreach (var hit in hits)
         {
-            // 3. 경사면의 기울기(Tangent)를 가져와서 대시 벡터를 그 각도로 바꿉니다.
-            // 이렇게 하면 대시 벡터가 수평이 아니라 '비탈길 각도'가 되어, 바닥을 타고 내려갑니다.
-            dashVec = player.GetSlopeMoveDirection(dashVec);
-
-            // 내리막(y < 0)이라면 감속하지 않고 가속도를 실어줘야 '스으윽-' 미끄러집니다.
-            // 만약 너무 빠르면 여기만 살짝 조정하세요.
-
-            finalDashSpeed = player.dashSpeed * (dashVec.y < 0 ? 1.0f : 0.6f);
+            if (hit.collider != null && hit.collider != player.ignoredDropCollider)
+            {
+                if (Vector2.Angle(Vector2.up, hit.normal) <= 0.1f) // 완전 평지 발견!
+                {
+                    detectedFlatGround = true;
+                    break;
+                }
+            }
         }
 
-        // 4. 적용
+        // 2. 비탈길 로직 처리
+        if (player.OnSlope())
+        {
+            // ★ [핵심 2] 비탈길과 평지가 '동시 감지'되었다면? (윗평지 교차점)
+            if (detectedFlatGround)
+            {
+                // 비탈길의 오르막 각도를 즉시 무시하고 평지 대시 모드로 전환합니다.
+                // 비탈길이 더 높더라도 윗평지에 찰싹 달라붙도록 미세한 하강 벡터(-0.1f)를 주입!
+                dashVec.y = -0.1f;
+                finalDashSpeed = player.dashSpeed; // 평지 진입이므로 속도 100% 쾌속 유지
+            }
+            else
+            {
+                // 순수 비탈길일 때 (동시 감지 아님)
+                dashVec = player.GetSlopeMoveDirection(dashVec);
+
+                if (dashVec.y > 0.05f)
+                {
+                    // 오르막 댐핑 (너무 느리다 싶으면 0.6f ~ 1.0f 사이로 올리세요)
+                    finalDashSpeed *= 0.6f;
+                }
+                else
+                {
+                    // 내리막 쾌속 슬라이딩
+                    finalDashSpeed = player.dashSpeed;
+                }
+            }
+        }
+        else if (detectedFlatGround)
+        {
+            // 순수 평지 대시일 때도 바닥에 미세하게 눌러줘서 턱에서 안 뜨게 만듦
+            dashVec.y = -0.05f;
+        }
+
+        // 3. 최종 속도 적용
         player.SetVelocity(dashVec.x * finalDashSpeed, dashVec.y * finalDashSpeed);
     }
 
