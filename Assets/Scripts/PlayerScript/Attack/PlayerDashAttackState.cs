@@ -38,9 +38,26 @@ public class PlayerDashAttackState : PlayerAttackState
         float facingDir = player.isFacingRight ? 1f : -1f;
         float normalizedTime = GetNormalizedTime();
 
+        // ----------------------------------------------------
+        // 🔥 [핵심 1] 발 밑을 넓게 스캔해서 '평지(각도 0)'가 있는지 독자적으로 찾습니다.
+        // ----------------------------------------------------
+        bool detectedFlatGround = false;
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(player.cd.bounds.center, player.cd.bounds.size * 0.9f, 0f, Vector2.down, 0.3f, player.GetCurrentGroundMask());
+
+        foreach (var hit in hits)
+        {
+            if (hit.collider != null && hit.collider != player.ignoredDropCollider)
+            {
+                if (Vector2.Angle(Vector2.up, hit.normal) <= 0.1f) // 완전 평지 발견!
+                {
+                    detectedFlatGround = true;
+                    break;
+                }
+            }
+        }
 
         // ----------------------------------------------------
-        // 🔥 [비탈길 전용 상수 로직]
+        // 🔥 [비탈길 전용 상수 로직 + 평지 교차점 보정]
         // ----------------------------------------------------
         if (player.OnSlope())
         {
@@ -48,60 +65,73 @@ public class PlayerDashAttackState : PlayerAttackState
 
             if (normalizedTime < 0.8f)
             {
-                Vector2 moveDir = new Vector2(facingDir, 0f);
-                Vector2 slopeMoveDir = player.GetSlopeMoveDirection(moveDir);
-
-                // X축과 Y축의 속도를 분리해서 제어합니다.
-                float finalSpeedX = slopeFixedSpeed;
-                float finalSpeedY = slopeFixedSpeed;
-
-                if (slopeMoveDir.y < 0) // 내리막
+                // ★ [핵심 2] 비탈길과 평지가 '동시 감지'되었다면? (윗평지 교차점)
+                if (detectedFlatGround)
                 {
-                    finalSpeedX = slopeFixedSpeed * 0.45f;
-                    finalSpeedY = slopeFixedSpeed * 0.45f;
+                    // 비탈길 오르막 벡터 무시! 윗평지에 찰싹 달라붙도록 미세 하강 벡터(-0.1f) 주입
+                    // 속도는 평지 진입이므로 원래 slideSpeed를 사용해 쾌속 유지
+                    player.SetVelocity(facingDir * slideSpeed, -0.1f);
                 }
-                else if (slopeMoveDir.y > 0) // 오르막
+                else
                 {
-                    // ⚡ [개발자님 아이디어 적용] 오르막 밀착 로직
-                    // Y축(올라가는 힘)은 시원하게 유지하되, X축(앞으로 가는 힘)을 줄여서 계단에 바짝 붙게 만듭니다.
-                    finalSpeedX = slopeFixedSpeed * 1.0f; // 1.6f -> 1.0f로 깎아서 가로 튀어나감 방지
-                    finalSpeedY = slopeFixedSpeed * 1.6f;
+                    // 순수 비탈길일 때 (기존 대시 공격 로직 유지)
+                    Vector2 moveDir = new Vector2(facingDir, 0f);
+                    Vector2 slopeMoveDir = player.GetSlopeMoveDirection(moveDir);
+
+                    float finalSpeedX = slopeFixedSpeed;
+                    float finalSpeedY = slopeFixedSpeed;
+
+                    if (slopeMoveDir.y < 0) // 내리막
+                    {
+                        finalSpeedX = slopeFixedSpeed * 0.45f;
+                        finalSpeedY = slopeFixedSpeed * 0.45f;
+                    }
+                    else if (slopeMoveDir.y > 0) // 오르막
+                    {
+                        finalSpeedX = slopeFixedSpeed * 1.0f;
+                        finalSpeedY = slopeFixedSpeed * 1.6f;
+                    }
+
+                    float downwardStickiness = slopeMoveDir.y < 0 ? 2.0f : 1.0f;
+                    float extraDownForce = slopeMoveDir.y < 0 ? 4f : 2f;
+
+                    player.SetVelocity(
+                        slopeMoveDir.x * finalSpeedX,
+                        (slopeMoveDir.y * finalSpeedY * downwardStickiness) - extraDownForce
+                    );
                 }
-
-                float downwardStickiness = slopeMoveDir.y < 0 ? 2.0f : 1.0f;
-                float extraDownForce = slopeMoveDir.y < 0 ? 4f : 2f;
-
-                // 분리된 X, Y 속도를 각각 적용
-                player.SetVelocity(
-                    slopeMoveDir.x * finalSpeedX,
-                    (slopeMoveDir.y * finalSpeedY * downwardStickiness) - extraDownForce
-                );
             }
             else
             {
                 player.SetVelocity(0f, 0f);
             }
         }
+        // ----------------------------------------------------
+        // 🔥 [평지 로직]
+        // ----------------------------------------------------
         else
         {
             player.rb.gravityScale = 1f; // 평지 Gravity 복구
 
+            // ★ 순수 평지 대시 공격일 때도 바닥에 미세하게 눌러줘서 턱에서 안 뜨게 만듦
+            float flatYVelocity = detectedFlatGround ? -0.05f : player.rb.linearVelocity.y;
+
             if (normalizedTime < 0.5f)
             {
-                player.SetVelocity(facingDir * slideSpeed, player.rb.linearVelocity.y);
+                player.SetVelocity(facingDir * slideSpeed, flatYVelocity);
             }
             else if (normalizedTime < 0.8f)
             {
                 float slowedSpeed = Mathf.Lerp(slideSpeed, 0f, (normalizedTime - 0.5f) / 0.3f);
-                player.SetVelocity(facingDir * slowedSpeed, player.rb.linearVelocity.y);
+                player.SetVelocity(facingDir * slowedSpeed, flatYVelocity);
             }
             else
             {
-                player.SetVelocity(0f, player.rb.linearVelocity.y);
+                player.SetVelocity(0f, flatYVelocity);
             }
         }
     }
-    
+
 
     public override void LogicUpdate()
     {
