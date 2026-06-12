@@ -607,8 +607,17 @@ public class PlayerController : MonoBehaviour
         foreach (var hit in hits)
         {
             if (hit.collider == null || hit.collider == cd || hit.collider == ignoredDropCollider)
-
+            {
                 continue;
+            }
+            if (((1 << hit.collider.gameObject.layer) & groundLayer) != 0)
+            {
+                // PlatformEffector2D(원웨이 발판 컴포넌트)가 안 달려있으면 진짜 '단단한 평지'이므로 무시!
+                if (hit.collider.GetComponent<PlatformEffector2D>() == null)
+                {
+                    continue;
+                }
+            }
 
             if (hit.distance < closestDist)
             {
@@ -641,8 +650,12 @@ public class PlayerController : MonoBehaviour
             {
                 if (hit.collider != null && hit.collider != bestTarget)
                 {
-                    Debug.Log("공간이 좁거나 애매하여 밑점프를 깐깐하게 차단합니다!");
-                    return null; // 가차 없이 취소됨
+                    if (((1 << hit.collider.gameObject.layer) & groundLayer) != 0 &&
+                    hit.collider.GetComponent<PlatformEffector2D>() == null)
+                    {
+                        Debug.Log("밑에 꽉 막힌 땅이 있어서 밑점프를 차단합니다!");
+                        return null;
+                    }
                 }
             }
         }
