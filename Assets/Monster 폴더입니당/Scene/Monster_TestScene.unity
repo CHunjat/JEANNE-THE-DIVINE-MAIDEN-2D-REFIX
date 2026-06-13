@@ -1089,6 +1089,8 @@ GameObject:
   - component: {fileID: 983019066}
   - component: {fileID: 983019067}
   - component: {fileID: 983019068}
+  - component: {fileID: 983019070}
+  - component: {fileID: 983019069}
   m_Layer: 10
   m_Name: MidBoss_Spider
   m_TagString: Enemy
@@ -1193,7 +1195,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MidBoss
   maxHp: 300
   currentHp: 0
-  moveSpeed: 0
+  moveSpeed: 2
   attackDamage: 0
   detectRange: 8
   attackRange: 2
@@ -1216,6 +1218,40 @@ MonoBehaviour:
   preDelay: 0.4
   hitboxActiveDuration: 0.2
   stampHitbox: {fileID: 0}
+--- !u!114 &983019069
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 983019063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 314efdef1fb26144f9891aae36d67fea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern5
+  cooldown: 3
+  clearingRange: 3
+  knockbackDistance: 10
+  knockbackDuration: 0.3
+  hitboxActiveDuration: 0.5
+  clearingHitbox: {fileID: 397516399}
+--- !u!114 &983019070
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 983019063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2d3f6ed1cc575a4bb62bb84174b4dd3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern4
+  cooldown: 3
+  airTime: 2
+  hitboxActiveDuration: 0.4
+  landingHitbox: {fileID: 1076234611}
 --- !u!1 &1076234611
 GameObject:
   m_ObjectHideFlags: 0
