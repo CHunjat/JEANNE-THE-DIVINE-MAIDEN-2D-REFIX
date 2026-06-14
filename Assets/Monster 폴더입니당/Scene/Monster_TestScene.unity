@@ -186,8 +186,8 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Radius: 0.5
+  m_Offset: {x: 0.008271813, y: 0.31435806}
+  m_Radius: 0.80608624
 --- !u!114 &7048243
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -798,7 +798,7 @@ Rigidbody2D:
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
-  m_LinearDamping: 0
+  m_LinearDamping: 3
   m_AngularDamping: 0.05
   m_GravityScale: 0
   m_Material: {fileID: 0}
@@ -934,7 +934,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4d49fdeb34f6d0438ce4e301d6bd80e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHitbox
-  ownerDamage: 10
+  ownerDamage: 0
   damageRatio: 1
   destroyOnHit: 0
   hitCooldown: 0.5
@@ -1202,6 +1202,8 @@ MonoBehaviour:
   currentState: 0
   currentPhase: 1
   phase2Threshold: 0.5
+  spriteRenderer: {fileID: 1205014776}
+  flashMaterial: {fileID: 2100000, guid: b6adf41d5d8d57e478fee5210526b32f, type: 2}
 --- !u!114 &983019068
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1215,9 +1217,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern1
   cooldown: 3
-  preDelay: 0.4
-  hitboxActiveDuration: 0.2
-  stampHitbox: {fileID: 0}
+  preDelay: 0.83
+  hitboxActiveDuration: 1
+  stampHitbox: {fileID: 7048240}
 --- !u!114 &983019069
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1250,7 +1252,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern4
   cooldown: 3
   airTime: 2
-  hitboxActiveDuration: 0.4
+  hitboxActiveDuration: 1
   landingHitbox: {fileID: 1076234611}
 --- !u!1 &1076234611
 GameObject:
@@ -1623,6 +1625,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 35}
+--- !u!212 &1205014776 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 3626916397498700004, guid: 2041a89f54b9b4b45ab1c04d6bfcfa4b, type: 3}
+  m_PrefabInstance: {fileID: 1559349474}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1559349474
 PrefabInstance:
   m_ObjectHideFlags: 0
