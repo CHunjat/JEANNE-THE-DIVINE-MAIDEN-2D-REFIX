@@ -186,6 +186,36 @@ public class InputReader : ScriptableObject, PlayerControls.IPlayerActions
         set => _grapplePressed = value;
     }
 
+    private bool _lightningPress; 
+    public bool LightningPressed
+    {
+        get
+        {
+            bool value = _lightningPress;
+            _lightningPress = false;
+            return value;
+        }
+        set
+        {
+            _lightningPress = value;
+        }
+    
+    }
+
+    public bool LightningHeld;
+    public void OnLightning(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            LightningPressed = true;  // 단발성 진입 티켓
+            LightningHeld = true;     // 기 모으기 유지 스위치 ON
+        }
+        else if (context.canceled)
+        {
+            LightningHeld = false;    // 손 떼면 유지 스위치 OFF
+        }
+    }
+
     public void OnGrapple(InputAction.CallbackContext context)
     {
         if (context.started)

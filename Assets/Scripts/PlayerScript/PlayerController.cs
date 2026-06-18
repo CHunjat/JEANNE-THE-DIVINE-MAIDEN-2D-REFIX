@@ -11,8 +11,8 @@ public class PlayerController : MonoBehaviour
     public bool ignoreSlopeDetection = false;
 
     [Header("Layer Settings")]
-    public LayerMask stairsLayer; // 이 줄이 있는지 확인하세요!
-
+    public LayerMask stairsLayer; //
+    public LayerMask enemyLayer; // 
     [Header("Input Data")]
     public InputReader inputReader;
 
@@ -140,6 +140,18 @@ public class PlayerController : MonoBehaviour
     public float maxSlopeAngle = 45f;
     public RaycastHit2D slopeHit; // 2D로 전환
 
+
+
+
+    [Header("라이트닝 컷 변수")]
+    public string anim_LightningReady = "LightningReady";   // 애니메이션 이름은 프로젝트에 맞게 수정
+    public string anim_LightningCharge = "LightningCharge";
+    public string anim_LightningAttack = "LightningAttack";
+    public enum SkillSlot { HeavyAttack, LightningCut }
+    public SkillSlot currentSkillSlot = SkillSlot.HeavyAttack; // 현재 선택된 스킬 슬롯
+
+
+
     public PlayerAttack1State Attack1State { get; private set; }
     public PlayerAttack2State Attack2State { get; private set; }
     public PlayerAttack3State Attack3State { get; private set; }
@@ -174,6 +186,10 @@ public class PlayerController : MonoBehaviour
     public PlayerGrappleState GrappleState { get; private set; }
 
     public PlayerDropState DropState { get; private set; }
+
+    public PlayerLightningReadyState LightningReadyState { get; private set; }
+    public PlayerLightningChargeState LightningChargeState { get; private set; }
+    public PlayerLightningAttackState LightningAttackState { get; private set; }
 
     [Header("변수 선언부")]
     public bool CanDash => dashCooltimer <= 0 && landTimer <= 0;
@@ -220,6 +236,10 @@ public class PlayerController : MonoBehaviour
 
         DropState = new PlayerDropState(this, StateMachine, "Falling");
 
+        LightningReadyState = new PlayerLightningReadyState(this, StateMachine, anim_LightningReady);
+        LightningChargeState = new PlayerLightningChargeState(this, StateMachine, anim_LightningCharge);
+        LightningAttackState = new PlayerLightningAttackState(this, StateMachine, anim_LightningAttack);
+
         rb = GetComponent<Rigidbody2D>(); // 2D로 변경
         cd = GetComponent<BoxCollider2D>(); // 2D로 변경
         defaultGravityScale = rb.gravityScale;
@@ -262,10 +282,16 @@ public class PlayerController : MonoBehaviour
             ResetAirActions(); // 바닥에 닿으면 공중 공격 횟수 초기화
         }
 
+        // [추가 테스트용] 키보드 Tab 키를 누르면 스킬 슬롯이 실시간으로 교체됨
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            currentSkillSlot = (currentSkillSlot == SkillSlot.HeavyAttack) ? SkillSlot.LightningCut : SkillSlot.HeavyAttack;
+            Debug.Log($"🔥 스킬 슬롯 전환됨: {currentSkillSlot}");
+        }
+
         //딱 idle, move에서만 가능
         HandleThrustAttackInput(); //강공찌르기 판독기 추가
-        HandleHeavyAttackInput(); //스킬찌르기 판독기 추가
-
+        HandleActiveSkillInput();  // [수정] E키(OnSkill) 하나로 슬롯에 따라 스킬을 분배하는 통합 판독기
 
         StateMachine.CurrentState.HandleInput();
         StateMachine.CurrentState.LogicUpdate();
@@ -287,6 +313,9 @@ public class PlayerController : MonoBehaviour
         if (StateMachine.CurrentState == HeavyAttackState) return;
         if (StateMachine.CurrentState == AirAttack1State) return;
         if (StateMachine.CurrentState == AirAttack2State) return;
+        if (StateMachine.CurrentState == LightningReadyState) return;
+        if(StateMachine.CurrentState == LightningChargeState) return;
+        if(StateMachine.CurrentState == LightningAttackState) return;
 
         bool isMidAir = StateMachine.CurrentState == JumpState ||
                         StateMachine.CurrentState == AirState ||
@@ -460,6 +489,7 @@ public class PlayerController : MonoBehaviour
             && !(StateMachine.CurrentState is PlayerAirAttack1State)
             && !(StateMachine.CurrentState is PlayerAirAttack2State)
             && !(StateMachine.CurrentState is PlayerAirUpAttackState))
+            
         {
             if (IsTooCloseToGround()) return; //공중 윗공격 땅 x
             float yInput = inputReader.MoveValue.y;
@@ -478,35 +508,42 @@ public class PlayerController : MonoBehaviour
 
     }
 
-    //스킬공격 분배기 함수 // 헤비어택(스킬) 할당키 "E"
-    public void HandleHeavyAttackInput()
+    // ★ [핵심] E키 하나로 슬롯을 확인해 스킬을 분배하는 통합 판독기
+    public void HandleActiveSkillInput()
     {
-        // 1.
+        // 1. 공통 기모으기 입력 검사 (InputReader의 HAttackPressed 사용)
         if (!inputReader.HAttackPressed) return;
 
         if (StateMachine.CurrentState is PlayerAttackState)
         {
-            Debug.Log("현재 공격 중이라 강공격 입력을 무시합니다.");
+            Debug.Log("현재 공격 중이라 스킬 입력을 무시합니다.");
             inputReader.HAttackPressed = false;
             return;
         }
-        //스프린트중 강공격막음 없애려면 이거 지워라 기획;;
+
+        // 스프린트중 스킬막음 없애려면 이거 지워라 기획;;
         if (isSprinting)
         {
             inputReader.HAttackPressed = false;
             return;
         }
 
-        // 2. 땅에 있고, 이미 기모으기 준비 중이 아닐 때만 진입
-        if (IsGrounded() && StateMachine.CurrentState != HeavyReadyState &&
-            StateMachine.CurrentState != HeavyChargeState && StateMachine.CurrentState != HeavyAttackState)
+        // 2. 땅에 있고, 현재 어떤 스킬 상태도 진행 중이 아닐 때만 진입
+        if (IsGrounded() &&
+            StateMachine.CurrentState != HeavyReadyState && StateMachine.CurrentState != HeavyChargeState && StateMachine.CurrentState != HeavyAttackState &&
+            StateMachine.CurrentState != LightningReadyState && StateMachine.CurrentState != LightningChargeState && StateMachine.CurrentState != LightningAttackState)
         {
-            // 판독기(ReadyState)로 보냅니다.
-            StateMachine.ChangeState(HeavyReadyState);
+            // 현재 활성화된 슬롯에 따라 전이할 상태 결정
+            if (currentSkillSlot == SkillSlot.HeavyAttack)
+            {
+                StateMachine.ChangeState(HeavyReadyState);
+            }
+            else if (currentSkillSlot == SkillSlot.LightningCut)
+            {
+                StateMachine.ChangeState(LightningReadyState);
+            }
         }
     }
-
-
 
     //강공 찌르기 //키 F
     public void HandleThrustAttackInput()
@@ -802,6 +839,8 @@ public class PlayerController : MonoBehaviour
         Gizmos.color = Color.blue;
         DrawWallGizmo(1f);
         DrawWallGizmo(-1f);
+
+
 
     }
 
