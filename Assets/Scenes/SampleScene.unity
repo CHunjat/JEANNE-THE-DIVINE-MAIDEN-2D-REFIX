@@ -1932,7 +1932,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9af4766af41f756438df53b03aa84435, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  groundedGraceTime: 0.15
+  groundedGraceTime: 0.2
   groundedTimer: 0
   ignoreSlopeDetection: 0
   stairsLayer:
@@ -1949,7 +1949,7 @@ MonoBehaviour:
   dashSpeed: 18
   dashDuration: 0.3
   dashcooltime: 0.7
-  landDashDelay: 0.3
+  landDashDelay: 0.9
   isFacingRight: 1
   jumpForce: 8
   airDeceleration: 1
