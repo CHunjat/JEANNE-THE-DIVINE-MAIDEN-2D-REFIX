@@ -2062,6 +2062,7 @@ MonoBehaviour:
   anim_LightningReady: LightningReady
   anim_LightningCharge: LightningCharge
   anim_LightningAttack: LightningAttack
+  anim_Heal: Heal
   currentSkillSlot: 0
 --- !u!61 &1199457215
 BoxCollider2D:

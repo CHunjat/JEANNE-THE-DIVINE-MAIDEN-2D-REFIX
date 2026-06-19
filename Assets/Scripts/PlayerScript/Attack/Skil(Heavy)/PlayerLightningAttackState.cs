@@ -20,17 +20,21 @@ public class PlayerLightningAttackState : PlayerAttackState
         base.Enter();
         comboInputRegistered = false;
         dashTimer = dashDuration;
-
+        bool isFacingRight = player.isFacingRight;
         // [요구사항 1, 2, 3] 입력 방향에 따른 고정값 설정
         float moveInput = player.inputReader.MoveValue.x;
 
-        if (moveInput == 0)
+        if (moveInput > 0 && isFacingRight)
         {
-            facingDir = 0; // 중립이면 제자리
+            facingDir = 1f; // 오른쪽을 보고 있고 오른쪽 입력
+        }
+        else if (moveInput < 0 && !isFacingRight)
+        {
+            facingDir = -1f; // 왼쪽을 보고 있고 왼쪽 입력
         }
         else
         {
-            facingDir = moveInput > 0 ? 1f : -1f;
+            facingDir = 0f; // 반대 방향키 입력 혹은 중립(제자리)
         }
 
         player.rb.gravityScale = 0f;

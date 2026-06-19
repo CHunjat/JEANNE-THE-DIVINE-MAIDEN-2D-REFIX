@@ -147,7 +147,18 @@ public class PlayerController : MonoBehaviour
     public string anim_LightningReady = "LightningReady";   // 애니메이션 이름은 프로젝트에 맞게 수정
     public string anim_LightningCharge = "LightningCharge";
     public string anim_LightningAttack = "LightningAttack";
-    public enum SkillSlot { HeavyAttack, LightningCut }
+    [Header("힐 애니메이션")]
+    public string anim_Heal = "Heal";
+
+
+
+    [Header("변수 선언부")]
+    public bool CanDash => dashCooltimer <= 0 && landTimer <= 0;
+    // 1. 비탈길인지 확인하고 경사면 정보(slopeHit)를 업데이트함
+    private float defaultGravityScale;
+
+    public enum SkillSlot
+    { HeavyAttack, LightningCut, Heal}
     public SkillSlot currentSkillSlot = SkillSlot.HeavyAttack; // 현재 선택된 스킬 슬롯
 
 
@@ -190,11 +201,9 @@ public class PlayerController : MonoBehaviour
     public PlayerLightningReadyState LightningReadyState { get; private set; }
     public PlayerLightningChargeState LightningChargeState { get; private set; }
     public PlayerLightningAttackState LightningAttackState { get; private set; }
+    public PlayerHealState HealState { get; private set; }
 
-    [Header("변수 선언부")]
-    public bool CanDash => dashCooltimer <= 0 && landTimer <= 0;
-    // 1. 비탈길인지 확인하고 경사면 정보(slopeHit)를 업데이트함
-    private float defaultGravityScale;
+
 
 
     private void Awake()
@@ -239,6 +248,7 @@ public class PlayerController : MonoBehaviour
         LightningReadyState = new PlayerLightningReadyState(this, StateMachine, anim_LightningReady);
         LightningChargeState = new PlayerLightningChargeState(this, StateMachine, anim_LightningCharge);
         LightningAttackState = new PlayerLightningAttackState(this, StateMachine, anim_LightningAttack);
+        HealState = new PlayerHealState(this, StateMachine, anim_Heal);
 
         rb = GetComponent<Rigidbody2D>(); // 2D로 변경
         cd = GetComponent<BoxCollider2D>(); // 2D로 변경
@@ -285,7 +295,10 @@ public class PlayerController : MonoBehaviour
         // [추가 테스트용] 키보드 Tab 키를 누르면 스킬 슬롯이 실시간으로 교체됨
         if (Input.GetKeyDown(KeyCode.Tab))
         {
-            currentSkillSlot = (currentSkillSlot == SkillSlot.HeavyAttack) ? SkillSlot.LightningCut : SkillSlot.HeavyAttack;
+            if (currentSkillSlot == SkillSlot.HeavyAttack) currentSkillSlot = SkillSlot.LightningCut;
+            else if (currentSkillSlot == SkillSlot.LightningCut) currentSkillSlot = SkillSlot.Heal;
+            else currentSkillSlot = SkillSlot.HeavyAttack;
+
             Debug.Log($"🔥 스킬 슬롯 전환됨: {currentSkillSlot}");
         }
 
@@ -314,8 +327,9 @@ public class PlayerController : MonoBehaviour
         if (StateMachine.CurrentState == AirAttack1State) return;
         if (StateMachine.CurrentState == AirAttack2State) return;
         if (StateMachine.CurrentState == LightningReadyState) return;
-        if(StateMachine.CurrentState == LightningChargeState) return;
-        if(StateMachine.CurrentState == LightningAttackState) return;
+        if (StateMachine.CurrentState == LightningChargeState) return;
+        if (StateMachine.CurrentState == LightningAttackState) return;
+        if (StateMachine.CurrentState == HealState) return;
 
         bool isMidAir = StateMachine.CurrentState == JumpState ||
                         StateMachine.CurrentState == AirState ||
@@ -489,7 +503,7 @@ public class PlayerController : MonoBehaviour
             && !(StateMachine.CurrentState is PlayerAirAttack1State)
             && !(StateMachine.CurrentState is PlayerAirAttack2State)
             && !(StateMachine.CurrentState is PlayerAirUpAttackState))
-            
+
         {
             if (IsTooCloseToGround()) return; //공중 윗공격 땅 x
             float yInput = inputReader.MoveValue.y;
@@ -531,7 +545,8 @@ public class PlayerController : MonoBehaviour
         // 2. 땅에 있고, 현재 어떤 스킬 상태도 진행 중이 아닐 때만 진입
         if (IsGrounded() &&
             StateMachine.CurrentState != HeavyReadyState && StateMachine.CurrentState != HeavyChargeState && StateMachine.CurrentState != HeavyAttackState &&
-            StateMachine.CurrentState != LightningReadyState && StateMachine.CurrentState != LightningChargeState && StateMachine.CurrentState != LightningAttackState)
+            StateMachine.CurrentState != LightningReadyState && StateMachine.CurrentState != LightningChargeState && StateMachine.CurrentState != LightningAttackState &&
+            StateMachine.CurrentState != HealState)
         {
             // 현재 활성화된 슬롯에 따라 전이할 상태 결정
             if (currentSkillSlot == SkillSlot.HeavyAttack)
@@ -541,6 +556,10 @@ public class PlayerController : MonoBehaviour
             else if (currentSkillSlot == SkillSlot.LightningCut)
             {
                 StateMachine.ChangeState(LightningReadyState);
+            }
+            else if (currentSkillSlot == SkillSlot.Heal)
+            {
+                StateMachine.ChangeState(HealState);
             }
         }
     }
@@ -631,30 +650,16 @@ public class PlayerController : MonoBehaviour
     // 통과 가능한 계단이나 원웨이 플랫폼의 콜라이더를 찾아 반환합니다.
     public Collider2D GetDropThroughCollider()
     {
-        // 1. [핵심] 레이저 시작점을 '중앙'이 아니라 '발바닥 0.1f 위'로 내립니다!
-        // 윗천장에 머리가 닿아있어도 절대 윗천장을 타겟으로 잘못 잡지 않게 합니다.
+        // 1. 발판 타겟 찾기 (가장 가까운 통과 가능한 발판 탐색)
         Vector2 rayOrigin = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
-        float rayLength = 0.5f; // 발바닥 기준이므로 길이는 0.5면 충분함
-
-        RaycastHit2D[] hits = Physics2D.RaycastAll(rayOrigin, Vector2.down, rayLength, stairsLayer | groundLayer);
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(rayOrigin, groundCheckSize, 0f, Vector2.down, 0.5f, groundLayer | stairsLayer);
 
         Collider2D bestTarget = null;
         float closestDist = float.MaxValue;
 
         foreach (var hit in hits)
         {
-            if (hit.collider == null || hit.collider == cd || hit.collider == ignoredDropCollider)
-            {
-                continue;
-            }
-            if (((1 << hit.collider.gameObject.layer) & groundLayer) != 0)
-            {
-                // PlatformEffector2D(원웨이 발판 컴포넌트)가 안 달려있으면 진짜 '단단한 평지'이므로 무시!
-                if (hit.collider.GetComponent<PlatformEffector2D>() == null)
-                {
-                    continue;
-                }
-            }
+            if (hit.collider == null || hit.collider == cd || hit.collider == ignoredDropCollider) continue;
 
             if (hit.distance < closestDist)
             {
@@ -663,36 +668,31 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // 2. 비탈길 안전장치 (기존 유지)
-        if (OnSlope() && slopeHit.collider != null && slopeHit.collider != ignoredDropCollider)
-        {
-            bestTarget = slopeHit.collider;
-        }
-
-        // 3. ★ 겹침/좁은 공간 밑점프 강제 취소 로직 (깐깐하게 조율된 버전)
+        // 2. 장애물 차단 검사 (bestTarget이 있을 때만 수행)
         if (bestTarget != null)
         {
+            // --- 스프린트 상태에 따른 판정 수치 구분 ---
+            // 스프린트면: 더 넓고(1.5f) 깊게(1.5f) 검사해서 깐깐하게 막음
+            // 일반이면: 조금 좁고(0.95f) 얕게(0.9f) 검사해서 관대하게 허용
+            float widthFactor = isSprinting ? 1.3f : 0.6f;
+            float checkDistance = isSprinting ? 1.3f : 0.6f;
+
             Vector2 footPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y);
+            Vector2 checkSize = new Vector2(cd.bounds.size.x * widthFactor, 0.1f);
 
-            // 🔧 조율 포인트 1: 너비 (기존 0.8f -> 0.95f로 늘려서 구멍이 넓을 때만 허용)
-            float checkWidth = cd.bounds.size.x * 1.2f;
-            Vector2 checkSize = new Vector2(checkWidth, 0.1f);
-
-            // 🔧 조율 포인트 2: 깊이 (기존 0.3f -> 0.45f로 늘려서 층간 간격이 넉넉해야 허용)
-            float checkDistance = isSprinting ? 1.5f : 0.4f;
-            // 아래쪽을 검사해서 target 이외의 다른 장애물(바닥/벽)이 하나라도 걸리면 취소!
             RaycastHit2D[] checkHits = Physics2D.BoxCastAll(footPos, checkSize, 0f, Vector2.down, checkDistance, groundLayer | stairsLayer);
 
             foreach (var hit in checkHits)
             {
-                if (hit.collider != null && hit.collider != bestTarget)
+                // 자신, 지금 통과하려는 발판, 이미 무시 중인 발판은 제외
+                if (hit.collider == cd || hit.collider == ignoredDropCollider || hit.collider == bestTarget) continue;
+
+                // [차단 로직]
+                // 감지된 것이 '통과 가능한 이펙터'가 없는 땅(Ground/Slope)이라면 좁은 공간으로 간주하고 차단
+                if (hit.collider.GetComponent<PlatformEffector2D>() == null)
                 {
-                    if (((1 << hit.collider.gameObject.layer) & groundLayer) != 0 &&
-                    hit.collider.GetComponent<PlatformEffector2D>() == null)
-                    {
-                        Debug.Log("밑에 꽉 막힌 땅이 있어서 밑점프를 차단합니다!");
-                        return null;
-                    }
+                    Debug.Log($"[차단] (스프린트:{isSprinting}) {hit.collider.name} 때문에 밑점프 불가");
+                    return null;
                 }
             }
         }
