@@ -3,13 +3,13 @@ using System.Collections;
 
 public class MidBossPattern5 : BossPatternBase
 {
-    [Header("클리어링 설정 (기획자님, 여기서 넉백 수치 조절하시면 됩니다!)")]
+    [Header("클리어링 설정 (여기서 넉백 수치 조절)")]
     [SerializeField] private float clearingRange = 3f;           // 플레이어가 이 거리 안에 들어와야만 스킬 발동
     [SerializeField] private float knockbackDistance = 10f;      // 플레이어를 밀어내는 거리 (기획서 기준 10m)
     [SerializeField] private float knockbackDuration = 0.3f;     // 얼마나 휙! 하고 빠르게 밀어낼지 (시간이 짧을수록 빠름)
     [SerializeField] private float hitboxActiveDuration = 0.5f;  // 밀쳐내기 판정 유지 시간 
 
-    [Header("히트박스 연결 (건드리지 마세요!)")]
+    [Header("히트박스 연결 (건드리면 안되는 거!)")]
     [SerializeField] private GameObject clearingHitbox;
 
     private Animator visualAnimator;
