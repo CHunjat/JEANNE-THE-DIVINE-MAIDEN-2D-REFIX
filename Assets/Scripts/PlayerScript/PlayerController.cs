@@ -1,5 +1,6 @@
-using System;
 using NUnit.Framework;
+using System;
+using TheBlackCat.TrailEffect2D;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -27,6 +28,10 @@ public class PlayerController : MonoBehaviour
     public float dashDuration = 0.2f;
     public float dashcooltime = 1.5f;
     private float dashCooltimer;
+
+    [Header("대쉬 잔상효과")]
+    public GameObject playerModelForTrail;
+    public Vector2 trailOffset = new Vector2(0f, -0.5f);
 
 
     [Header("착지딜레이 버니합금지")]
@@ -253,6 +258,15 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>(); // 2D로 변경
         cd = GetComponent<BoxCollider2D>(); // 2D로 변경
         defaultGravityScale = rb.gravityScale;
+
+        if (playerModelForTrail != null)
+        {
+            var trailInstance = playerModelForTrail.GetComponent<TrailInstance>();
+            if (trailInstance != null)
+            {
+                trailInstance.spawnOffset = trailOffset; // 내가 정한 값을 에셋에 덮어씌움
+            }
+        }
     }
 
     private void Start() => StateMachine.Initialize(IdleState);

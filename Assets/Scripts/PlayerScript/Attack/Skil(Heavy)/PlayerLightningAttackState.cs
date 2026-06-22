@@ -1,3 +1,4 @@
+using TheBlackCat.TrailEffect2D;
 using UnityEngine;
 
 public class PlayerLightningAttackState : PlayerAttackState
@@ -18,6 +19,11 @@ public class PlayerLightningAttackState : PlayerAttackState
     public override void Enter()
     {
         base.Enter();
+        if (player.playerModelForTrail != null)
+        {
+            TrailManager.Instance.StartTrail(player.playerModelForTrail);
+        }
+
         comboInputRegistered = false;
         dashTimer = dashDuration;
         bool isFacingRight = player.isFacingRight;
@@ -113,6 +119,10 @@ public class PlayerLightningAttackState : PlayerAttackState
     public override void Exit()
     {
         base.Exit();
+        if (player.playerModelForTrail != null)
+        {
+            TrailManager.Instance.StopTrail(player.playerModelForTrail);
+        }
         player.SetVelocity(0f, 0f);
         player.rb.gravityScale = 1f;
 

@@ -1,3 +1,4 @@
+using TheBlackCat.TrailEffect2D;
 using UnityEngine;
 
 public class PlayerDashState : PlayerState
@@ -12,6 +13,13 @@ public class PlayerDashState : PlayerState
     public override void Enter()
     {
         base.Enter();
+
+        ////대쉬 잔상 패리대쉬시 사용
+        //if (player.playerModelForTrail != null)
+        //{
+        //    TrailManager.Instance.StartTrail(player.playerModelForTrail);
+        //}
+
 
         // 🔥 대쉬 시작할 때 땅이었는지 기록 (공중 대쉬는 경사면 보정을 받지 않게 하기 위함)
         startedGrounded = player.IsGrounded() || player.OnSlope();
@@ -163,6 +171,14 @@ public class PlayerDashState : PlayerState
     public override void Exit()
     {
         base.Exit();
+
+        //패리대쉬일때 잔상 밑에 추가
+        //if (player.playerModelForTrail != null)
+        //{
+        //    TrailManager.Instance.StopTrail(player.playerModelForTrail);
+        //}
+
+
         player.rb.gravityScale = 1f; // 2D gravityScale 원복
     }
 }
