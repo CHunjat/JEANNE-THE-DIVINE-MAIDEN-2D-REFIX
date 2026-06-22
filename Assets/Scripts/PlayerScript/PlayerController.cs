@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using TheBlackCat.TrailEffect2D;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -21,6 +22,7 @@ public class PlayerController : MonoBehaviour
     public Rigidbody2D rb; // 2D로 전환
     public BoxCollider2D cd; // 2D로 전환
     public Animator animator;
+    public PlayerStats playerStats; //스탯 컴포넌트 연결
 
     [Header("Movement Settings")]
     public float moveSpeed = 7f;
@@ -123,6 +125,69 @@ public class PlayerController : MonoBehaviour
     public string anim_BlockBreak = "BlockBreak";
 
     [Header("패링")]
+
+
+
+    [Header("전투 세팅")]
+    public Transform attackPoint;           // 타격 기준점
+    public List<AttackDataSO> attackLibrary; // SO 파일들을 드래그해서 담는 곳
+
+    // 애니메이션 이벤트에서 호출
+    public void ExecuteAttack(int index)
+    {
+        if (index < 0 || index >= attackLibrary.Count) return;
+        PerformMeleeAttack(attackLibrary[index]);
+    }
+
+    private void PerformMeleeAttack(AttackDataSO data)
+    {
+        float dir = isFacingRight ? 1f : -1f;
+        Vector2 finalOffset = new Vector2(data.offset.x * dir, data.offset.y);
+        Vector2 hitCenter = (Vector2)attackPoint.position + finalOffset;
+
+        Collider2D[] hitEnemies = Physics2D.OverlapBoxAll(hitCenter, data.size, 0f, enemyLayer);
+
+        foreach (Collider2D enemy in hitEnemies)
+        {
+            // 파트너의 EnemyFSM 호출 나중에 컴포넌트 붙이면 쓸꺼
+            //EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
+            //if (enemyFSM != null) enemyFSM.TakeDamage(data.damage);
+        }
+    }
+
+    // 씬 뷰에서 공격 범위를 실시간 확인
+    private void OnDrawGizmosSelected()
+    {
+        if (attackPoint == null || attackLibrary == null) return;
+        float dir = isFacingRight ? 1f : -1f;
+        Gizmos.color = Color.red;
+
+        foreach (var data in attackLibrary)
+        {
+            if (data == null) continue;
+            Vector2 drawPos = (Vector2)attackPoint.position + new Vector2(data.offset.x * dir, data.offset.y);
+            Gizmos.DrawWireCube(drawPos, data.size);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -258,6 +323,7 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>(); // 2D로 변경
         cd = GetComponent<BoxCollider2D>(); // 2D로 변경
         defaultGravityScale = rb.gravityScale;
+        playerStats = GetComponent<PlayerStats>(); //시작할 때 내 몸에 붙은 스탯 스크립트를 찾아둠
 
         if (playerModelForTrail != null)
         {
