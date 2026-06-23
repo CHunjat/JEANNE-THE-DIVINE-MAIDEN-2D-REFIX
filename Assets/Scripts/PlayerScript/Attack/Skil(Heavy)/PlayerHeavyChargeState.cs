@@ -3,7 +3,7 @@
 public class PlayerHeavyChargeState : PlayerState
 {
     private bool isFullyCharged;
-    private float fullChargeTime = 1.2f;
+    private float fullChargeTime = 0.5f;
     private bool isLoopAnimStarted;
 
     public PlayerHeavyChargeState(PlayerController player, PlayerStateMachine stateMachine, string animName)
@@ -56,13 +56,14 @@ public class PlayerHeavyChargeState : PlayerState
             if (isFullyCharged)
             {
                 stateMachine.ChangeState(player.HeavyAttackState);
+                return;
             }
-            else
-            {
-                stateMachine.ChangeState(player.Attack2State);
-                Debug.Log("차지 실패: 일반 강공격 나감");
-            }
-            return; // 상태가 바뀌었으므로 아래 로직 실행 방지
+            //else
+            //{
+            //    stateMachine.ChangeState(player.Attack2State);
+            //    Debug.Log("차지 실패: 일반 강공격 나감");
+            //}
+             // 상태가 바뀌었으므로 아래 로직 실행 방지
         }
 
         // 3. 풀차지 도달 체크

@@ -132,10 +132,23 @@ public class PlayerController : MonoBehaviour
     public Transform attackPoint;           // 타격 기준점
     public List<AttackDataSO> attackLibrary; // SO 파일들을 드래그해서 담는 곳
 
+    [Header("실시간 기즈모 설정")]
+    public bool useLiveGizmoOnly = true;     // true: 공격할 때만 뜸 / false: 기존처럼 에디터에서 항상 뜸
+    private AttackDataSO currentActiveData;   // 현재 실행 중인 공격의 데이터 저장용
+    private float gizmoDisplayTimer;          // 기즈모를 화면에 유지할 타이머
+    private const float GIZMO_DURATION = 0.2f; // 기즈모가 켜져 있을 시간 (초단위, 취향껏 조절)
+
+
     // 애니메이션 이벤트에서 호출
     public void ExecuteAttack(int index)
     {
-        if (index < 0 || index >= attackLibrary.Count) return;
+        if (index < 0 || index >= attackLibrary.Count)
+        { 
+            return; 
+        }
+
+        currentActiveData = attackLibrary[index];
+        gizmoDisplayTimer = GIZMO_DURATION;
         PerformMeleeAttack(attackLibrary[index]);
     }
 
@@ -380,6 +393,15 @@ public class PlayerController : MonoBehaviour
             else currentSkillSlot = SkillSlot.HeavyAttack;
 
             Debug.Log($"🔥 스킬 슬롯 전환됨: {currentSkillSlot}");
+        }
+
+        if (gizmoDisplayTimer > 0)
+        {
+            gizmoDisplayTimer -= Time.deltaTime;
+            if (gizmoDisplayTimer <= 0)
+            {
+                currentActiveData = null; // 시간이 다 되면 데이터를 비워 기즈모를 끕니다.
+            }
         }
 
         //딱 idle, move에서만 가능
@@ -919,6 +941,40 @@ public class PlayerController : MonoBehaviour
         Gizmos.color = Color.blue;
         DrawWallGizmo(1f);
         DrawWallGizmo(-1f);
+
+        if (attackPoint == null || attackLibrary == null) return;
+
+        float dir = isFacingRight ? 1f : -1f;
+
+        // [실시간 모드] 게임 플레이 중 공격할 때만 잠깐 반짝이게 그리기
+        if (useLiveGizmoOnly)
+        {
+            if (Application.isPlaying && currentActiveData != null)
+            {
+                Gizmos.color = new Color(1f, 0f, 0f, 0.4f); // 살짝 투명한 빨간색 (속 채우기)
+                Vector2 drawPos = (Vector2)attackPoint.position + new Vector2(currentActiveData.offset.x * dir, currentActiveData.offset.y);
+
+                Gizmos.DrawCube(drawPos, currentActiveData.size);      // 속이 찬 박스
+                Gizmos.color = Color.red;
+                Gizmos.DrawWireCube(drawPos, currentActiveData.size);  // 테두리 선
+            }
+        }
+        // [설계 모드] 게임이 꺼져있거나 인스펙터에서 튜닝할 때 
+        else
+        {
+            for (int i = 0; i < attackLibrary.Count; i++)
+            {
+                var data = attackLibrary[i];
+                if (data == null) continue;
+
+                // 콤보 순서에 따라 색상 다르게 (1타: 빨강, 2타: 노랑, 3타: 파랑)
+                Gizmos.color = i == 0 ? Color.red : (i == 1 ? Color.yellow : Color.blue);
+                Vector2 drawPos = (Vector2)attackPoint.position + new Vector2(data.offset.x * dir, data.offset.y);
+
+                Gizmos.DrawWireCube(drawPos, data.size);
+
+            }
+        }
 
 
 

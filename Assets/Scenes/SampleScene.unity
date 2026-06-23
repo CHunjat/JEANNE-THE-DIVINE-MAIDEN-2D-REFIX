@@ -2107,6 +2107,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4f304e5798ad0074f814593a08ac8de7, type: 2}
   - {fileID: 11400000, guid: c7fe45cba6e2d4a4088c9e8914449efe, type: 2}
   - {fileID: 11400000, guid: 0cf1bf7e28c84fe408b5b7c7fa695158, type: 2}
+  - {fileID: 11400000, guid: 3df95a0b01ad6314f9fb3ea101245123, type: 2}
+  - {fileID: 11400000, guid: dcabe2a06b93eaf4aa5816c51a88af88, type: 2}
+  - {fileID: 11400000, guid: 19d8d352cc6f11541bb9faf07d5138e0, type: 2}
+  - {fileID: 11400000, guid: 5ed5b6189047afb48a1272bad16bc44d, type: 2}
+  - {fileID: 11400000, guid: dd64875976b55e04eace69b7fefc829f, type: 2}
+  useLiveGizmoOnly: 1
   grappleLine: {fileID: 1742580939}
   shieldPoint: {fileID: 541230335}
   AirShieldPoint: {fileID: 10894103}

@@ -38,8 +38,8 @@ public class PlayerHeavyReadyState : PlayerState
         // 1. 변수이용 0.15초를 기준으로 
         if (!player.inputReader.HeavyAttackHeld)
         {
-            // TODO: 일반 강공격 State가 따로 있다면 거기로, 없으면 Attack1State로
-            stateMachine.ChangeState(player.Attack1State);
+            // TODO: 일반 강공격 State가 따로 있다면 거기로, 없으면 Idle스테이트로 ㄱㄱ
+            stateMachine.ChangeState(player.IdleState);
             return;
         }
 
