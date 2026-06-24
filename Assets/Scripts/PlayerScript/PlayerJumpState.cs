@@ -42,7 +42,16 @@ public class PlayerJumpState : PlayerState
 
                 if (slopeMoveDir.y > 0)
                 {
-                    finalJumpForce += isFirstSprintJump ? 3.5f : 0.5f;
+                    if (isFirstSprintJump)
+                    {
+                        
+                        finalJumpForce *= 1.1f; // (취향에 따라 0.7f ~ 0.9f 사이로 조절하세요)
+                    }
+                    else
+                    {
+                        
+                        finalJumpForce += 1.1f;
+                    }
                 }
             }
             player.transform.position += (Vector3)Vector2.up * 0.05f;

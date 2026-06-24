@@ -39,7 +39,8 @@ public class PlayerHeavyReadyState : PlayerState
         if (!player.inputReader.HeavyAttackHeld)
         {
             // TODO: 일반 강공격 State가 따로 있다면 거기로, 없으면 Idle스테이트로 ㄱㄱ
-            stateMachine.ChangeState(player.IdleState);
+            player.currentChargeLevel = 1;
+            stateMachine.ChangeState(player.HeavyAttackState);
             return;
         }
 

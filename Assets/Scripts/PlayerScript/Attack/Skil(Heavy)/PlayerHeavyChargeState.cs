@@ -3,7 +3,7 @@
 public class PlayerHeavyChargeState : PlayerState
 {
     private bool isFullyCharged;
-    private float fullChargeTime = 0.5f;
+    private float fullChargeTime = 1.5f; // 풀차지에 걸리는 시간 (원하는 시간으로 조절)
     private bool isLoopAnimStarted;
 
     public PlayerHeavyChargeState(PlayerController player, PlayerStateMachine stateMachine, string animName)
@@ -17,25 +17,27 @@ public class PlayerHeavyChargeState : PlayerState
         isFullyCharged = false;
         isLoopAnimStarted = false;
 
-        // 시작 시 준비 애니메이션 강제 재생
+        // ★ 진입 시 무조건 1단계로 세팅
+        player.currentChargeLevel = 1;
 
+        // 시작 시 준비 애니메이션 강제 재생
         player.animator.Play("ToCharge", 0, 0f);
     }
 
     public override void PhysicsUpdate()
     {
         base.PhysicsUpdate();
+
         if (player.OnSlope())
         {
             player.rb.gravityScale = 0f; // 2D gravityScale 사용 (중력 끄기)
-            player.SetVelocity(0f, 0f);   // 속도 완전 고정 (이동 공격이 아닐 경우)
+            player.SetVelocity(0f, 0f);  // 속도 완전 고정 (이동 공격이 아닐 경우)
         }
         else
         {
             // 평지라면 기존 중력/마찰력 로직 유지
             player.SetVelocity(0f, player.rb.linearVelocity.y);
         }
-        player.SetVelocity(0f, player.rb.linearVelocity.y);
     }
 
     public override void LogicUpdate()
@@ -50,30 +52,26 @@ public class PlayerHeavyChargeState : PlayerState
             player.animator.Play("Charging");
         }
 
-        // 2. 입력 판정: 유저가 손을 떼는 순간 공격 상태로 전환
-        if (!player.inputReader.HeavyAttackHeld)
-        {
-            if (isFullyCharged)
-            {
-                stateMachine.ChangeState(player.HeavyAttackState);
-                return;
-            }
-            //else
-            //{
-            //    stateMachine.ChangeState(player.Attack2State);
-            //    Debug.Log("차지 실패: 일반 강공격 나감");
-            //}
-             // 상태가 바뀌었으므로 아래 로직 실행 방지
-        }
-
-        // 3. 풀차지 도달 체크
+        // 2. 풀차지 도달 체크
+        // 지정한 시간이 지나면 2단계로 승급시킴
         if (stateTimer >= fullChargeTime && !isFullyCharged)
         {
             isFullyCharged = true;
-            Debug.Log("풀차지 완료! 번쩍!");
-            // 여기서 시각적 이펙트(반짝임)를 넣어주면 아주 좋습니다.
+            player.currentChargeLevel = 2; // ★ 풀차지 달성 시 2단계로 변환
+
+            Debug.Log("풀차지 완료! 번쩍! (2단계)");
+            // TODO: 여기서 시각적 이펙트(반짝임)나 효과음을 넣어주면 아주 좋습니다.
+        }
+
+        // 3. 입력 판정: 유저가 손을 떼는 순간 공격 상태로 전환
+        // (0.5초 전에 떼면 1단계인 상태로 넘어가고, 0.5초 후에 떼면 2단계로 넘어감)
+        if (!player.inputReader.HeavyAttackHeld)
+        {
+            stateMachine.ChangeState(player.HeavyAttackState);
+            return; // 상태가 바뀌었으므로 아래 로직 실행 방지
         }
     }
+
     public override void Exit()
     {
         base.Exit();

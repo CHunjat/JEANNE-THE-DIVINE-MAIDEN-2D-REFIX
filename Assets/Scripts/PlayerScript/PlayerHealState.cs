@@ -43,7 +43,7 @@ public class PlayerHealState : PlayerState
             // PlayerController에 연결해둔 스탯 스크립트의 Heal 함수를 부릅니다. (예: 50 회복)
             if (player.playerStats != null)
             {
-                player.playerStats.Heal(50f);
+                player.playerStats.Heal(50f , 30f); //50f+ 체력 , 30f는 마나 감소(-)
                 // 콘솔창 로그는 PlayerStats.cs 안의 Heal 함수에서 띄워주므로 여기선 지워도 됩니다.
             }
         }

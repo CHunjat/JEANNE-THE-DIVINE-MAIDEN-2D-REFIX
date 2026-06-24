@@ -128,6 +128,24 @@ public class PlayerController : MonoBehaviour
 
 
 
+
+    [Header("차지 공격 설정")]
+    public int currentChargeLevel = 1; // 1: 즉발(또는 덜 모음), 2: 풀차지
+
+    // 🔥 애니메이션 이벤트에서 호출할 차지 공격 전용 함수
+    public void ExecuteChargeAttack(int baseIndex)
+    {
+      
+        int finalIndex = baseIndex + (currentChargeLevel - 1);
+
+        if (finalIndex < 0 || finalIndex >= attackLibrary.Count) return;
+
+        Debug.Log($"홀리 슬래쉬 {currentChargeLevel}단계 발동! (인덱스: {finalIndex})");
+        PerformMeleeAttack(attackLibrary[finalIndex]);
+    }
+
+
+
     [Header("전투 세팅")]
     public Transform attackPoint;           // 타격 기준점
     public List<AttackDataSO> attackLibrary; // SO 파일들을 드래그해서 담는 곳
@@ -160,11 +178,53 @@ public class PlayerController : MonoBehaviour
 
         Collider2D[] hitEnemies = Physics2D.OverlapBoxAll(hitCenter, data.size, 0f, enemyLayer);
 
+        bool hasHitEnemy = false;
+
         foreach (Collider2D enemy in hitEnemies)
         {
-            // 파트너의 EnemyFSM 호출 나중에 컴포넌트 붙이면 쓸꺼
-            //EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
-            //if (enemyFSM != null) enemyFSM.TakeDamage(data.damage);
+            hasHitEnemy = true; // 한 명이라도 맞았다면 true
+
+            // 1. 데미지 및 넉백 전달
+            // EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
+            // if (enemyFSM != null) 
+            // {
+            //     enemyFSM.TakeDamage(data.damage);
+            //     enemyFSM.TakeKnockback(data.knockbackForce, dir); // 밀려날 방향(dir)과 힘 전달 //아마 넉백 구현안되어있을거같으니 주석 풀기 ㄴㄴ
+            // }
+
+            // 2. 타격 이펙트(VFX) 생성 (맞은 적의 위치나 타격 중심점에 생성)
+            if (data.attackEffectPrefab != null)
+            {
+                // 적 몸통 정중앙이나 겹치는 타격점에 이펙트를 터뜨립니다.
+                Instantiate(data.attackEffectPrefab, enemy.transform.position, Quaternion.identity);
+            }
+        }
+
+        // 3. 적을 한 명이라도 맞췄을 때 한 번만 실행되는 '타격감' 연출
+        if (hasHitEnemy)
+        {
+            // [사운드 SFX] 타격음 재생
+            if (data.attackSFX != null)
+            {
+                // 간단한 재생 방식 (AudioSource.PlayClipAtPoint)
+                // 카메라나 플레이어 위치에서 소리를 재생합니다.
+                AudioSource.PlayClipAtPoint(data.attackSFX, transform.position);
+            }
+
+            // [카메라 흔들림] 강도가 0보다 크다면 실행
+            if (data.cameraShakeIntensity > 0f)
+            {
+                //CameraManager.Instance.ShakeCamera(data.cameraShakeIntensity, 0.1f); //아직 안만듬
+                Debug.Log($"카메라 흔들림 발생! 강도: {data.cameraShakeIntensity}");
+            }
+
+            // [역경직 HitStop] 시간이 0보다 크다면 실행
+            if (data.hitStopDuration > 0f)
+            {
+                // 코루틴 등을 활용해 Time.timeScale을 아주 잠깐 0으로 만들었다가 푸는 로직을 호출합니다.
+                // StartCoroutine(HitStopRoutine(data.hitStopDuration)); //아직 안만듬
+                Debug.Log($"역경직 발생! {data.hitStopDuration}초 동안 정지!");
+            }
         }
     }
 
@@ -182,25 +242,6 @@ public class PlayerController : MonoBehaviour
             Gizmos.DrawWireCube(drawPos, data.size);
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -222,8 +263,6 @@ public class PlayerController : MonoBehaviour
     [Header("비탈길(Slope) 세팅")]
     public float maxSlopeAngle = 45f;
     public RaycastHit2D slopeHit; // 2D로 전환
-
-
 
 
     [Header("라이트닝 컷 변수")]

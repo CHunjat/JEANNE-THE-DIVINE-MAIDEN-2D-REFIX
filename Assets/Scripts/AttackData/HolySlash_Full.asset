@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8b7dcffd13d898f40a25556c5adbe16d, type: 3}
-  m_Name: AirHeavyAtk
+  m_Name: HolySlash_Full
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  attackName: AirHeavyAtk
-  size: {x: 1.46, y: 0.63}
-  offset: {x: 0.58, y: -0.39}
+  attackName: ChargingAtk
+  size: {x: 3.76, y: 2.59}
+  offset: {x: 1, y: 0.8}
   damage: 15
   knockbackForce: 0
   hitStopDuration: 0

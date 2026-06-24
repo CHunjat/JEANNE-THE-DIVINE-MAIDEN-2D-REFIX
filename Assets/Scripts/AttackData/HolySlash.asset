@@ -15,4 +15,10 @@ MonoBehaviour:
   attackName: ChargingAtk
   size: {x: 3.76, y: 2.59}
   offset: {x: 1, y: 0.8}
-  damage: 15
+  damage: 8
+  knockbackForce: 0
+  hitStopDuration: 0
+  cameraShakeIntensity: 0
+  attackEffectPrefab: {fileID: 0}
+  attackSFX: {fileID: 0}
+  sfxVolume: 1

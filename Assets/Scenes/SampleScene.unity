@@ -2102,14 +2102,17 @@ MonoBehaviour:
   anim_GuardOff: Blockoff
   anim_BlockHit: BlockNormalHit
   anim_BlockBreak: BlockBreak
+  currentChargeLevel: 1
   attackPoint: {fileID: 1252207914}
   attackLibrary:
   - {fileID: 11400000, guid: 4f304e5798ad0074f814593a08ac8de7, type: 2}
   - {fileID: 11400000, guid: c7fe45cba6e2d4a4088c9e8914449efe, type: 2}
   - {fileID: 11400000, guid: 0cf1bf7e28c84fe408b5b7c7fa695158, type: 2}
   - {fileID: 11400000, guid: 3df95a0b01ad6314f9fb3ea101245123, type: 2}
+  - {fileID: 11400000, guid: 3d8a7663f5a8d1d45a45be8fb24969d5, type: 2}
   - {fileID: 11400000, guid: dcabe2a06b93eaf4aa5816c51a88af88, type: 2}
   - {fileID: 11400000, guid: 19d8d352cc6f11541bb9faf07d5138e0, type: 2}
+  - {fileID: 11400000, guid: 4158570a4028e5044b46d2d4559d6955, type: 2}
   - {fileID: 11400000, guid: 5ed5b6189047afb48a1272bad16bc44d, type: 2}
   - {fileID: 11400000, guid: dd64875976b55e04eace69b7fefc829f, type: 2}
   useLiveGizmoOnly: 1

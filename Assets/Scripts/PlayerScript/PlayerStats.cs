@@ -6,9 +6,11 @@ public class PlayerStats : MonoBehaviour
     [Header("체력 (Health)")]
     public float maxHp = 100f;
     public float currentHp;
+    public float MaxMp = 100f;
+    public float currentMp;
 
     [Header("기본 스탯 (Base Stats)")]
-    public float baseAttackPower = 10f; // 기본 공격력
+    public float baseAttackPower = 0f; // 기본 공격력
     public float defense = 0f;          // 방어력
 
     [Header("상태 이상 및 무적 (Status)")]
@@ -19,6 +21,7 @@ public class PlayerStats : MonoBehaviour
     {
         // 게임 시작 시 체력을 최대치로 초기화
         currentHp = maxHp;
+        currentMp = MaxMp;
     }
 
     // 💥 [파트너 호출용] 몬스터가 플레이어를 때릴 때 사용할 함수
@@ -46,12 +49,21 @@ public class PlayerStats : MonoBehaviour
     }
 
     // 💚 힐 스킬이나 물약을 먹었을 때 사용할 함수
-    public void Heal(float amount)
+    public void Heal(float amount, float mpCost)
     {
         if (currentHp <= 0) return; // 죽었을 땐 힐 불가
 
+        if (currentMp < mpCost)
+        {
+            Debug.Log("MP가 부족하여 힐을 사용할 수 없습니다!");
+            return;
+        }
+
+        // 3. MP 소모 및 체력 회복
+        currentMp -= mpCost;
         currentHp = Mathf.Min(currentHp + amount, maxHp);
-        Debug.Log($"체력 회복! 현재 체력: {currentHp}");
+
+        Debug.Log($"힐 사용! MP 소모: {mpCost} / 현재 체력: {currentHp} / 남은 MP: {currentMp}");
     }
 
     // 피격 시 잠시 무적이 되는 코루틴
