@@ -2,15 +2,14 @@ using UnityEngine;
 using System.Collections;
 
 // =====================================================
-// MidBossPattern4.cs (전체 교체본)
-// 거미 보스 1페이즈 패턴 4 - 점프 공격
+// MidBossPattern4.cs (애니메이션 이벤트 적용 완료)
 // =====================================================
 public class MidBossPattern4 : BossPatternBase
 {
-    [Header("점프 공격 설정")]
-    [SerializeField] private float trackTime = 2.7f;
-    [SerializeField] private float dropDelay = 0.3f;
-    [SerializeField] private float hitboxActiveDuration = 1.0f;
+    [Header("점프 공격 설정 (기획자 조절)")]
+    [SerializeField] private float trackTime = 2.7f;            // 공중에서 유도탄처럼 따라다니는 시간임.
+    [SerializeField] private float dropDelay = 0.3f;            // 떨어지기 전 회피 유예 시간임.
+    [SerializeField] private float hitboxActiveDuration = 1.0f; // 충격파 유지 시간임.
 
     [Header("히트박스 연결")]
     [SerializeField] private GameObject landingHitbox;
@@ -21,22 +20,15 @@ public class MidBossPattern4 : BossPatternBase
 
     private void Awake()
     {
-        cooldown = 8f;
         visualAnimator = GetComponentInChildren<Animator>();
         owner = GetComponent<MidBoss>();
-
         if (landingHitbox != null) landingHitbox.SetActive(false);
     }
 
     protected override void OnExecute()
     {
         if (isJumping) return;
-        Debug.Log("[MidBossPattern4] 점프 공격 시작! doJump 방아쇠 격발");
-
-        // 점프 트리거 격발
-        if (visualAnimator != null)
-            visualAnimator.SetTrigger("doJump");
-
+        if (visualAnimator != null) visualAnimator.SetTrigger("doJump");
         StartCoroutine(JumpRoutine());
     }
 
@@ -48,6 +40,7 @@ public class MidBossPattern4 : BossPatternBase
 
         GameObject playerObj = GameObject.FindWithTag("Player");
         float timer = 0f;
+
         while (timer < trackTime)
         {
             if (playerObj != null)
@@ -62,18 +55,21 @@ public class MidBossPattern4 : BossPatternBase
             transform.position = new Vector2(transform.position.x, playerObj.transform.position.y);
 
         if (visual != null) visual.gameObject.SetActive(true);
-
-        // 착지 트리거 격발
-        if (visualAnimator != null)
-            visualAnimator.SetTrigger("doLand");
-
-        if (landingHitbox != null)
-        {
-            landingHitbox.SetActive(true);
-            yield return new WaitForSeconds(hitboxActiveDuration);
-            landingHitbox.SetActive(false);
-        }
+        if (visualAnimator != null) visualAnimator.SetTrigger("doLand");
 
         isJumping = false;
     }
+
+    // [애니메이션 이벤트 연동용 함수]
+    // doLand 모션 중 바닥에 발이 쾅 닿는 프레임에 "AnimEvent_LandImpact" 적어 넣음.
+    public void AnimEvent_LandImpact()
+    {
+        if (landingHitbox != null)
+        {
+            landingHitbox.SetActive(true);
+            Invoke(nameof(DeactivateLanding), hitboxActiveDuration);
+        }
+    }
+
+    private void DeactivateLanding() { if (landingHitbox != null) landingHitbox.SetActive(false); }
 }

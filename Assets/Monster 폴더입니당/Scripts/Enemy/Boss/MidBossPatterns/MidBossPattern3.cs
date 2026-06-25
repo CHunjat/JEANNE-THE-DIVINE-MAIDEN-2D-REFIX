@@ -1,16 +1,14 @@
 using UnityEngine;
 
 // =====================================================
-// MidBossPattern3.cs (전체 교체본)
-// 거미 보스 1페이즈 패턴 3 - 거미줄 뱉기
+// MidBossPattern3.cs (애니메이션 이벤트 적용 완료)
 // =====================================================
 public class MidBossPattern3 : BossPatternBase
 {
-    [Header("거미줄 뱉기 설정")]
-    [SerializeField] private float preDelay = 0.6f;
+    [Header("거미줄 뱉기 설정 (기획자 조절)")]
     [SerializeField] private float webSpeed = 6f;
     [SerializeField] private float webRange = 12f;
-    [SerializeField] private float bindDuration = 3f;
+    [SerializeField] private float bindDuration = 3f;      // 구속 상태이상 지속 시간임.
 
     [Header("히트박스 연결")]
     [SerializeField] private GameObject webPrefab;
@@ -20,22 +18,18 @@ public class MidBossPattern3 : BossPatternBase
 
     private void Awake()
     {
-        cooldown = 6f;
         visualAnimator = GetComponentInChildren<Animator>();
         owner = transform;
     }
 
     protected override void OnExecute()
     {
-        Debug.Log("[MidBossPattern3] 거미줄 뱉기 시전! doSpit 방아쇠 격발");
-        // 아까 Web 모션 삭제했으므로 뱉기 모션인 doSpit으로 통일 격발
-        if (visualAnimator != null)
-            visualAnimator.SetTrigger("doSpit");
-
-        Invoke(nameof(FireWeb), preDelay);
+        if (visualAnimator != null) visualAnimator.SetTrigger("doSpit");
     }
 
-    private void FireWeb()
+    // [애니메이션 이벤트 연동용 함수]
+    // 거미가 입에서 침을 뱉어내는 딱 그 프레임에 "AnimEvent_SpitWeb" 적어 넣음.
+    public void AnimEvent_SpitWeb()
     {
         if (webPrefab == null) return;
 
