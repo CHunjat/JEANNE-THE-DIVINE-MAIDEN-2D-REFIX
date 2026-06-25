@@ -11,12 +11,8 @@ public class AttackDataSO : ScriptableObject
     public float damage;           // 데미지 수치
 
     [Header("타격감 (Game Feel) 요소")]
-    public float knockbackForce;   // 넉백(밀쳐내기) 강도
+   
     public float hitStopDuration;  // 역경직(멈춤) 시간 (예: 0.05초)
 
-    [Header("시각 & 청각 효과")]
-    public GameObject attackEffectPrefab; // 타격 성공 시 터질 파티클(VFX)
-    public AudioClip attackSFX;           // 타격 성공 시 재생될 사운드(SFX)
-    [Range(0f, 1f)]
-    public float sfxVolume = 1f;
+ 
 }

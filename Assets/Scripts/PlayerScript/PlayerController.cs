@@ -188,40 +188,26 @@ public class PlayerController : MonoBehaviour
         {
             hasHitEnemy = true; // 한 명이라도 맞았다면 true
 
-            // 1. 데미지 및 넉백 전달
+            // 1. 데미지 및 넉백 전달 윤진이의 enemyfsm 스크립트 확보시 주석해제
             // EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
             // if (enemyFSM != null) 
             // {
             //     enemyFSM.TakeDamage(data.damage);
-            //     enemyFSM.TakeKnockback(data.knockbackForce, dir); // 밀려날 방향(dir)과 힘 전달 //아마 넉백 구현안되어있을거같으니 주석 풀기 ㄴㄴ
             // }
+            Debug.Log($"<color=orange>[타격 적중]</color> <b>{data.attackName}</b> -> {enemy.name}에게 적중! (타격 이펙트 생성 위치: {enemy.transform.position})");
 
-            // 2. 타격 이펙트(VFX) 생성 (맞은 적의 위치나 타격 중심점에 생성)
-            if (data.attackEffectPrefab != null)
-            {
-                // 적 몸통 정중앙이나 겹치는 타격점에 이펙트를 터뜨립니다.
-                Instantiate(data.attackEffectPrefab, enemy.transform.position, Quaternion.identity);
-            }
         }
 
         // 3. 적을 한 명이라도 맞췄을 때 한 번만 실행되는 '타격감' 연출
         if (hasHitEnemy)
         {
-            // [사운드 SFX] 타격음 재생
-            if (data.attackSFX != null)
-            {
-                // 간단한 재생 방식 (AudioSource.PlayClipAtPoint)
-                // 카메라나 플레이어 위치에서 소리를 재생합니다.
-                AudioSource.PlayClipAtPoint(data.attackSFX, transform.position);
-            }
-
          
             // [역경직 HitStop] 시간이 0보다 크다면 실행
             if (data.hitStopDuration > 0f)
             {
                 // 코루틴 등을 활용해 Time.timeScale을 아주 잠깐 0으로 만들었다가 푸는 로직을 호출합니다.
                 // StartCoroutine(HitStopRoutine(data.hitStopDuration)); //아직 안만듬
-                Debug.Log($"역경직 발생! {data.hitStopDuration}초 동안 정지!");
+                Debug.Log($"<color=yellow>[역경직 발생]</color> <b>{data.attackName}</b> 타격감 연출! {data.hitStopDuration}초 동안 정지!");
             }
         }
     }

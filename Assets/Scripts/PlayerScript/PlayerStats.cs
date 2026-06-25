@@ -24,7 +24,7 @@ public class PlayerStats : MonoBehaviour
         currentMp = MaxMp;
     }
 
-    // 💥 [파트너 호출용] 몬스터가 플레이어를 때릴 때 사용할 함수
+    //파트너 호출용 몬스터가 플레이어를 때릴 때 사용할 함수
     public void TakeDamage(float amount)
     {
         // 무적 상태이거나 이미 죽었다면 데미지 무시

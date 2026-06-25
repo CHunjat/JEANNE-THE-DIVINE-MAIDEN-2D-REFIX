@@ -47,7 +47,7 @@ public class PlayerDiveDropState : PlayerState
         player.SetVelocity(0f, player.rb.linearVelocity.y);
 
         // ========================================================
-        // 💡 추가된 부분: 낙하 중 타격 판정 로직 (매 물리 프레임마다 체크)
+        // 추가된 부분: 낙하 중 타격 판정 로직 (매 물리 프레임마다 체크)
         // ========================================================
         Collider2D[] hits = Physics2D.OverlapBoxAll(
             player.transform.position + (Vector3)attackData.offset,
@@ -62,19 +62,11 @@ public class PlayerDiveDropState : PlayerState
             if (alreadyHitEnemies.Contains(hit)) continue;
 
             // hit.GetComponent<EnemyFSM>().TakeDamage(attackData.damage); 
-            Debug.Log($"{hit.name} 낙하 공격(EnemyFSM 연동 대기 중)");
-
+            Debug.Log($"<color=orange>[타격]</color> <b>{attackData.attackName}</b> -> {hit.name}적중 ( 위치: {hit.transform.position})");
             // 명부에 이름 적기
             alreadyHitEnemies.Add(hit);
 
-            // 타격 이펙트 및 사운드 발생 (최초 1회만 터짐)
-            if (attackData.attackEffectPrefab)
-                Object.Instantiate(attackData.attackEffectPrefab, hit.transform.position, Quaternion.identity);
-
-            if (attackData.attackSFX)
-                AudioSource.PlayClipAtPoint(attackData.attackSFX, hit.transform.position, attackData.sfxVolume);
         }
-        // ========================================================
     }
 
     public override void Exit()
