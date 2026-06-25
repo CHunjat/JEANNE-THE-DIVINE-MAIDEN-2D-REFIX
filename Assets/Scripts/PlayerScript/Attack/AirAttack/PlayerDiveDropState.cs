@@ -46,13 +46,11 @@ public class PlayerDiveDropState : PlayerState
         // 제자리에서 안정적으로 떨어지도록 X축 고정
         player.SetVelocity(0f, player.rb.linearVelocity.y);
 
-        // ========================================================
         // 추가된 부분: 낙하 중 타격 판정 로직 (매 물리 프레임마다 체크)
-        // ========================================================
-        Collider2D[] hits = Physics2D.OverlapBoxAll(
+        Collider2D[] hits = Physics2D.OverlapBoxAll
+        (
             player.transform.position + (Vector3)attackData.offset,
-            attackData.size,
-            0f,
+            attackData.size, 0f,
             player.enemyLayer
         );
 

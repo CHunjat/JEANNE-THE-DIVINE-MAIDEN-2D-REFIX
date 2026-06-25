@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TheBlackCat.TrailEffect2D;
 using Unity.VisualScripting;
@@ -188,7 +189,7 @@ public class PlayerController : MonoBehaviour
         {
             hasHitEnemy = true; // 한 명이라도 맞았다면 true
 
-            // 1. 데미지 및 넉백 전달 윤진이의 enemyfsm 스크립트 확보시 주석해제
+            //  enemyfsm 스크립트 확보시 주석해제
             // EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
             // if (enemyFSM != null) 
             // {
@@ -206,11 +207,31 @@ public class PlayerController : MonoBehaviour
             if (data.hitStopDuration > 0f)
             {
                 // 코루틴 등을 활용해 Time.timeScale을 아주 잠깐 0으로 만들었다가 푸는 로직을 호출합니다.
-                // StartCoroutine(HitStopRoutine(data.hitStopDuration)); //아직 안만듬
+                StartCoroutine(HitStopRoutine(data.hitStopDuration)); //아직 안만듬
                 Debug.Log($"<color=yellow>[역경직 발생]</color> <b>{data.attackName}</b> 타격감 연출! {data.hitStopDuration}초 동안 정지!");
             }
         }
     }
+
+    private IEnumerator HitStopRoutine(float duration)
+    {
+        // 1. 기존 타임스케일 저장 
+        // (보통 1f지만, 이미 슬로우 모션 중일 수도 있으니 원래 값을 기억해둡니다)
+        float originalTimeScale = Time.timeScale;
+
+        // 2. 게임 시간 정지! (역경직 발생)
+        Time.timeScale = 0f;
+
+        // 3.현실 시간(Realtime) 기준으로 대기
+        // 타임스케일이 0이므로 일반 WaitForSeconds를 쓰면 ㅈ댐
+        yield return new WaitForSecondsRealtime(duration);
+
+        // 4. 시간이 다 되면 원래 타임스케일로 복구
+        Time.timeScale = originalTimeScale;
+
+        Debug.Log($"<color=yellow>[역경직 종료]</color> {duration}초 정지 해제!");
+    }
+
 
     // 씬 뷰에서 공격 범위를 실시간 확인
     private void OnDrawGizmosSelected()
