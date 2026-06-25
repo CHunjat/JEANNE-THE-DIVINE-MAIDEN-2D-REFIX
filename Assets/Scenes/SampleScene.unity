@@ -2103,7 +2103,7 @@ MonoBehaviour:
   anim_BlockHit: BlockNormalHit
   anim_BlockBreak: BlockBreak
   healAmount: 50
-  healMpCost: 1
+  healMpCost: 30
   currentChargeLevel: 1
   attackPoint: {fileID: 1252207914}
   attackLibrary:

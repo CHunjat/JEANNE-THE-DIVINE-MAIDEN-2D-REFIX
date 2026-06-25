@@ -665,7 +665,6 @@ public class PlayerController : MonoBehaviour
 
     }
 
-    // ★ [핵심] E키 하나로 슬롯을 확인해 스킬을 분배하는 통합 판독기
     public void HandleActiveSkillInput()
     {
         // 1. 공통 기모으기 입력 검사 (InputReader의 HAttackPressed 사용)
@@ -684,6 +683,8 @@ public class PlayerController : MonoBehaviour
             inputReader.HAttackPressed = false;
             return;
         }
+
+
 
         // 2. 땅에 있고, 현재 어떤 스킬 상태도 진행 중이 아닐 때만 진입
         if (IsGrounded() &&

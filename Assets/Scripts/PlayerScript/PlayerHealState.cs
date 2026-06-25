@@ -34,6 +34,9 @@ public class PlayerHealState : PlayerState
     public override void LogicUpdate()
     {
         base.LogicUpdate();
+        AnimatorStateInfo stateInfo = player.animator.GetCurrentAnimatorStateInfo(0);
+        if (!stateInfo.IsName(player.anim_Heal)) return;
+
 
         // 애니메이션이 50% 진행되었을 때 진짜 회복 로직 
         if (!hasHealed && GetNormalizedTime() >= 0.5f)
