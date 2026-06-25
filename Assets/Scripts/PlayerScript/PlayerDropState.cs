@@ -15,8 +15,8 @@ public class PlayerDropState : PlayerState
         if (dropCol != null)
         {
             player.ignoredDropCollider = dropCol;
-            player.ignoreSlopeDetection = true; // 🔥 비탈길 자석 끄기! (허공 툭 걸림 방지)
-            // ⚡ [핵심 수정] 0.15f는 너무 깊어 가까운 계단을 건너뛰게 만듭니다.
+            player.ignoreSlopeDetection = true; //비탈길 자석 끄기! (허공 툭 걸림 방지)
+            // ⚡ [핵심  0.15f는 너무 깊어 가까운 계단을 건너뛰게 만듭니다.
             // 딱 땅에서 발만 떨어지도록 0.02f만 내립니다.
             player.transform.position -= new Vector3(0f, 0.1f, 0f);
 
@@ -40,7 +40,7 @@ public class PlayerDropState : PlayerState
         // 0.2초면 캐릭터가 충분히 발판을 뚫고 내려가서 툭 걸릴 일이 없습니다.
         yield return new WaitForSeconds(0.2f);
 
-        player.ignoreSlopeDetection = false; // 🔥 다시 자석 켜기! (착지 시 안착 보장)
+        player.ignoreSlopeDetection = false;
 
         // 발판 빠져나올 때까지 기다림
         while (playerCol != null && platformCol != null && Physics2D.Distance(playerCol, platformCol).isOverlapped)

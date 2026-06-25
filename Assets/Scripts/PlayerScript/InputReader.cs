@@ -151,12 +151,12 @@ public class InputReader : ScriptableObject, PlayerControls.IPlayerActions
         {
             ThrustAttackPressed = true; // 상태 전이용 단발성 티켓 발급
             ThrustAttackHeld = true;    // 기 모으기 유지 스위치 ON
-            Debug.Log("👉 [입력] 찌르기 키 눌림! (Held = true)"); // 👈 추가
+            Debug.Log("찌르기 키 눌림! (Held = true)"); // 👈 추가
         }
         else if (context.canceled)
         {
             ThrustAttackHeld = false;   // 손 떼면 유지 스위치 OFF
-            Debug.Log("✋ [입력] 찌르기 키 떨어짐! (Held = false)"); // 👈 추가
+            Debug.Log("찌르기 키 떨어짐! (Held = false)"); // 👈 추가
         }
     }
 

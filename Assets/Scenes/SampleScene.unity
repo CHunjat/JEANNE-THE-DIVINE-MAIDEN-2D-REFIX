@@ -722,7 +722,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -9.9900055, y: 20.873184, z: -10}
+  m_LocalPosition: {x: -17.680004, y: 27.033184, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1509,7 +1509,7 @@ Transform:
   m_GameObject: {fileID: 942376641}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -9.9900055, y: 20.873184, z: -10}
+  m_LocalPosition: {x: -17.680004, y: 27.033184, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1962,7 +1962,7 @@ Transform:
   m_GameObject: {fileID: 1199457208}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -9.990002, y: 18.57, z: 0}
+  m_LocalPosition: {x: -17.68, y: 24.73, z: 0}
   m_LocalScale: {x: 0.6, y: 0.6, z: 0.6}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -2102,6 +2102,8 @@ MonoBehaviour:
   anim_GuardOff: Blockoff
   anim_BlockHit: BlockNormalHit
   anim_BlockBreak: BlockBreak
+  healAmount: 50
+  healMpCost: 1
   currentChargeLevel: 1
   attackPoint: {fileID: 1252207914}
   attackLibrary:
@@ -2113,8 +2115,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: dcabe2a06b93eaf4aa5816c51a88af88, type: 2}
   - {fileID: 11400000, guid: 19d8d352cc6f11541bb9faf07d5138e0, type: 2}
   - {fileID: 11400000, guid: 4158570a4028e5044b46d2d4559d6955, type: 2}
-  - {fileID: 11400000, guid: 5ed5b6189047afb48a1272bad16bc44d, type: 2}
   - {fileID: 11400000, guid: dd64875976b55e04eace69b7fefc829f, type: 2}
+  - {fileID: 11400000, guid: 840de12734797b44bb9206b4b02eb289, type: 2}
   useLiveGizmoOnly: 1
   grappleLine: {fileID: 1742580939}
   shieldPoint: {fileID: 541230335}
@@ -2132,6 +2134,7 @@ MonoBehaviour:
   anim_LightningCharge: LightningCharge
   anim_LightningAttack: LightningAttack
   anim_Heal: Heal
+  diveDropData: {fileID: 11400000, guid: 5ed5b6189047afb48a1272bad16bc44d, type: 2}
   currentSkillSlot: 0
 --- !u!61 &1199457215
 BoxCollider2D:
@@ -2279,6 +2282,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   maxHp: 100
   currentHp: 0
+  MaxMp: 100
+  currentMp: 0
   baseAttackPower: 10
   defense: 0
   isInvincible: 0

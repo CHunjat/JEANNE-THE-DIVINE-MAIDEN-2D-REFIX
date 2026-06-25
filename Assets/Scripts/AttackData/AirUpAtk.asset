@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8b7dcffd13d898f40a25556c5adbe16d, type: 3}
-  m_Name: AirHeavyDrop
+  m_Name: AirUpAtk
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  attackName: AirHeavyDrop
-  size: {x: 1.23, y: 1.48}
-  offset: {x: -0.23, y: 0.17}
-  damage: 7
+  attackName: AirUpAtk
+  size: {x: 2.39, y: 1.63}
+  offset: {x: -0.75, y: 1.16}
+  damage: 3
   knockbackForce: 0
   hitStopDuration: 0
   attackEffectPrefab: {fileID: 0}

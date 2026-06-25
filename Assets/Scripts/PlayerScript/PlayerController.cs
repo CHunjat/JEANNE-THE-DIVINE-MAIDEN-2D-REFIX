@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour
     public Animator animator;
     public PlayerStats playerStats; //스탯 컴포넌트 연결
 
+
     [Header("Movement Settings")]
     public float moveSpeed = 7f;
     public float dashSpeed = 20f;
@@ -124,6 +125,10 @@ public class PlayerController : MonoBehaviour
     public string anim_BlockHit = "BlockNormalHit";
     public string anim_BlockBreak = "BlockBreak";
 
+    [Header("힐 스킬(Heal) 데이터")]
+    public float healAmount = 50f;  // 체력 회복량
+    public float healMpCost = 30f;  // 마나 소모량
+
     [Header("패링")]
 
 
@@ -143,7 +148,6 @@ public class PlayerController : MonoBehaviour
         Debug.Log($"홀리 슬래쉬 {currentChargeLevel}단계 발동! (인덱스: {finalIndex})");
         PerformMeleeAttack(attackLibrary[finalIndex]);
     }
-
 
 
     [Header("전투 세팅")]
@@ -211,13 +215,7 @@ public class PlayerController : MonoBehaviour
                 AudioSource.PlayClipAtPoint(data.attackSFX, transform.position);
             }
 
-            // [카메라 흔들림] 강도가 0보다 크다면 실행
-            if (data.cameraShakeIntensity > 0f)
-            {
-                //CameraManager.Instance.ShakeCamera(data.cameraShakeIntensity, 0.1f); //아직 안만듬
-                Debug.Log($"카메라 흔들림 발생! 강도: {data.cameraShakeIntensity}");
-            }
-
+         
             // [역경직 HitStop] 시간이 0보다 크다면 실행
             if (data.hitStopDuration > 0f)
             {
@@ -278,6 +276,10 @@ public class PlayerController : MonoBehaviour
     public bool CanDash => dashCooltimer <= 0 && landTimer <= 0;
     // 1. 비탈길인지 확인하고 경사면 정보(slopeHit)를 업데이트함
     private float defaultGravityScale;
+    public bool IsActionLocked => StateMachine.CurrentState == HealState;
+
+    [Header("스킬 데이터 (SO)")]
+    public AttackDataSO diveDropData; // 유니티 에디터에서 방금 만든 SO를 할당할 곳 공중 강공격을 위한 선언;;
 
     public enum SkillSlot
     { HeavyAttack, LightningCut, Heal}
@@ -357,7 +359,7 @@ public class PlayerController : MonoBehaviour
         AirAttack1State = new PlayerAirAttack1State(this, StateMachine, "AirAtk1");
         AirAttack2State = new PlayerAirAttack2State(this, StateMachine, "AirAtk2");
 
-        DiveDropState = new PlayerDiveDropState(this, StateMachine, anim_DiveDrop);
+        DiveDropState = new PlayerDiveDropState(this, StateMachine, anim_DiveDrop, diveDropData);
         DiveLandState = new PlayerDiveLandState(this, StateMachine, anim_DiveLand);
         AirUpAttackState = new PlayerAirUpAttackState(this, StateMachine, anim_AirUpAtk);
 
@@ -424,14 +426,14 @@ public class PlayerController : MonoBehaviour
             ResetAirActions(); // 바닥에 닿으면 공중 공격 횟수 초기화
         }
 
-        // [추가 테스트용] 키보드 Tab 키를 누르면 스킬 슬롯이 실시간으로 교체됨
+        // [추가 테스트용] 키보드 Tab 키를 누르면 스킬 슬롯이 실시간으로 교체됨                    
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             if (currentSkillSlot == SkillSlot.HeavyAttack) currentSkillSlot = SkillSlot.LightningCut;
             else if (currentSkillSlot == SkillSlot.LightningCut) currentSkillSlot = SkillSlot.Heal;
             else currentSkillSlot = SkillSlot.HeavyAttack;
 
-            Debug.Log($"🔥 스킬 슬롯 전환됨: {currentSkillSlot}");
+            Debug.Log($"스킬 슬롯 전환됨: {currentSkillSlot}");
         }
 
         if (gizmoDisplayTimer > 0)
@@ -700,7 +702,16 @@ public class PlayerController : MonoBehaviour
             }
             else if (currentSkillSlot == SkillSlot.Heal)
             {
-                StateMachine.ChangeState(HealState);
+                if (playerStats.currentMp >= healMpCost)
+                {
+                    StateMachine.ChangeState(HealState);
+                }
+                else
+                {
+                    // 마나가 부족하면 상태를 넘기지 않고 입력을 무시합니다. (애니메이션 절대 안 나감)
+                    Debug.Log("마나가 부족하여 힐 스킬을 사용할 수 없습니다!");
+                    inputReader.HAttackPressed = false;
+                }
             }
         }
     }
@@ -801,6 +812,17 @@ public class PlayerController : MonoBehaviour
         foreach (var hit in hits)
         {
             if (hit.collider == null || hit.collider == cd || hit.collider == ignoredDropCollider) continue;
+
+           
+            // hit.collider가 속한 레이어가 stairsLayer에 포함되는지 확인
+            bool isStairs = ((1 << hit.collider.gameObject.layer) & stairsLayer) != 0;
+            bool hasEffector = hit.collider.GetComponent<PlatformEffector2D>() != null;
+
+            // 계단 레이어도 아니고, 이펙터도 없다면? -> 밑점프 불가능한 일반 쌩바닥!
+            if (!isStairs && !hasEffector)
+            {
+                continue; // 타겟으로 잡지 말고 무시해라!
+            }
 
             if (hit.distance < closestDist)
             {

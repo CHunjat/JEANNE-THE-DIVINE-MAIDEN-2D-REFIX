@@ -32,6 +32,8 @@ public class PlayerMoveState : PlayerState
 
     public override void LogicUpdate()
     {
+
+        if (player.StateMachine.CurrentState == player.HealState) return;
         player.HandleGuardInput();
         if (stateMachine.CurrentState == player.GuardState) return;
 
@@ -101,6 +103,13 @@ public class PlayerMoveState : PlayerState
         // [정지 로직]
         if (xInput == 0)
         {
+
+
+            if (player.inputReader.HAttackPressed || player.inputReader.HeavyAttackHeld ||
+            player.inputReader.ThrustAttackHeld || player.inputReader.LightningPressed)
+            {
+                return; // 입력 중이니 Idle 전환 스킵하고 버틴다!
+            }
             if (player.isSprinting)
             {
                 if (!player.wasSprinting)

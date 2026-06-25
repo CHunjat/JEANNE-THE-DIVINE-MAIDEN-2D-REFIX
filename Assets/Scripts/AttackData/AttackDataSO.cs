@@ -13,7 +13,6 @@ public class AttackDataSO : ScriptableObject
     [Header("타격감 (Game Feel) 요소")]
     public float knockbackForce;   // 넉백(밀쳐내기) 강도
     public float hitStopDuration;  // 역경직(멈춤) 시간 (예: 0.05초)
-    public float cameraShakeIntensity; // 카메라 흔들림 강도 (0이면 안 흔들림)
 
     [Header("시각 & 청각 효과")]
     public GameObject attackEffectPrefab; // 타격 성공 시 터질 파티클(VFX)
