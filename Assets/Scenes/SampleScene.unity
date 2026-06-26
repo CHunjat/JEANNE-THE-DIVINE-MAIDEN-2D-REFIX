@@ -671,7 +671,7 @@ Camera:
   m_GameObject: {fileID: 330585543}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 2
+  m_ClearFlags: 1
   m_BackGroundColor: {r: 1, g: 1, b: 1, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -992,8 +992,8 @@ GameObject:
   - component: {fileID: 457128640}
   - component: {fileID: 457128639}
   - component: {fileID: 457128638}
-  - component: {fileID: 457128637}
   - component: {fileID: 457128636}
+  - component: {fileID: 457128642}
   m_Layer: 12
   m_Name: Visual
   m_TagString: Untagged
@@ -1013,7 +1013,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 764f6c39b22962540a0f77960828ef62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DummyEnemy
-  maxHp: 100
+  maxHp: 500
   currentHp: 0
   moveSpeed: 3
   attackDamage: 10
@@ -1022,33 +1022,6 @@ MonoBehaviour:
   currentState: 3
   hitAnimName: Hit
   idleAnimName: Idle
---- !u!50 &457128637
-Rigidbody2D:
-  serializedVersion: 5
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 457128635}
-  m_BodyType: 1
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_GravityScale: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_Interpolate: 0
-  m_SleepingMode: 1
-  m_CollisionDetection: 0
-  m_Constraints: 4
 --- !u!61 &457128638
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1186,11 +1159,38 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -28.87, y: 10.01, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1.56, y: 1.56, z: 1.56}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!50 &457128642
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 457128635}
+  m_BodyType: 1
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &541230334
 GameObject:
   m_ObjectHideFlags: 0
@@ -1824,6 +1824,37 @@ MonoBehaviour:
       BarrelClipping: 0.25
       Anamorphism: 0
   BlendHint: 0
+--- !u!1 &1064294652
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1064294653}
+  m_Layer: 6
+  m_Name: FX_ThrustPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 3306451490063965843, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1064294653
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064294652}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.79, y: 1.398, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1199457212}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1097305468
 GameObject:
   m_ObjectHideFlags: 0
@@ -2181,6 +2212,7 @@ Transform:
   - {fileID: 541230335}
   - {fileID: 10894103}
   - {fileID: 1252207914}
+  - {fileID: 1064294653}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1199457214
@@ -2328,6 +2360,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4158570a4028e5044b46d2d4559d6955, type: 2}
   - {fileID: 11400000, guid: dd64875976b55e04eace69b7fefc829f, type: 2}
   - {fileID: 11400000, guid: 840de12734797b44bb9206b4b02eb289, type: 2}
+  - {fileID: 11400000, guid: 8012b6f2619d96f429cb2457067e5d27, type: 2}
   useLiveGizmoOnly: 1
   grappleLine: {fileID: 1742580939}
   shieldPoint: {fileID: 541230335}
@@ -2345,6 +2378,9 @@ MonoBehaviour:
   anim_LightningCharge: LightningCharge
   anim_LightningAttack: LightningAttack
   anim_Heal: Heal
+  thrustChargeFxPrefab: {fileID: 5107921000559936895, guid: 1bdd5be339e01f14a9e27f1f04a11960, type: 3}
+  thrustChargeFxSpawnPoint: {fileID: 1064294653}
+  isThrustCharged: 0
   diveDropData: {fileID: 11400000, guid: 5ed5b6189047afb48a1272bad16bc44d, type: 2}
   currentSkillSlot: 0
 --- !u!61 &1199457215

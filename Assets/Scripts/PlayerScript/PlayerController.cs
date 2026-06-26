@@ -193,7 +193,13 @@ public class PlayerController : MonoBehaviour
              EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
             if (enemyFSM != null)
             {
-                enemyFSM.TakeDamage(data.damage);
+                float finalDamage = data.damage;
+
+                if (data.canCharge && isThrustCharged)
+                {
+                    finalDamage *= data.chargeMultiplier;
+                }
+                enemyFSM.TakeDamage(finalDamage);
             }
             Debug.Log($"<color=orange>[타격 적중]</color> <b>{data.attackName}</b> -> {enemy.name}에게 적중! (타격 이펙트 생성 위치: {enemy.transform.position})");
 
@@ -278,12 +284,18 @@ public class PlayerController : MonoBehaviour
     public string anim_Heal = "Heal";
 
 
+    [Header("이펙트(FX) 설정")] //middleATK 이펙트설정 
+    //위치 조절용 오프셋 변수 
+    public GameObject thrustChargeFxPrefab;
+    public Transform thrustChargeFxSpawnPoint;
 
     [Header("변수 선언부")]
     public bool CanDash => dashCooltimer <= 0 && landTimer <= 0;
     // 1. 비탈길인지 확인하고 경사면 정보(slopeHit)를 업데이트함
     private float defaultGravityScale;
     public bool IsActionLocked => StateMachine.CurrentState == HealState;
+    [HideInInspector]
+    public bool isThrustCharged = false;
 
     [Header("스킬 데이터 (SO)")]
     public AttackDataSO diveDropData; // 유니티 에디터에서 방금 만든 SO를 할당할 곳 공중 강공격을 위한 선언;;

@@ -10,10 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8b7dcffd13d898f40a25556c5adbe16d, type: 3}
-  m_Name: AirHeavyDrop
+  m_Name: ATK_Middle
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  attackName: AirHeavyDrop
-  size: {x: 1.23, y: 1.48}
-  offset: {x: -0.23, y: 0.17}
-  damage: 7
-  hitStopDuration: 0.05
+  attackName: MiddleChargeATK
+  size: {x: 1.85, y: 0.84}
+  offset: {x: 0.52, y: 0.04}
+  damage: 3
+  hitStopDuration: 0.04
+  canCharge: 1
+  chargeMultiplier: 1.5
