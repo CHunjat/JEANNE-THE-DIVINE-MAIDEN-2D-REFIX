@@ -189,12 +189,12 @@ public class PlayerController : MonoBehaviour
         {
             hasHitEnemy = true; // 한 명이라도 맞았다면 true
 
-            //  enemyfsm 스크립트 확보시 주석해제
-            // EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
-            // if (enemyFSM != null) 
-            // {
-            //     enemyFSM.TakeDamage(data.damage);
-            // }
+            //enemyfsm 스크립트 확보시 주석해제
+             EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
+            if (enemyFSM != null)
+            {
+                enemyFSM.TakeDamage(data.damage);
+            }
             Debug.Log($"<color=orange>[타격 적중]</color> <b>{data.attackName}</b> -> {enemy.name}에게 적중! (타격 이펙트 생성 위치: {enemy.transform.position})");
 
         }
