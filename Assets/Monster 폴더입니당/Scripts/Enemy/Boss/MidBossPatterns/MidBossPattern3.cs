@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // =====================================================
-// MidBossPattern3.cs (애니메이션 이벤트 적용 완료)
+// MidBossPattern3.cs (발사체 프리팹 슬롯 유지 완료)
 // =====================================================
 public class MidBossPattern3 : BossPatternBase
 {
@@ -10,7 +10,7 @@ public class MidBossPattern3 : BossPatternBase
     [SerializeField] private float webRange = 12f;
     [SerializeField] private float bindDuration = 3f;      // 구속 상태이상 지속 시간임.
 
-    [Header("히트박스 연결")]
+    [Header("발사체 프리팹 연결 (이건 새로 소환하는 거라 유지함)")]
     [SerializeField] private GameObject webPrefab;
 
     private Transform owner;
@@ -28,7 +28,6 @@ public class MidBossPattern3 : BossPatternBase
     }
 
     // [애니메이션 이벤트 연동용 함수]
-    // 거미가 입에서 침을 뱉어내는 딱 그 프레임에 "AnimEvent_SpitWeb" 적어 넣음.
     public void AnimEvent_SpitWeb()
     {
         if (webPrefab == null) return;

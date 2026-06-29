@@ -187,14 +187,14 @@ AnimationClip:
     messageOptions: 0
   - time: 0.91
     functionName: RelayEvent
-    data: AnimEvent_SlashReturn
+    data: AnimEvent_Slash1
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
   - time: 1.49
     functionName: RelayEvent
-    data: AnimEvent_Stamp
+    data: AnimEvent_Slash1
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0

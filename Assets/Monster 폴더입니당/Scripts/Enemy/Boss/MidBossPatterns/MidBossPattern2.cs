@@ -1,48 +1,28 @@
 using UnityEngine;
 
 // =====================================================
-// MidBossPattern2.cs (애니메이션 이벤트 적용 완료)
+// MidBossPattern2.cs (제자리 근접 슬래시 전용으로 수정 완료)
+// 장풍(Projectile) 로직 및 프리팹 빈칸 싹 다 날리고 애니메이션만 실행.
 // =====================================================
 public class MidBossPattern2 : BossPatternBase
 {
-    [Header("검기 발사 설정 (기획자 조절)")]
-    [SerializeField] private float slashSpeed = 8f;              // 검기 이동 속도임.
-    [SerializeField] private float slashRange = 6f;              // 검기 최대 사거리임.
-
-    [Header("히트박스 연결")]
-    [SerializeField] private GameObject slashEffectPrefab;
-
-    private Transform owner;
+    // 자식 오브젝트(Visual)에 있는 애니메이터를 조종하기 위한 변수.
     private Animator visualAnimator;
 
     private void Awake()
     {
+        // 시작할 때 Visual 오브젝트에 붙어있는 Animator 컴포넌트를 찾아서 넣어둠.
         visualAnimator = GetComponentInChildren<Animator>();
-        owner = transform;
     }
 
+    // MidBoss.cs에서 이 패턴을 뽑아서 실행할 때 발동되는 함수임.
     protected override void OnExecute()
     {
-        if (visualAnimator != null) visualAnimator.SetTrigger("doSlashPhase2");
-    }
-
-    // [애니메이션 이벤트 연동용 함수]
-    // 거미가 팔을 휙 뻗는 프레임에 "AnimEvent_FireSlash" 적어 넣으면 됨.
-    public void AnimEvent_FireSlash()
-    {
-        if (slashEffectPrefab == null) return;
-
-        GameObject slash = Instantiate(slashEffectPrefab, owner.position, Quaternion.identity);
-        SlashProjectile projectile = slash.GetComponent<SlashProjectile>();
-
-        if (projectile != null)
+        // 애니메이션 트리거("doSlashPhase2")만 딱 켜줌. 
+        // 실제 히트박스가 켜지는 건 애니메이션 창에서 부른 MidBoss.cs의 AnimEvent_Slash1()이 알아서 함.
+        if (visualAnimator != null)
         {
-            GameObject playerObj = GameObject.FindWithTag("Player");
-            Vector2 dir = playerObj != null
-                ? ((Vector2)(playerObj.transform.position - owner.position)).normalized
-                : Vector2.right;
-
-            projectile.Initialize(dir, slashSpeed, slashRange);
+            visualAnimator.SetTrigger("doSlashPhase2");
         }
     }
 }

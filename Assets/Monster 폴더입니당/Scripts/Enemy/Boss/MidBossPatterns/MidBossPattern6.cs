@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 
 // =====================================================
-// MidBossPattern6.cs (애니메이션 이벤트 적용 완료)
+// MidBossPattern6.cs (인스펙터 슬롯 2개 전면 자동화 완료)
 // =====================================================
 public class MidBossPattern6 : BossPatternBase
 {
@@ -15,9 +15,8 @@ public class MidBossPattern6 : BossPatternBase
     [SerializeField] private float backKickRange = 3f;
     [SerializeField] private float backKickHitboxDuration = 0.3f;
 
-    [Header("히트박스 연결")]
-    [SerializeField] private GameObject stampHitbox;
-    [SerializeField] private GameObject backKickHitbox;
+    private GameObject stampHitbox;    // 인스펙터 슬롯 삭제함.
+    private GameObject backKickHitbox; // 인스펙터 슬롯 삭제함.
 
     private Rigidbody2D rb;
     private Animator visualAnimator;
@@ -27,6 +26,13 @@ public class MidBossPattern6 : BossPatternBase
     {
         visualAnimator = GetComponentInChildren<Animator>();
         rb = GetComponent<Rigidbody2D>();
+
+        MidBoss parent = GetComponent<MidBoss>();
+        if (parent != null)
+        {
+            stampHitbox = parent.hitBox_Stamp;
+            backKickHitbox = parent.hitBox_BackKick;
+        }
 
         if (stampHitbox != null) stampHitbox.SetActive(false);
         if (backKickHitbox != null) backKickHitbox.SetActive(false);
@@ -60,7 +66,6 @@ public class MidBossPattern6 : BossPatternBase
     }
 
     // [애니메이션 이벤트 연동용 함수 1]
-    // 1타 찍는 프레임과 2타 찍는 프레임 두 곳 모두에 "AnimEvent_DoubleStamp" 꽂음.
     public void AnimEvent_DoubleStamp()
     {
         if (stampHitbox != null)
@@ -71,23 +76,21 @@ public class MidBossPattern6 : BossPatternBase
     }
 
     // [애니메이션 이벤트 연동용 함수 2]
-    // 애니메이션이 완전히 끝나기 직전(또는 2타 종료 직후) 프레임에 "AnimEvent_CheckBackKick" 꽂음.
-    // 사거리 내에 적이 있으면 알아서 모션 연계 방아쇠를 당김.
     public void AnimEvent_CheckBackKick()
     {
         GameObject playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null && Vector2.Distance(transform.position, playerObj.transform.position) <= backKickRange)
         {
-            if (visualAnimator != null) visualAnimator.SetTrigger("doDouble");
+            // [수정] doDouble 중복 트리거 대신 조건부 뒷발차기 전용 트리거를 쏴서 모션 끊김 방지함!
+            if (visualAnimator != null) visualAnimator.SetTrigger("doConditionBackKick");
         }
         else
         {
-            isExecuting = false; // 연계 안 하면 패턴 종료함.
+            isExecuting = false;
         }
     }
 
     // [애니메이션 이벤트 연동용 함수 3]
-    // 뒷발 찌르기 모션의 타격 프레임에 "AnimEvent_BackKickHit" 꽂음.
     public void AnimEvent_BackKickHit()
     {
         if (backKickHitbox != null)

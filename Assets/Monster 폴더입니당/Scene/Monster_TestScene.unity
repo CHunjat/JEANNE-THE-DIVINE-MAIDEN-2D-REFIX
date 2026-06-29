@@ -751,7 +751,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a4dd177b17825e478a493fd420b532a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
-  maxHp: 200
+  maxHp: 300
   currentHp: 0
 --- !u!1 &460906006 stripped
 GameObject:
@@ -1220,6 +1220,10 @@ PrefabInstance:
     - target: {fileID: 1715139335864007623, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.72
+      objectReference: {fileID: 0}
+    - target: {fileID: 3012287259468978372, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: cooldown
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 3012287259468978372, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_Enabled

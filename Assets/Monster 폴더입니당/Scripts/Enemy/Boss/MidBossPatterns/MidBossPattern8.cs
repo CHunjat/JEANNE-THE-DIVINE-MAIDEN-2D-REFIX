@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 
 // =====================================================
-// MidBossPattern8.cs (애니메이션 이벤트 적용 완료)
+// MidBossPattern8.cs (필살 패턴 슬롯 최적화 완료)
 // =====================================================
 public class MidBossPattern8 : BossPatternBase
 {
@@ -17,17 +17,25 @@ public class MidBossPattern8 : BossPatternBase
     [SerializeField] private float landingHitboxDuration = 0.4f;
     [SerializeField] private float boundDamageMultiplier = 2f;
 
-    [Header("히트박스 연결")]
-    [SerializeField] private GameObject clearingHitbox;
-    [SerializeField] private GameObject landingHitbox;
+    [Header("발사체 프리팹 연결 (새로 굽는 거라 유지함)")]
     [SerializeField] private GameObject webPrefab;
 
+    private GameObject clearingHitbox; // 인스펙터 슬롯 삭제함.
+    private GameObject landingHitbox;  // 인스펙터 슬롯 삭제함.
     private Animator visualAnimator;
     private bool isExecuting = false;
 
     private void Awake()
     {
         visualAnimator = GetComponentInChildren<Animator>();
+
+        MidBoss parent = GetComponent<MidBoss>();
+        if (parent != null)
+        {
+            clearingHitbox = parent.hitBox_Clearing;
+            landingHitbox = parent.hitBox_Landing;
+        }
+
         if (clearingHitbox != null) clearingHitbox.SetActive(false);
         if (landingHitbox != null) landingHitbox.SetActive(false);
     }
@@ -39,7 +47,6 @@ public class MidBossPattern8 : BossPatternBase
         if (visualAnimator != null) visualAnimator.SetTrigger("doSpit");
     }
 
-    // 1단계: 넉백 뿜어내는 모션 프레임에 "AnimEvent_UltClearing" 꽂음.
     public void AnimEvent_UltClearing()
     {
         ApplyClearing();
@@ -50,7 +57,6 @@ public class MidBossPattern8 : BossPatternBase
         }
     }
 
-    // 2단계: 거미줄 뱉는 모션 프레임에 "AnimEvent_UltWeb" 꽂음.
     public void AnimEvent_UltWeb()
     {
         if (webPrefab == null) return;
@@ -61,7 +67,6 @@ public class MidBossPattern8 : BossPatternBase
         MidBossWebProjectile webScript = web.GetComponent<MidBossWebProjectile>();
         if (webScript != null) webScript.Initialize(dir, webSpeed, webRange, bindDuration);
 
-        // 거미줄 발사 후 바로 공중 점프 코루틴 진입함.
         StartCoroutine(UltJumpRoutine());
     }
 
@@ -79,7 +84,6 @@ public class MidBossPattern8 : BossPatternBase
         if (visualAnimator != null) visualAnimator.SetTrigger("doLand");
     }
 
-    // 3단계: doLand 착지 모션 쾅 찍는 프레임에 "AnimEvent_UltLandImpact" 꽂음.
     public void AnimEvent_UltLandImpact()
     {
         if (landingHitbox != null)
