@@ -13,7 +13,7 @@ public class PlayerHealState : PlayerState
         hasHealed = false;
 
         player.SetVelocity(0f, player.rb.linearVelocity.y);
-        Debug.Log("힐 시전 시작... (무방비 상태)");
+        Debug.Log("힐 시전 시작");
     }
 
     public override void PhysicsUpdate()

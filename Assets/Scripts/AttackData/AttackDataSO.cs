@@ -16,7 +16,7 @@ public class AttackDataSO : ScriptableObject
 
 
     [Header("차지(기 모으기) 설정")]
-    public bool canCharge = false;        // 이 공격이 기 모으기가 가능한가? (찌르기 SO에서만 체크!)
+    public bool canCharge = false;        // 이 공격이 기 모으기가 가능한가?
     public float chargeMultiplier = 1.5f; // 풀 차지 시 데미지 몇 배? (예: 1.5배)
 
 }

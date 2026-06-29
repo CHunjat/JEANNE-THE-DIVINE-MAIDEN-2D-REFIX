@@ -138,7 +138,7 @@ public class PlayerController : MonoBehaviour
     [Header("차지 공격 설정")]
     public int currentChargeLevel = 1; // 1: 즉발(또는 덜 모음), 2: 풀차지
 
-    // 🔥 애니메이션 이벤트에서 호출할 차지 공격 전용 함수
+    // 애니메이션 이벤트에서 호출할 차지 공격 전용 함수
     public void ExecuteChargeAttack(int baseIndex)
     {
       
@@ -189,7 +189,7 @@ public class PlayerController : MonoBehaviour
         {
             hasHitEnemy = true; // 한 명이라도 맞았다면 true
 
-            //enemyfsm 스크립트 확보시 주석해제
+            //enemyfsm 스크립트 확보시 주석해제(기초연동완료)
              EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
             if (enemyFSM != null)
             {
@@ -298,7 +298,7 @@ public class PlayerController : MonoBehaviour
     public bool isThrustCharged = false;
 
     [Header("스킬 데이터 (SO)")]
-    public AttackDataSO diveDropData; // 유니티 에디터에서 방금 만든 SO를 할당할 곳 공중 강공격을 위한 선언;;
+    public AttackDataSO diveDropData; // 유니티 에디터에서 방금 만든 SO를 할당할 곳 오직 공중 강공격을 위한 선언;;
 
     public enum SkillSlot
     { HeavyAttack, LightningCut, Heal}
@@ -1027,7 +1027,7 @@ public class PlayerController : MonoBehaviour
 
         float dir = isFacingRight ? 1f : -1f;
 
-        // [실시간 모드] 게임 플레이 중 공격할 때만 잠깐 반짝이게 그리기
+        // 실시간 모드: 게임 플레이 중 공격할 때만 잠깐 반짝이게 그리기
         if (useLiveGizmoOnly)
         {
             if (Application.isPlaying && currentActiveData != null)
@@ -1040,7 +1040,7 @@ public class PlayerController : MonoBehaviour
                 Gizmos.DrawWireCube(drawPos, currentActiveData.size);  // 테두리 선
             }
         }
-        // [설계 모드] 게임이 꺼져있거나 인스펙터에서 튜닝할 때 
+        // 설계 모드: 게임이 꺼져있거나 인스펙터에서 튜닝할 때 
         else
         {
             for (int i = 0; i < attackLibrary.Count; i++)
