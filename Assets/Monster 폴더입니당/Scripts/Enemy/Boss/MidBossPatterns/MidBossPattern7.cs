@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // =====================================================
-// MidBossPattern7.cs (중복 슬롯 전면 청소 완료)
+// MidBossPattern7.cs (트리거 무한루프 버그 수정 완료본)
 // =====================================================
 public class MidBossPattern7 : BossPatternBase
 {
@@ -64,7 +64,8 @@ public class MidBossPattern7 : BossPatternBase
         GameObject playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null && Vector2.Distance(transform.position, playerObj.transform.position) <= conditionStampRange)
         {
-            if (visualAnimator != null) visualAnimator.SetTrigger("doSlashDouble");
+            // [핵심 수정] 무한루프 돌던 doSlashDouble 대신 애니메이터에 있는 3타 찍기 트리거를 쏨!
+            if (visualAnimator != null) visualAnimator.SetTrigger("doSlashTriple");
         }
     }
 

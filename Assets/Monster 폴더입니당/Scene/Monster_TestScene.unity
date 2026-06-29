@@ -1281,6 +1281,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4925484290603104269, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: returnHitbox
+      value: 
+      objectReference: {fileID: 460906006}
     - target: {fileID: 5145147845001952587, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_Name
       value: MidBoss_Spider
