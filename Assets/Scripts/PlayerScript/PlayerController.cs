@@ -305,6 +305,12 @@ public class PlayerController : MonoBehaviour
     public SkillSlot currentSkillSlot = SkillSlot.HeavyAttack; // 현재 선택된 스킬 슬롯
 
 
+    [Header("체크포인트 애니메이션")]
+    public string anim_ToRest = "ToRest";     // 앉는 과정 (0~5 프레임)
+    public string anim_Resting = "Resting";   // 앉아서 대기 (0~8 프레임 반복)
+    public string anim_Standing = "Standing"; // 일어나는 과정 (0~1 프레임)
+
+
 
     public PlayerAttack1State Attack1State { get; private set; }
     public PlayerAttack2State Attack2State { get; private set; }
@@ -346,6 +352,8 @@ public class PlayerController : MonoBehaviour
     public PlayerLightningAttackState LightningAttackState { get; private set; }
     public PlayerHealState HealState { get; private set; }
 
+    public PlayerRestState RestState { get; private set; }
+    public PlayerStandUpState StandUpState { get; private set; }
 
 
 
@@ -392,6 +400,9 @@ public class PlayerController : MonoBehaviour
         LightningChargeState = new PlayerLightningChargeState(this, StateMachine, anim_LightningCharge);
         LightningAttackState = new PlayerLightningAttackState(this, StateMachine, anim_LightningAttack);
         HealState = new PlayerHealState(this, StateMachine, anim_Heal);
+        RestState = new PlayerRestState(this, StateMachine, anim_ToRest);
+        StandUpState = new PlayerStandUpState(this, StateMachine, anim_Standing);
+
 
         rb = GetComponent<Rigidbody2D>(); // 2D로 변경
         cd = GetComponent<BoxCollider2D>(); // 2D로 변경

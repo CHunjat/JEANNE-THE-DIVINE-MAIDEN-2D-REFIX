@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: fd1e1d1e68c962748ab07fd3754a0227
+guid: 910bef4e0402df24b959b0d79d343d36
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -93,43 +93,17 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: Android
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: WindowsStoreApps
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: ToRest6_0
+      name: OutRest4_0
       rect:
         serializedVersion: 2
-        x: 10
-        y: 0
-        width: 32
-        height: 26
+        x: 22
+        y: 17
+        width: 30
+        height: 43
       alignment: 7
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -138,8 +112,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: bfdd2dca372830d42a5041db56a83aea
-      internalID: -1371243261
+      spriteID: 8570f3abaed72c242a0e47d782543199
+      internalID: -519808256
       vertices: []
       indices: 
       edges: []
@@ -148,7 +122,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: f76297129e6a5a843a7170356b1c3f80
+    spriteID: c56247fde878afa4fb23030e7150853e
     internalID: 0
     vertices: []
     indices: 
@@ -160,7 +134,7 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.0},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":7,"pivotUnitMode":1,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      ToRest6_0: -1371243261
+      OutRest4_0: -519808256
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
