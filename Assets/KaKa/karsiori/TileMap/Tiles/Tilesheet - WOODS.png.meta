@@ -1264,7 +1264,11 @@ TextureImporter:
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
-      physicsShape: []
+      physicsShape:
+      - - {x: 16, y: 16}
+        - {x: -16, y: 16}
+        - {x: -16, y: -16}
+        - {x: 16, y: -16}
       tessellationDetail: 0
       bones: []
       spriteID: 354c2f0164bcb2f4f9b506e3d51451e6
@@ -2209,7 +2213,10 @@ TextureImporter:
       Tilesheet - WOODS_85: 138614400
       Tilesheet - WOODS_86: 372247034
       Tilesheet - WOODS_87: 854101567
+      Tilesheet - WOODS_88: -838540576
+      Tilesheet - WOODS_89: -189717526
       Tilesheet - WOODS_9: 100805104
+      Tilesheet - WOODS_90: -1626296852
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
