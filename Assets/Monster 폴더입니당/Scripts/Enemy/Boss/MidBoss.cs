@@ -28,6 +28,9 @@ public class MidBoss : EnemyFSM
     // 클리어링(Pattern5) 전용 변수 - 긴급 발동을 위해 따로 뺌
     private MidBossPattern5 clearingPattern;
 
+    // [추가됨] 그로기 컴포넌트 참조
+    private EnemyGroggy groggy;
+
     [Header("Hit Box 연결 (인스펙터에서 할당)")]
     public GameObject hitBox_Stamp;
     public GameObject hitBox_Landing;
@@ -79,6 +82,9 @@ public class MidBoss : EnemyFSM
             originalMaterial = spriteRenderer.material;
         }
 
+        // [추가됨] 그로기 컴포넌트 가져오기 (없어도 동작은 함 - null 체크로 방어)
+        groggy = GetComponent<EnemyGroggy>();
+
         AnimEvent_DisableAllHitBox();
     }
 
@@ -86,7 +92,20 @@ public class MidBoss : EnemyFSM
     {
         if (isPhaseChanging || GetCurrentState() == EnemyState.Dead) return;
 
-        base.TakeDamage(amount);
+        // [추가됨] 그로기 중이면 데미지 배율 적용
+        float finalDamage = amount;
+        if (groggy != null)
+        {
+            finalDamage = amount * groggy.GetDamageMultiplier();
+        }
+
+        base.TakeDamage(finalDamage);
+
+        // [추가됨] 그로기 게이지 누적은 원본 데미지(amount) 기준으로
+        if (groggy != null)
+        {
+            groggy.AddGauge(amount);
+        }
 
         if (spriteRenderer != null && flashMaterial != null)
         {
@@ -113,11 +132,30 @@ public class MidBoss : EnemyFSM
     {
         if (currentPhase == 1 && currentHp <= maxHp * phase2Threshold)
         {
-            currentPhase = 2;
-            isPhaseChanging = true;
-            Debug.Log("[MidBoss] 2페이즈 돌입!");
-            Invoke(nameof(EndPhaseTransition), 2f);
+            // [추가됨] 그로기 중이면 페이즈 전환을 그로기 끝날 때까지 보류
+            if (groggy != null && groggy.IsGroggy)
+            {
+                groggy.RequestPendingPhaseTransition();
+                return;
+            }
+
+            StartPhaseTransition();
         }
+    }
+
+    // [추가됨] 페이즈 전환 시작 로직을 별도 함수로 분리 (그로기 보류 후 재호출 가능하도록)
+    private void StartPhaseTransition()
+    {
+        currentPhase = 2;
+        isPhaseChanging = true;
+        Debug.Log("[MidBoss] 2페이즈 돌입!");
+        Invoke(nameof(EndPhaseTransition), 2f);
+    }
+
+    // [추가됨] EnemyGroggy가 SendMessage로 호출하는 콜백 - 그로기 끝났는데 페이즈 전환이 보류돼 있었을 때
+    private void OnGroggyEndedPhaseTransition()
+    {
+        StartPhaseTransition();
     }
 
     private void EndPhaseTransition()
@@ -163,6 +201,9 @@ public class MidBoss : EnemyFSM
     protected override void OnAttack()
     {
         if (isPhaseChanging) return;
+
+        // [추가됨] 그로기 중이면 공격 로직 전체 스킵 (무방비 상태)
+        if (groggy != null && groggy.IsGroggy) return;
 
         // ========================================================
         // 1. 긴급 가로채기 (무한루프 차단 및 클리어링 즉시 발동)
@@ -233,6 +274,12 @@ public class MidBoss : EnemyFSM
     }
 
     protected override void OnHit() { }
+
+    // [추가됨] 그로기 상태 - 이동만 멈추고 나머지는 완전 무방비
+    protected override void OnGroggy()
+    {
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+    }
 
     protected override void OnDead()
     {
