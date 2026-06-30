@@ -38,18 +38,21 @@ public class SkillUIManager : MonoBehaviour
         // Skill_MaskGroup 하위 자식들(Skill1~5)을 탐색하여 내부 오브젝트들을 캐싱
         if (skillGroupTransform != null)
         {
+            Debug.Log($"[SkillUI] 자식 개수: {skillGroupTransform.childCount}개 발견");
+
             for (int i = 0; i < skillGroupTransform.childCount; i++)
             {
                 Transform child = skillGroupTransform.GetChild(i);
-
-                // 자식 오브젝트(Skill1~5) 아래에서 각각 자식 찾기
                 Transform maskChild = child.Find("Skill_Mask");
                 Transform mask180Child = child.Find("Skill_Mask180");
+
+                // ★ 어디서 막혔는지 콘솔창에 로그 찍기
+                if (maskChild == null) Debug.LogError($"[SkillUI] {child.name} 안에서 'Skill_Mask'를 찾을 수 없습니다!");
+                if (mask180Child == null) Debug.LogError($"[SkillUI] {child.name} 안에서 'Skill_Mask180'을 찾을 수 없습니다!");
 
                 Image targetImage = (maskChild != null) ? maskChild.GetComponent<Image>() : null;
                 GameObject target180Obj = (mask180Child != null) ? mask180Child.gameObject : null;
 
-                // 이름에 맞춰 배열의 적절한 인덱스(0~4)에 매칭
                 int index = -1;
                 if (child.name.Contains("Skill1")) index = 0;
                 else if (child.name.Contains("Skill2")) index = 1;
@@ -61,8 +64,17 @@ public class SkillUIManager : MonoBehaviour
                 {
                     maskImages[index] = targetImage;
                     mask180Objects[index] = target180Obj;
+                    Debug.Log($"[SkillUI] 인덱스 {index}번에 {child.name} 캐싱 성공!");
+                }
+                else
+                {
+                    Debug.LogWarning($"[SkillUI] {child.name}은 이름 조건(Skill1~5)에 맞지 않아 제외되었습니다.");
                 }
             }
+        }
+        else
+        {
+            Debug.LogError("[SkillUI] Skill_MaskGroup을 씬에서 찾을 수 없습니다!");
         }
 
         UpdateSkillMasks();
