@@ -16,3 +16,4 @@ MonoBehaviour:
   size: {x: 2.64, y: 0.85}
   offset: {x: -0.82, y: -0.15}
   damage: 4
+  hitStopDuration: 0.07

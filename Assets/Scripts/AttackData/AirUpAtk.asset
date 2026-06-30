@@ -16,8 +16,4 @@ MonoBehaviour:
   size: {x: 2.39, y: 1.63}
   offset: {x: -0.75, y: 1.16}
   damage: 3
-  knockbackForce: 0
-  hitStopDuration: 0
-  attackEffectPrefab: {fileID: 0}
-  attackSFX: {fileID: 0}
-  sfxVolume: 1
+  hitStopDuration: 0.1

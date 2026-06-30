@@ -14,5 +14,9 @@ public class AttackDataSO : ScriptableObject
    
     public float hitStopDuration;  // 역경직(멈춤) 시간 (예: 0.05초)
 
- 
+
+    [Header("차지(기 모으기) 설정")]
+    public bool canCharge = false;        // 이 공격이 기 모으기가 가능한가?
+    public float chargeMultiplier = 1.5f; // 풀 차지 시 데미지 몇 배? (예: 1.5배)
+
 }

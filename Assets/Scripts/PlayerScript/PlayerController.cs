@@ -138,7 +138,7 @@ public class PlayerController : MonoBehaviour
     [Header("차지 공격 설정")]
     public int currentChargeLevel = 1; // 1: 즉발(또는 덜 모음), 2: 풀차지
 
-    // 🔥 애니메이션 이벤트에서 호출할 차지 공격 전용 함수
+    // 애니메이션 이벤트에서 호출할 차지 공격 전용 함수
     public void ExecuteChargeAttack(int baseIndex)
     {
       
@@ -189,11 +189,17 @@ public class PlayerController : MonoBehaviour
         {
             hasHitEnemy = true; // 한 명이라도 맞았다면 true
 
-            //enemyfsm 스크립트 확보시 주석해제
+            //enemyfsm 스크립트 확보시 주석해제(기초연동완료)
              EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
             if (enemyFSM != null)
             {
-                enemyFSM.TakeDamage(data.damage);
+                float finalDamage = data.damage;
+
+                if (data.canCharge && isThrustCharged)
+                {
+                    finalDamage *= data.chargeMultiplier;
+                }
+                enemyFSM.TakeDamage(finalDamage);
             }
             Debug.Log($"<color=orange>[타격 적중]</color> <b>{data.attackName}</b> -> {enemy.name}에게 적중! (타격 이펙트 생성 위치: {enemy.transform.position})");
 
@@ -278,19 +284,31 @@ public class PlayerController : MonoBehaviour
     public string anim_Heal = "Heal";
 
 
+    [Header("이펙트(FX) 설정")] //middleATK 이펙트설정 
+    //위치 조절용 오프셋 변수 
+    public GameObject thrustChargeFxPrefab;
+    public Transform thrustChargeFxSpawnPoint;
 
     [Header("변수 선언부")]
     public bool CanDash => dashCooltimer <= 0 && landTimer <= 0;
     // 1. 비탈길인지 확인하고 경사면 정보(slopeHit)를 업데이트함
     private float defaultGravityScale;
     public bool IsActionLocked => StateMachine.CurrentState == HealState;
+    [HideInInspector]
+    public bool isThrustCharged = false;
 
     [Header("스킬 데이터 (SO)")]
-    public AttackDataSO diveDropData; // 유니티 에디터에서 방금 만든 SO를 할당할 곳 공중 강공격을 위한 선언;;
+    public AttackDataSO diveDropData; // 유니티 에디터에서 방금 만든 SO를 할당할 곳 오직 공중 강공격을 위한 선언;;
 
     public enum SkillSlot
     { HeavyAttack, LightningCut, Heal}
     public SkillSlot currentSkillSlot = SkillSlot.HeavyAttack; // 현재 선택된 스킬 슬롯
+
+
+    [Header("체크포인트 애니메이션")]
+    public string anim_ToRest = "ToRest";     // 앉는 과정 (0~5 프레임)
+    public string anim_Resting = "Resting";   // 앉아서 대기 (0~8 프레임 반복)
+    public string anim_Standing = "Standing"; // 일어나는 과정 (0~1 프레임)
 
 
 
@@ -334,6 +352,8 @@ public class PlayerController : MonoBehaviour
     public PlayerLightningAttackState LightningAttackState { get; private set; }
     public PlayerHealState HealState { get; private set; }
 
+    public PlayerRestState RestState { get; private set; }
+    public PlayerStandUpState StandUpState { get; private set; }
 
 
 
@@ -380,6 +400,9 @@ public class PlayerController : MonoBehaviour
         LightningChargeState = new PlayerLightningChargeState(this, StateMachine, anim_LightningCharge);
         LightningAttackState = new PlayerLightningAttackState(this, StateMachine, anim_LightningAttack);
         HealState = new PlayerHealState(this, StateMachine, anim_Heal);
+        RestState = new PlayerRestState(this, StateMachine, anim_ToRest);
+        StandUpState = new PlayerStandUpState(this, StateMachine, anim_Standing);
+
 
         rb = GetComponent<Rigidbody2D>(); // 2D로 변경
         cd = GetComponent<BoxCollider2D>(); // 2D로 변경
@@ -1015,7 +1038,7 @@ public class PlayerController : MonoBehaviour
 
         float dir = isFacingRight ? 1f : -1f;
 
-        // [실시간 모드] 게임 플레이 중 공격할 때만 잠깐 반짝이게 그리기
+        // 실시간 모드: 게임 플레이 중 공격할 때만 잠깐 반짝이게 그리기
         if (useLiveGizmoOnly)
         {
             if (Application.isPlaying && currentActiveData != null)
@@ -1028,7 +1051,7 @@ public class PlayerController : MonoBehaviour
                 Gizmos.DrawWireCube(drawPos, currentActiveData.size);  // 테두리 선
             }
         }
-        // [설계 모드] 게임이 꺼져있거나 인스펙터에서 튜닝할 때 
+        // 설계 모드: 게임이 꺼져있거나 인스펙터에서 튜닝할 때 
         else
         {
             for (int i = 0; i < attackLibrary.Count; i++)

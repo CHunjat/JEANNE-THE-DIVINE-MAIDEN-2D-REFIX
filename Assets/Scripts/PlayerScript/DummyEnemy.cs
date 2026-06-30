@@ -18,10 +18,11 @@ public class DummyEnemy : EnemyFSM
         // 살아있다면 맞았을 때 무조건 Hit 상태로 강제 변환!
         if (currentHp > 0)
         {
+            isHitAnimationStarted = false;
             ChangeState(EnemyState.Hit);
         }
     }
-
+     
     protected override void OnIdle()
     {
         isHitAnimationStarted = false;
