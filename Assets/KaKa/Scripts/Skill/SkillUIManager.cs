@@ -38,21 +38,18 @@ public class SkillUIManager : MonoBehaviour
         // Skill_MaskGroup 하위 자식들(Skill1~5)을 탐색하여 내부 오브젝트들을 캐싱
         if (skillGroupTransform != null)
         {
-            Debug.Log($"[SkillUI] 자식 개수: {skillGroupTransform.childCount}개 발견");
-
             for (int i = 0; i < skillGroupTransform.childCount; i++)
             {
                 Transform child = skillGroupTransform.GetChild(i);
+
+                // 자식 오브젝트(Skill1~5) 아래에서 각각 자식 찾기
                 Transform maskChild = child.Find("Skill_Mask");
                 Transform mask180Child = child.Find("Skill_Mask180");
-
-                // ★ 어디서 막혔는지 콘솔창에 로그 찍기
-                if (maskChild == null) Debug.LogError($"[SkillUI] {child.name} 안에서 'Skill_Mask'를 찾을 수 없습니다!");
-                if (mask180Child == null) Debug.LogError($"[SkillUI] {child.name} 안에서 'Skill_Mask180'을 찾을 수 없습니다!");
 
                 Image targetImage = (maskChild != null) ? maskChild.GetComponent<Image>() : null;
                 GameObject target180Obj = (mask180Child != null) ? mask180Child.gameObject : null;
 
+                // 이름에 맞춰 배열의 적절한 인덱스(0~4)에 매칭
                 int index = -1;
                 if (child.name.Contains("Skill1")) index = 0;
                 else if (child.name.Contains("Skill2")) index = 1;
@@ -64,17 +61,8 @@ public class SkillUIManager : MonoBehaviour
                 {
                     maskImages[index] = targetImage;
                     mask180Objects[index] = target180Obj;
-                    Debug.Log($"[SkillUI] 인덱스 {index}번에 {child.name} 캐싱 성공!");
-                }
-                else
-                {
-                    Debug.LogWarning($"[SkillUI] {child.name}은 이름 조건(Skill1~5)에 맞지 않아 제외되었습니다.");
                 }
             }
-        }
-        else
-        {
-            Debug.LogError("[SkillUI] Skill_MaskGroup을 씬에서 찾을 수 없습니다!");
         }
 
         UpdateSkillMasks();
@@ -92,6 +80,24 @@ public class SkillUIManager : MonoBehaviour
 
         // PlayerStats에서 현재 MP 값 실시간 동기화
         float currentMp = playerStats.currentMp;
+
+        // ──────────────────────────────────────────────────────────
+        // ⭐ [수정] MP가 최대치(500) 미만일 때만 Skill_MaskGroup을 활성화
+        // ──────────────────────────────────────────────────────────
+        if (skillGroupTransform != null)
+        {
+            // MP가 500 미만이면 true(활성화), 500 이상(최대치)이면 false(비활성화)
+            bool shouldBeActive = currentMp < 500f;
+
+            if (skillGroupTransform.gameObject.activeSelf != shouldBeActive)
+            {
+                skillGroupTransform.gameObject.SetActive(shouldBeActive);
+            }
+        }
+
+        // 마나가 500 가득 차서 그룹이 꺼졌다면, 하위 마스크 연산을 할 필요가 없으므로 리턴
+        if (skillGroupTransform != null && !skillGroupTransform.gameObject.activeSelf) return;
+        // ──────────────────────────────────────────────────────────
 
         for (int i = 0; i < 5; i++)
         {
@@ -124,12 +130,10 @@ public class SkillUIManager : MonoBehaviour
                 // 현재 MP 상태에 따라 Fill Amount 값 복구 및 계산
                 if (currentMp <= minMp)
                 {
-                    // MP가 아예 도달하지 못한 완전히 잠긴 상태 -> 마스크 가득 채움 (1.0)
                     maskImages[i].fillAmount = 1f;
                 }
                 else
                 {
-                    // MP가 다시 줄어들거나 차오르는 도중인 상태 -> 실시간 비율 계산
                     float progress = (currentMp - minMp) / 100f;
                     maskImages[i].fillAmount = 1f - progress;
                 }
