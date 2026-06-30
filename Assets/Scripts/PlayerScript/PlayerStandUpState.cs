@@ -9,6 +9,8 @@ public class PlayerStandUpState : PlayerState
     {
         base.Enter();
         player.SetVelocity(0f, player.rb.linearVelocity.y);
+        player.animator.Play(animHash, 0, 0);
+        player.animator.Update(0f);
     }
 
     public override void LogicUpdate()
