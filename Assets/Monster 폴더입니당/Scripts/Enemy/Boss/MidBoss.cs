@@ -5,194 +5,154 @@ using System.Collections.Generic;
 // =====================================================
 // MidBoss.cs
 // 중간 보스(거미)의 핵심 AI 제어 스크립트임.
-// EnemyFSM(상태 머신)을 상속받아 행동을 제어함.
 // =====================================================
 public class MidBoss : EnemyFSM
 {
     [Header("페이즈 설정")]
-    // 현재 보스가 몇 페이즈인지 저장하는 변수임. (기본값 1)
     [SerializeField] private int currentPhase = 1;
-    // 2페이즈로 넘어갈 체력 비율임. (0.5 = 최대 체력의 50%)
     [SerializeField] private float phase2Threshold = 0.5f;
-    // 지금 2페이즈로 변신(포효 등) 중인지 체크하는 변수임. true일 땐 무적이고 안 움직임.
     private bool isPhaseChanging = false;
 
     [Header("보스 공격 딜레이")]
-    // 패턴들이 기관총처럼 한꺼번에 나가는 걸 막기 위해, '다음 번 공격이 가능한 시간'을 기록해 두는 변수임.
     private float nextAttackTime = 0f;
 
     [Header("피격 피드백 (경직 면역)")]
-    // 보스의 2D 이미지를 화면에 그려주는 컴포넌트임. 색깔을 바꾸기 위해 필요함.
     [SerializeField] private SpriteRenderer spriteRenderer;
-    // 맞았을 때 잠깐 입을 '하얀색 옷(마테리얼)'임. 인스펙터에서 GUI/Text Shader를 넣은 마테리얼을 연결해야 함.
     [SerializeField] private Material flashMaterial;
-    // 피격이 끝나면 다시 원래 색깔로 돌아오기 위해, 게임 시작 시점의 원래 옷을 기억해 둘 변수임.
     private Material originalMaterial;
-    // 하얗게 번쩍이는 타이머(코루틴)가 여러 개 겹쳐서 버그 나는 걸 막기 위해, 현재 실행 중인 타이머를 추적하는 변수임.
     private Coroutine flashCoroutine;
 
-    // 1페이즈 때 쓸 패턴들을 모아둘 장바구니임.
     private List<BossPatternBase> phase1Patterns = new List<BossPatternBase>();
-    // 2페이즈 때 쓸 패턴들을 모아둘 장바구니임.
     private List<BossPatternBase> phase2Patterns = new List<BossPatternBase>();
 
+    // 클리어링(Pattern5) 전용 변수 - 긴급 발동을 위해 따로 뺌
+    private MidBossPattern5 clearingPattern;
+
     [Header("Hit Box 연결 (인스펙터에서 할당)")]
-    // 인스펙터에서 빈칸에 끌어다 넣을 타격 판정 박스들임.
     public GameObject hitBox_Stamp;
     public GameObject hitBox_Landing;
     public GameObject hitBox_Clearing;
     public GameObject hitBox_Slash;
     public GameObject hitBox_BackKick;
 
-    // [추가] OnDead() 사후 처리가 매 프레임 중복 실행되는 것을 확실하게 막아주는 전용 스위치임.
     private bool isDeadProcessed = false;
 
     protected override void Awake()
     {
-        base.Awake(); // 부모 클래스(EnemyFSM)의 초기화 코드를 먼저 실행함.
+        base.Awake();
 
-        // ===== 플레이어와 보스 본체의 물리적 충돌만 무시 (관통 세팅) =====
-        Collider2D myCollider = GetComponent<Collider2D>(); // 보스 본체에 붙어있는 충돌체 컴포넌트를 가져옴.
-        GameObject playerObj = GameObject.FindWithTag("Player"); // 태그를 이용해 하이어라키에서 플레이어 오브젝트를 찾아냄.
+        Collider2D myCollider = GetComponent<Collider2D>();
+        GameObject playerObj = GameObject.FindWithTag("Player");
 
         if (playerObj != null && myCollider != null)
         {
-            Collider2D playerCollider = playerObj.GetComponent<Collider2D>(); // 플레이어 본체의 콜라이더 컴포넌트를 가져옴.
+            Collider2D playerCollider = playerObj.GetComponent<Collider2D>();
             if (playerCollider != null)
             {
-                // 보스 본체와 플레이어 본체가 서로 겹쳐도 밀어내지 않고 부드럽게 통과하게 만듦. (자석 현상 원천 차단)
                 Physics2D.IgnoreCollision(myCollider, playerCollider, true);
             }
         }
-        // =========================================================================
 
-        // 보스 오브젝트에 붙어있는 패턴(1~8번) 스크립트들을 싹 다 배열로 긁어옴.
         BossPatternBase[] allPatterns = GetComponents<BossPatternBase>();
 
-        // 긁어온 스크립트들의 '이름'을 확인해서 1페이즈용, 2페이즈용 장바구니에 알아서 나눠 담음.
+        // 5번(클리어링)은 긴급 가로채기용이므로 찾아서 따로 빼둠
+        clearingPattern = GetComponent<MidBossPattern5>();
+
         foreach (var p in allPatterns)
         {
-            string patternName = p.GetType().Name; // 스크립트 이름 추출
+            string patternName = p.GetType().Name;
 
-            // 이름이 6, 7, 8번이면 2페이즈 가방에 넣음.
+            if (patternName == "MidBossPattern5") continue; // 5번은 랜덤 뽑기 가방에 안 넣음
+
             if (patternName == "MidBossPattern6" || patternName == "MidBossPattern7" || patternName == "MidBossPattern8")
             {
                 phase2Patterns.Add(p);
             }
-            // 그 외(1~5번)는 1페이즈 가방에 넣음.
             else
             {
                 phase1Patterns.Add(p);
             }
         }
 
-        // 게임이 시작될 때 보스의 원래 마테리얼(옷)을 originalMaterial 변수에 저장해 둠.
         if (spriteRenderer != null)
         {
             originalMaterial = spriteRenderer.material;
         }
 
-        // 시작할 때 혹시라도 켜져 있는 판정 박스들 싹 다 끄고 시작함.
         AnimEvent_DisableAllHitBox();
     }
 
-    // 플레이어한테 맞아서 피가 깎일 때 실행되는 함수임.
     public override void TakeDamage(float amount)
     {
-        // 2페이즈 변신 연출 중(isPhaseChanging)일 때는 데미지를 안 받고 무시하도록 방어막이 켜짐.
         if (isPhaseChanging || GetCurrentState() == EnemyState.Dead) return;
 
-        base.TakeDamage(amount); // 부모 클래스의 코드를 실행해서 실제로 체력을 깎음.
+        base.TakeDamage(amount);
 
-        // [피격 피드백 로직] 보스는 경직 면역이므로 맞았을 때 상태가 바뀌지 않고 하얗게 번쩍이기만 함.
         if (spriteRenderer != null && flashMaterial != null)
         {
-            // 만약 이미 번쩍이고 있는 중(연타로 맞음)이라면, 꼬이지 않게 기존 타이머를 강제로 끔.
             if (flashCoroutine != null) StopCoroutine(flashCoroutine);
-            // 새 타이머(FlashRoutine)를 켜서 하얗게 만듦.
             flashCoroutine = StartCoroutine(FlashRoutine());
         }
 
-        // 피가 깎였으니 "혹시 50% 밑으로 떨어져서 2페이즈 갈 때가 됐나?" 검사함.
         CheckPhaseTransition();
     }
 
-    // 부모 클래스(EnemyBase)의 Die()에서 Destroy(gameObject)를 곧바로 실행하는 것을 막기 위해 오버라이드함.
     protected override void Die()
     {
-        // 부모의 즉시 삭제 로직을 완전히 씹어버리고, FSM 상태를 사망(Dead)으로 안전하게 변경함.
         ChangeState(EnemyState.Dead);
     }
 
-    // 0.1초 동안 몸을 하얗게 바꿨다가 원래대로 되돌리는 타이머(코루틴) 함수임.
     private IEnumerator FlashRoutine()
     {
-        // 보스 옷을 하얀색(flashMaterial)으로 갈아입힘.
         spriteRenderer.material = flashMaterial;
-        // 0.1초 동안 그 상태로 대기함.
         yield return new WaitForSeconds(0.1f);
-        // 시간이 지나면 게임 시작할 때 기억해둔 원래 옷(originalMaterial)으로 다시 갈아입힘.
         spriteRenderer.material = originalMaterial;
     }
 
-    // 2페이즈로 넘어갈지 조건을 검사하는 함수임.
     private void CheckPhaseTransition()
     {
-        // 현재 1페이즈고, 피가 50% 이하라면 실행됨. (EnemyBase에서 복구된 protected 변수 직접 접근함)
         if (currentPhase == 1 && currentHp <= maxHp * phase2Threshold)
         {
-            currentPhase = 2;             // 2페이즈로 올림.
-            isPhaseChanging = true;       // 변신 중이라고 표시함 (이때 위쪽 TakeDamage에서 데미지 차단됨).
+            currentPhase = 2;
+            isPhaseChanging = true;
             Debug.Log("[MidBoss] 2페이즈 돌입!");
-
-            // 2초 동안 포효하는 연출을 위해 대기했다가, EndPhaseTransition 함수를 실행함.
             Invoke(nameof(EndPhaseTransition), 2f);
         }
     }
 
-    // 2초간의 변신 연출이 끝나면 실행되는 함수임.
     private void EndPhaseTransition()
     {
-        isPhaseChanging = false;         // 변신 끝났다고 표시함. 방어막이 꺼지고 다시 데미지가 들어오는 상태가 됨.
-        ChangeState(EnemyState.Chase);   // 멍때리지 말고 바로 플레이어를 쫓아가게 상태를 바꿈.
+        isPhaseChanging = false;
+        ChangeState(EnemyState.Chase);
     }
 
-    // [상태] 대기: 플레이어가 멀리 있을 때 멍때리는 상태임.
     protected override void OnIdle()
     {
-        // 걷거나 공격하는 애니메이션을 끔.
         if (animator != null)
         {
             animator.SetBool("isMoving", false);
             animator.SetBool("isAttacking", false);
         }
 
-        // 플레이어가 감지 범위(detectRange) 안에 들어오면 추격 상태로 바꿈.
         if (GetDistanceToPlayer() <= detectRange)
             ChangeState(EnemyState.Chase);
     }
 
-    // [상태] 추격: 플레이어가 감지 범위엔 들어왔으나 때리기엔 멀 때 다가가는 상태임.
     protected override void OnChase()
     {
-        // 변신 중일 땐 안 쫓아감.
         if (isPhaseChanging) return;
 
-        // 걷는 애니메이션을 켬.
         if (animator != null)
             animator.SetBool("isMoving", true);
 
-        // 쫓아가다가 플레이어가 공격 사거리(attackRange) 안에 들어오면 공격 상태로 바꿈.
         if (GetDistanceToPlayer() <= attackRange)
         {
             ChangeState(EnemyState.Attack);
             return;
         }
 
-        // 플레이어가 있는 쪽으로 고개를 돌림 (좌우 반전).
         FlipTowardsPlayer();
 
-        // X축(좌우)으로만 이동 속도를 주고, Y축은 냅둬서 보스가 바닥을 파고들거나 하늘로 날아가는 걸 막음.
         if (player != null)
         {
             float moveDirX = Mathf.Sign(player.position.x - transform.position.x);
@@ -200,46 +160,61 @@ public class MidBoss : EnemyFSM
         }
     }
 
-    // [상태] 공격: 플레이어가 때릴 수 있는 사거리 안에 있을 때의 상태임.
     protected override void OnAttack()
     {
-        // 변신 중일 땐 안 때림.
         if (isPhaseChanging) return;
 
-        // 공격하려고 폼 잡았는데 플레이어가 얍삽하게 사거리 밖으로 도망가면 다시 추격 상태로 바꿈.
+        // ========================================================
+        // 1. 긴급 가로채기 (무한루프 차단 및 클리어링 즉시 발동)
+        // ========================================================
+        if (clearingPattern != null && clearingPattern.IsUsable())
+        {
+            FlipTowardsPlayer();
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+
+            if (animator != null)
+            {
+                animator.SetBool("isMoving", false);
+                animator.SetBool("isAttacking", true);
+            }
+
+            Debug.Log("<color=red>[MidBoss] 몸체 겹침 감지! 클리어링 정상 발동!</color>");
+            clearingPattern.Execute();
+
+            // 클리어링 모션 동안만 대기하고 다시 기본 공격 사이클로 복귀 (1.5초)
+            nextAttackTime = Time.time + 1.5f;
+            return;
+        }
+
+        // ========================================================
+        // 2. 일반 공격 로직
+        // ========================================================
         if (GetDistanceToPlayer() > attackRange)
         {
             ChangeState(EnemyState.Chase);
             return;
         }
 
-        // 플레이어가 보스 뒤로 구르기 등으로 넘어갔을 경우를 대비해 고개를 돌려줌.
         FlipTowardsPlayer();
 
-        // [중요] 아직 다음 공격을 할 타이밍(3.5초 쿨타임)이 안 됐으면, 그냥 제자리에서 이동만 멈추고 쉼.
+        // 3.5초 쿨타임 대기 확인
         if (Time.time < nextAttackTime)
         {
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
             return;
         }
 
-        // 때릴 타이밍이 됐으니 공격 애니메이션을 켬.
         if (animator != null)
         {
             animator.SetBool("isMoving", false);
             animator.SetBool("isAttacking", true);
         }
 
-        // 공격하는 동안 얼음 위처럼 미끄러지지 않게 이동 속도를 0으로 브레이크 욺.
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
 
-        // 현재 페이즈에 맞는 패턴 가방을 엶.
         List<BossPatternBase> currentPatterns = (currentPhase == 1) ? phase1Patterns : phase2Patterns;
-
-        // 당장 쓸 수 있는(각자 쿨타임이 다 찬) 패턴들만 모아둘 임시 장바구니를 만듦.
         List<BossPatternBase> readyPatterns = new List<BossPatternBase>();
 
-        // 패턴 가방을 뒤져서 쓸 수 있는 애들만 임시 장바구니에 담음.
         foreach (var pattern in currentPatterns)
         {
             if (pattern.IsUsable())
@@ -248,88 +223,54 @@ public class MidBoss : EnemyFSM
             }
         }
 
-        // 쓸 수 있는 스킬이 하나라도 있다면?
         if (readyPatterns.Count > 0)
         {
-            // 주사위를 굴려서 그중 랜덤으로 하나를 뽑아서 시전함. (1번만 편식하는 버그 방지)
             int randomIdx = Random.Range(0, readyPatterns.Count);
+            Debug.Log($"<color=cyan>[MidBoss] 일반 패턴 발동: {readyPatterns[randomIdx].GetType().Name}</color>");
             readyPatterns[randomIdx].Execute();
-
-            // 스킬을 하나 썼으니, 다음번 공격은 3.5초 뒤에 하라고 타이머를 세팅해 줌.
             nextAttackTime = Time.time + 3.5f;
         }
     }
 
-    // [상태] 피격: 보스는 경직 면역이라 매 프레임 실행할 내용이 없으므로 비워둠.
-    protected override void OnHit()
-    {
-    }
+    protected override void OnHit() { }
 
-    // [상태] 사망: 피가 0이 됐을 때 매 프레임 실행되는 사망 상태 함수임.
     protected override void OnDead()
     {
-        // [수정] 중력값으로 중복 실행을 막던 꼼수 대신, 전용 스위치(isDeadProcessed)를 사용하여 안전하게 리턴함.
         if (isDeadProcessed) return;
         isDeadProcessed = true;
 
-        // 1. 죽은 시체가 바닥에서 밀려다니지 않게 이동 속도를 완전히 0으로 고정함.
         rb.linearVelocity = Vector2.zero;
-
-        // 유니티 중력을 0으로 만들어서 죽을 때 시체가 땅 밑으로 추락하는 현상을 방지함.
         rb.gravityScale = 0f;
 
-        // 2. 시체에 플레이어가 걸려 넘어지거나 비비적거리는 걸 막기 위해 본체 충돌체(Collider)를 끔.
         Collider2D coll = GetComponent<Collider2D>();
-        if (coll != null)
-            coll.enabled = false;
+        if (coll != null) coll.enabled = false;
 
-        // 3. 죽는 애니메이션을 틀어줌.
-        if (animator != null)
-            animator.SetBool("isDead", true);
+        if (animator != null) animator.SetBool("isDead", true);
 
         Debug.Log("[MidBoss] 컷! 보스 처치 완료!");
     }
 
     // ========================================================
-    // 애니메이션 이벤트 핀에서 실시간으로 호출할 함수들 모음임.
-    // 연속 공격(콤보) 시 다단 히트가 정상적으로 들어가도록 모두 0.2초 자동 꺼짐을 적용함!
+    // 애니메이션 이벤트 핀
     // ========================================================
-
-    // 슬래쉬 모션 중 칼날이 뻗어나오는 프레임에 맞춰 슬래쉬 히트박스를 켬.
     public void AnimEvent_Slash1()
     {
-        if (hitBox_Slash)
-        {
-            hitBox_Slash.SetActive(true);
-            Invoke(nameof(DeactivateSlash), 0.2f); // 0.2초 뒤에 끄는 함수 예약함.
-        }
+        if (hitBox_Slash) { hitBox_Slash.SetActive(true); Invoke(nameof(DeactivateSlash), 0.2f); }
     }
     private void DeactivateSlash() { if (hitBox_Slash) hitBox_Slash.SetActive(false); }
 
-    // 발 구르기(스탬프) 모션 중 발이 땅에 쾅 닿는 프레임에 히트박스를 켬. (3연타 막타에도 쓰임!)
     public void AnimEvent_Stamp()
     {
-        if (hitBox_Stamp)
-        {
-            hitBox_Stamp.SetActive(true);
-            Invoke(nameof(DeactivateStamp), 0.2f); // 0.2초 뒤에 끄는 함수 예약함.
-        }
+        if (hitBox_Stamp) { hitBox_Stamp.SetActive(true); Invoke(nameof(DeactivateStamp), 0.2f); }
     }
     private void DeactivateStamp() { if (hitBox_Stamp) hitBox_Stamp.SetActive(false); }
 
-    // 뒷발차기 모션 중 다리가 뒤로 쫙 뻗어지는 프레임에 히트박스를 켬.
     public void AnimEvent_BackKickHit()
     {
-        if (hitBox_BackKick)
-        {
-            hitBox_BackKick.SetActive(true);
-            Invoke(nameof(DeactivateBackKick), 0.2f); // 0.2초 뒤에 끄는 함수 예약함.
-        }
+        if (hitBox_BackKick) { hitBox_BackKick.SetActive(true); Invoke(nameof(DeactivateBackKick), 0.2f); }
     }
     private void DeactivateBackKick() { if (hitBox_BackKick) hitBox_BackKick.SetActive(false); }
 
-
-    // 공격 판정이 끝나고 다음 모션으로 넘어갈 때, 혹시라도 켜져있는 모든 히트박스를 안전하게 끔.
     public void AnimEvent_DisableAllHitBox()
     {
         if (hitBox_Stamp) hitBox_Stamp.SetActive(false);
@@ -339,9 +280,5 @@ public class MidBoss : EnemyFSM
         if (hitBox_BackKick) hitBox_BackKick.SetActive(false);
     }
 
-    // 사망(Die) 애니메이션의 맨 마지막 프레임에 꽂아둘 시체 삭제 함수임.
-    public void AnimEvent_Die()
-    {
-        Destroy(gameObject);
-    }
+    public void AnimEvent_Die() { Destroy(gameObject); }
 }
