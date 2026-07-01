@@ -44,6 +44,12 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: PlayerAndProp
+    uniqueID: 1953683477
+    locked: 0
+  - name: DarknessUI
+    uniqueID: 4192305317
+    locked: 0
   m_RenderingLayers:
   - Default
   - Light Layer 1

@@ -15,23 +15,40 @@ public class PlayerAirAttack1State : PlayerState
         // 1. 공격 횟수 1개 차감
         player.currentAirActionCount++;
 
-        // 2. 🛑 2D 중력 끄기 (체공)
+        // 2. 2D 중력 끄기 (체공)
         player.rb.gravityScale = 0f;
 
-        // 3. 🦅 허공답보: 진행하던 X축 관성은 절반으로 줄이고, Y축은 살짝 튕겨 올림
+        player.animator.Play(animHash, 0, 0f);
+        player.animator.Update(0f); // 이걸 해야 1프레임 지연이 사라짐
+
+        // 3. 허공답보: 진행하던 X축 관성은 절반으로 줄이고, Y축은 살짝 튕겨 올림
         float currentX = player.rb.linearVelocity.x;
         player.SetVelocity(currentX * 0.5f, player.airAttackBounceForce);
+
+     
     }
 
     public override void LogicUpdate()
     {
         base.LogicUpdate();
 
-        float nTime = GetNormalizedTime();
-        // 현재 애니메이션 실제 길이 가져오기
-        float animLength = player.animator.GetCurrentAnimatorStateInfo(0).length;
+        // 1. 공격 직후 아주 짧은 시간(0.1초)은 무조건 대기
+        if (stateTimer < 0.1f) return;
 
-        // ⚔️ 2타 콤보 예약: 카운트가 남았고, 모션이 50% 이상 진행됐을 때 공격 키를 누르면
+        // 2. 애니메이터 정보 갱신 (애니메이션이 '공격'으로 완전히 넘어갔는지 확인)
+        var stateInfo = player.animator.GetCurrentAnimatorStateInfo(0);
+
+        // 3.[방어코드] 만약 애니메이션이 아직 공격 모션이 아니라면, 길이 계산 자체가 무의미함.
+        // 애니메이션이 확실히 공격 모션일 때만 밑의 로직 진행
+        if (!stateInfo.IsName("AirAtk1")) return;
+
+        float nTime = GetNormalizedTime();
+        float animLength = stateInfo.length;
+
+        // 4. [디버깅] 만약 애니메이션 길이가 0이라면 강제로 0.5초로 고정 (붕쯔 버그 방지)
+        if (animLength <= 0.01f) animLength = 0.5f;
+
+        // ⚔️ 2타 콤보 예약
         if (player.inputReader.AttackPressed && player.currentAirActionCount < player.maxAirActions && nTime >= 0.5f)
         {
             isExitingState = true;
@@ -40,10 +57,11 @@ public class PlayerAirAttack1State : PlayerState
         }
 
         // 🚪 애니메이션 다 끝나면 다시 떨어지기 시작
+        // stateTimer >= animLength 로직은 이제 안전함 (animLength가 0일 리 없으니까)
         if (stateTimer >= animLength && !isExitingState)
         {
             isExitingState = true;
-            stateMachine.ChangeState(player.AirState); // Fall 모션으로 돌아감
+            stateMachine.ChangeState(player.AirState);
         }
     }
 
@@ -61,7 +79,7 @@ public class PlayerAirAttack1State : PlayerState
             player.SetVelocity(0f, player.rb.linearVelocity.y);
         }
 
-        // 🔥 공중 브레이크: '스르륵'을 '통!'으로 바꿔주는 마법
+        // 공중 브레이크: '스르륵'을 '통!'으로 바꿔주는 마법
         float currentX = player.rb.linearVelocity.x;
         float currentY = player.rb.linearVelocity.y;
 

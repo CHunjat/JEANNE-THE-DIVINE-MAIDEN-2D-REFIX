@@ -289,17 +289,6 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""06af26c5-e050-4611-b42c-1a813c6f1542"",
-                    ""path"": """",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Grapple"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
                     ""id"": ""593fb431-4f4f-459e-bf9e-02c7ff06e94e"",
                     ""path"": ""<Keyboard>/ctrl"",
                     ""interactions"": """",
