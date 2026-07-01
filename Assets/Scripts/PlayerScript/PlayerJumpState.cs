@@ -33,7 +33,7 @@ public class PlayerJumpState : PlayerState
         {
             player.rb.linearVelocity = new Vector2(player.rb.linearVelocity.x, 0f);
 
-            // 🔥 [Bug 2 완벽 해결] 방향키를 떼고 있을 때(xInput == 0)는 비탈길 추가 부스트(3.5f)를 절대 주지 않습니다!
+            //  방향키를 떼고 있을 때(xInput == 0)는 비탈길 추가 부스트(3.5f) X
             // 이 조건문 하나로 중립 점프 시 하늘로 치솟는 폭주 버그가 완벽히 차단됩니다.
             if (Mathf.Abs(xInput) > 0.1f)
             {
@@ -45,7 +45,7 @@ public class PlayerJumpState : PlayerState
                     if (isFirstSprintJump)
                     {
                         
-                        finalJumpForce *= 1.1f; // (취향에 따라 0.7f ~ 0.9f 사이로 조절하세요)
+                        finalJumpForce *= 1.1f; // (취향에 따라 0.7f ~ 0.9f 사이로 조절)
                     }
                     else
                     {

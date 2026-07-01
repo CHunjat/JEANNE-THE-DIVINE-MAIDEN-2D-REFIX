@@ -17,8 +17,10 @@ public class PlayerStats : MonoBehaviour
     public bool isInvincible = false;   // 무적 상태 여부
     public float invincibilityDuration = 1.0f; // 피격 시 무적 시간
 
+    private PlayerController playerController;
     private void Awake()
     {
+        playerController = GetComponent<PlayerController>();
         // 게임 시작 시 체력을 최대치로 초기화
         currentHp = maxHp;
         currentMp = MaxMp;
@@ -39,12 +41,23 @@ public class PlayerStats : MonoBehaviour
         if (currentHp <= 0)
         {
             currentHp = 0;
-            Die();
+
+            // 이미 죽어가는 중이면 중복 실행 방지
+            if (playerController.StateMachine.CurrentState == playerController.DieState) return;
+
+            // 사망 상태로 전환
+            playerController.StateMachine.ChangeState(playerController.DieState);
         }
         else
         {
             // 살아있다면 피격 무적 시간 발동
             StartCoroutine(InvincibilityRoutine());
+
+            //피격 스테이트 ㄱㄱ
+            //if (playerController.StateMachine.CurrentState != playerController.HitState)
+            //{
+            //    playerController.StateMachine.ChangeState(playerController.HitState);
+            //}
         }
     }
 
@@ -76,9 +89,5 @@ public class PlayerStats : MonoBehaviour
     }
 
     // 사망 처리
-    private void Die()
-    {
-        Debug.Log("플레이어 사망!");
-        // TODO: 사망 애니메이션 트리거, 입력 차단, 게임오버 UI 호출 등
-    }
+   
 }

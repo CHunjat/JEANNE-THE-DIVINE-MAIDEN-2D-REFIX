@@ -126,12 +126,12 @@ TextureImporter:
       name: Death22_0
       rect:
         serializedVersion: 2
-        x: 36
+        x: 34
         y: 12
         width: 49
         height: 23
-      alignment: 7
-      pivot: {x: 0, y: 0}
+      alignment: 9
+      pivot: {x: 0.18367347, y: 0.08695652}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
