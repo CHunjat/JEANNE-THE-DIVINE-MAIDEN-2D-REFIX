@@ -723,6 +723,12 @@ public class PlayerController : MonoBehaviour
 
     public void HandleActiveSkillInput()
     {
+
+        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState)
+        {
+            inputReader.HAttackPressed = false;
+            return;
+        }
         // 1. 공통 기모으기 입력 검사 (InputReader의 HAttackPressed 사용)
         if (!inputReader.HAttackPressed) return;
 
@@ -776,6 +782,11 @@ public class PlayerController : MonoBehaviour
     //강공 찌르기 //키 F
     public void HandleThrustAttackInput()
     {
+        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState)
+        {
+            inputReader.ThrustAttackPressed = false;
+            return;
+        }
         if (!inputReader.ThrustAttackPressed) return;
 
         // 1. 이미 내려찍기 중이면 중복 방지
