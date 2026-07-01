@@ -151,12 +151,12 @@ public class InputReader : ScriptableObject, PlayerControls.IPlayerActions
         {
             ThrustAttackPressed = true; // 상태 전이용 단발성 티켓 발급
             ThrustAttackHeld = true;    // 기 모으기 유지 스위치 ON
-            Debug.Log("👉 [입력] 찌르기 키 눌림! (Held = true)"); // 👈 추가
+            Debug.Log("찌르기 키 눌림! (Held = true)"); // 👈 추가
         }
         else if (context.canceled)
         {
             ThrustAttackHeld = false;   // 손 떼면 유지 스위치 OFF
-            Debug.Log("✋ [입력] 찌르기 키 떨어짐! (Held = false)"); // 👈 추가
+            Debug.Log("찌르기 키 떨어짐! (Held = false)"); // 👈 추가
         }
     }
 
@@ -180,11 +180,40 @@ public class InputReader : ScriptableObject, PlayerControls.IPlayerActions
         {
             bool value = _grapplePressed;
             _grapplePressed = false; // 읽어가자마자 꺼버림! (점프랑 동일)
-            Debug.Log("그래플");
 
             return value;
         }
         set => _grapplePressed = value;
+    }
+
+    private bool _lightningPress; 
+    public bool LightningPressed
+    {
+        get
+        {
+            bool value = _lightningPress;
+            _lightningPress = false;
+            return value;
+        }
+        set
+        {
+            _lightningPress = value;
+        }
+    
+    }
+
+    public bool LightningHeld;
+    public void OnLightning(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            LightningPressed = true;  // 단발성 진입 티켓
+            LightningHeld = true;     // 기 모으기 유지 스위치 ON
+        }
+        else if (context.canceled)
+        {
+            LightningHeld = false;    // 손 떼면 유지 스위치 OFF
+        }
     }
 
     public void OnGrapple(InputAction.CallbackContext context)

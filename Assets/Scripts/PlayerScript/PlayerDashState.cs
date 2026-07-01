@@ -1,3 +1,4 @@
+using TheBlackCat.TrailEffect2D;
 using UnityEngine;
 
 public class PlayerDashState : PlayerState
@@ -13,9 +14,18 @@ public class PlayerDashState : PlayerState
     {
         base.Enter();
 
-        // 🔥 대쉬 시작할 때 땅이었는지 기록 (공중 대쉬는 경사면 보정을 받지 않게 하기 위함)
-        startedGrounded = player.IsGrounded() || player.OnSlope();
+        ////대쉬 잔상 패리대쉬시 사용
+        //if (player.playerModelForTrail != null)
+        //{
+        //    TrailManager.Instance.StartTrail(player.playerModelForTrail);
+        //}
 
+
+        // 대쉬 시작할 때 땅이었는지 기록 (공중 대쉬는 경사면 보정을 받지 않게 하기 위함)
+        if (!player.IsGrounded() && !player.OnSlope())
+        {
+            player.hasUsedAirDash = true;
+        }
         player.rb.gravityScale = 0f; // 2D gravityScale 사용
         dashTime = player.dashDuration;
 
@@ -35,25 +45,71 @@ public class PlayerDashState : PlayerState
     {
         base.PhysicsUpdate();
 
-        // 기본 대쉬 방향 (수평) - Vector2로 전환
         Vector2 dashVec = new Vector2(dashDirection, 0f);
+        float finalDashSpeed = player.dashSpeed;
 
-        // 🔥 버그 수정 핵심 로직
-        // 1. 지상에서 대쉬를 시작했고 2. 현재 비탈길 위라면 경사면 보정 적용
-        // 공중에서 대쉬하다가 비탈길에 닿은 경우는 보정을 하지 않아야 위로 튀지 않습니다.
-        if (startedGrounded && player.OnSlope())
+        // 1. [핵심 1] 발 밑을 넓게 스캔해서 '평지(각도 0)'가 있는지 독자적으로 찾습니다.
+        bool detectedFlatGround = false;
+
+        // 캐릭터 사이즈만큼 넓게 레이를 쏴서 윗평지가 발밑에 들어왔는지 확인
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(player.cd.bounds.center, player.cd.bounds.size * 0.9f, 0f, Vector2.down, 0.3f, player.GetCurrentGroundMask());
+
+        foreach (var hit in hits)
         {
-            dashVec = player.GetSlopeMoveDirection(dashVec);
+            if (hit.collider != null && hit.collider != player.ignoredDropCollider)
+            {
+                if (Vector2.Angle(Vector2.up, hit.normal) <= 0.1f) // 완전 평지 발견!
+                {
+                    detectedFlatGround = true;
+                    break;
+                }
+            }
         }
 
-        // 공중 대쉬 상태에서 비탈길에 충돌하면 자연스럽게 멈추거나 슬라이딩하도록
-        // 수직 속도(y)에 중력을 끄고 대쉬 속도만 주입
-        player.SetVelocity(dashVec.x * player.dashSpeed, dashVec.y * player.dashSpeed);
+        // 2. 비탈길 로직 처리
+        if (player.OnSlope())
+        {
+            // ★ [핵심 2] 비탈길과 평지가 '동시 감지'되었다면? (윗평지 교차점)
+            if (detectedFlatGround)
+            {
+                // 비탈길의 오르막 각도를 즉시 무시하고 평지 대시 모드로 전환합니다.
+                // 비탈길이 더 높더라도 윗평지에 찰싹 달라붙도록 미세한 하강 벡터(-0.1f)를 주입!
+                dashVec.y = -0.1f;
+                finalDashSpeed = player.dashSpeed; // 평지 진입이므로 속도 100% 쾌속 유지
+            }
+            else
+            {
+                // 순수 비탈길일 때 (동시 감지 아님)
+                dashVec = player.GetSlopeMoveDirection(dashVec);
+
+                if (dashVec.y > 0.05f)
+                {
+                    // 오르막 댐핑 (너무 느리다 싶으면 0.6f ~ 1.0f 사이로 올리세요)
+                    finalDashSpeed *= 0.6f;
+                }
+                else
+                {
+                    // 내리막 쾌속 슬라이딩
+                    finalDashSpeed = player.dashSpeed;
+                }
+            }
+        }
+        else if (detectedFlatGround)
+        {
+            // 순수 평지 대시일 때도 바닥에 미세하게 눌러줘서 턱에서 안 뜨게 만듦
+            dashVec.y = -0.05f;
+        }
+
+        // 3. 최종 속도 적용
+        player.SetVelocity(dashVec.x * finalDashSpeed, dashVec.y * finalDashSpeed);
     }
 
     public override void LogicUpdate()
     {
         base.LogicUpdate();
+
+        player.HandleAttackInput();
+        dashTime -= Time.deltaTime;
 
         player.HandleGrappleInput();
         if (stateMachine.CurrentState == player.GrappleState) return; // 그래플로 넘어갔다면 아래 로직 스킵
@@ -62,8 +118,6 @@ public class PlayerDashState : PlayerState
         if (stateMachine.CurrentState == player.GuardState) return;
 
 
-        player.HandleAttackInput();
-        dashTime -= Time.deltaTime;
 
         // 벽에 닿았을 때 예외 처리
         if (player.IsTouchingWall(dashDirection))
@@ -91,7 +145,10 @@ public class PlayerDashState : PlayerState
     private void FinishDash()
     {
         player.ResetDashCooldown();
-
+        if (player.OnSlope())
+        {
+            player.rb.linearVelocity = new Vector2(player.rb.linearVelocity.x, 0f);
+        }
         if (player.IsGrounded() || player.OnSlope())
         {
             if (Mathf.Abs(player.inputReader.MoveValue.x) > 0.1f)
@@ -117,6 +174,14 @@ public class PlayerDashState : PlayerState
     public override void Exit()
     {
         base.Exit();
+
+        //패리대쉬일때 잔상 밑에 추가
+        //if (player.playerModelForTrail != null)
+        //{
+        //    TrailManager.Instance.StopTrail(player.playerModelForTrail);
+        //}
+
+
         player.rb.gravityScale = 1f; // 2D gravityScale 원복
     }
 }

@@ -1,10 +1,21 @@
-using System;
 using NUnit.Framework;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using TheBlackCat.TrailEffect2D;
 using Unity.VisualScripting;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    public float groundedGraceTime = 0.8f; // 공중 판정 유예 시간
+    public float groundedTimer;
+
+    public bool ignoreSlopeDetection = false;
+
+    [Header("Layer Settings")]
+    public LayerMask stairsLayer; //
+    public LayerMask enemyLayer; // 
     [Header("Input Data")]
     public InputReader inputReader;
 
@@ -12,6 +23,8 @@ public class PlayerController : MonoBehaviour
     public Rigidbody2D rb; // 2D로 전환
     public BoxCollider2D cd; // 2D로 전환
     public Animator animator;
+    public PlayerStats playerStats; //스탯 컴포넌트 연결
+
 
     [Header("Movement Settings")]
     public float moveSpeed = 7f;
@@ -20,13 +33,14 @@ public class PlayerController : MonoBehaviour
     public float dashcooltime = 1.5f;
     private float dashCooltimer;
 
+    [Header("대쉬 잔상효과")]
+    public GameObject playerModelForTrail;
+    public Vector2 trailOffset = new Vector2(0f, -0.5f);
+
 
     [Header("착지딜레이 버니합금지")]
     public float landDashDelay = 0.5f;
     private float landTimer;
-
-
-    public bool CanDash => dashCooltimer <= 0 && landTimer <= 0;
 
 
     [Header("Orientation")]
@@ -84,13 +98,6 @@ public class PlayerController : MonoBehaviour
     public float wallGrabCooldown = 0.2f;
     public float wallGrabTimer;
 
-    [Header("공격 관리")]
-    public PlayerAttack1State Attack1State { get; private set; }
-    public PlayerAttack2State Attack2State { get; private set; }
-    public PlayerAttack3State Attack3State { get; private set; }
-
-    public PlayerDashAttackState DashAndSprintATK { get; private set; }
-
 
     [Header("Thrust Attack Settings")]
     public AnimationCurve thrustVelocityCurve; // 찌르기 속도 그래프
@@ -119,7 +126,133 @@ public class PlayerController : MonoBehaviour
     public string anim_BlockHit = "BlockNormalHit";
     public string anim_BlockBreak = "BlockBreak";
 
+    [Header("힐 스킬(Heal) 데이터")]
+    public float healAmount = 50f;  // 체력 회복량
+    public float healMpCost = 30f;  // 마나 소모량
+
     [Header("패링")]
+
+
+
+
+    [Header("차지 공격 설정")]
+    public int currentChargeLevel = 1; // 1: 즉발(또는 덜 모음), 2: 풀차지
+
+    // 애니메이션 이벤트에서 호출할 차지 공격 전용 함수
+    public void ExecuteChargeAttack(int baseIndex)
+    {
+      
+        int finalIndex = baseIndex + (currentChargeLevel - 1);
+
+        if (finalIndex < 0 || finalIndex >= attackLibrary.Count) return;
+
+        Debug.Log($"홀리 슬래쉬 {currentChargeLevel}단계 발동! (인덱스: {finalIndex})");
+        PerformMeleeAttack(attackLibrary[finalIndex]);
+    }
+
+
+    [Header("전투 세팅")]
+    public Transform attackPoint;           // 타격 기준점
+    public List<AttackDataSO> attackLibrary; // SO 파일들을 드래그해서 담는 곳
+
+    [Header("실시간 기즈모 설정")]
+    public bool useLiveGizmoOnly = true;     // true: 공격할 때만 뜸 / false: 기존처럼 에디터에서 항상 뜸
+    private AttackDataSO currentActiveData;   // 현재 실행 중인 공격의 데이터 저장용
+    private float gizmoDisplayTimer;          // 기즈모를 화면에 유지할 타이머
+    private const float GIZMO_DURATION = 0.2f; // 기즈모가 켜져 있을 시간 (초단위, 취향껏 조절)
+
+
+    // 애니메이션 이벤트에서 호출
+    public void ExecuteAttack(int index)
+    {
+        if (index < 0 || index >= attackLibrary.Count)
+        { 
+            return; 
+        }
+
+        currentActiveData = attackLibrary[index];
+        gizmoDisplayTimer = GIZMO_DURATION;
+        PerformMeleeAttack(attackLibrary[index]);
+    }
+
+    private void PerformMeleeAttack(AttackDataSO data)
+    {
+        float dir = isFacingRight ? 1f : -1f;
+        Vector2 finalOffset = new Vector2(data.offset.x * dir, data.offset.y);
+        Vector2 hitCenter = (Vector2)attackPoint.position + finalOffset;
+
+        Collider2D[] hitEnemies = Physics2D.OverlapBoxAll(hitCenter, data.size, 0f, enemyLayer);
+
+        bool hasHitEnemy = false;
+
+        foreach (Collider2D enemy in hitEnemies)
+        {
+            hasHitEnemy = true; // 한 명이라도 맞았다면 true
+
+            //enemyfsm 스크립트 확보시 주석해제(기초연동완료)
+             EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
+            if (enemyFSM != null)
+            {
+                float finalDamage = data.damage;
+
+                if (data.canCharge && isThrustCharged)
+                {
+                    finalDamage *= data.chargeMultiplier;
+                }
+                enemyFSM.TakeDamage(finalDamage);
+            }
+            Debug.Log($"<color=orange>[타격 적중]</color> <b>{data.attackName}</b> -> {enemy.name}에게 적중! (타격 이펙트 생성 위치: {enemy.transform.position})");
+
+        }
+
+        // 3. 적을 한 명이라도 맞췄을 때 한 번만 실행되는 '타격감' 연출
+        if (hasHitEnemy)
+        {
+         
+            // [역경직 HitStop] 시간이 0보다 크다면 실행
+            if (data.hitStopDuration > 0f)
+            {
+                // 코루틴 등을 활용해 Time.timeScale을 아주 잠깐 0으로 만들었다가 푸는 로직을 호출합니다.
+                StartCoroutine(HitStopRoutine(data.hitStopDuration)); //아직 안만듬
+                Debug.Log($"<color=yellow>[역경직 발생]</color> <b>{data.attackName}</b> 타격감 연출! {data.hitStopDuration}초 동안 정지!");
+            }
+        }
+    }
+
+    private IEnumerator HitStopRoutine(float duration)
+    {
+        // 1. 기존 타임스케일 저장 
+        // (보통 1f지만, 이미 슬로우 모션 중일 수도 있으니 원래 값을 기억해둡니다)
+        float originalTimeScale = Time.timeScale;
+
+        // 2. 게임 시간 정지! (역경직 발생)
+        Time.timeScale = 0f;
+
+        // 3.현실 시간(Realtime) 기준으로 대기
+        // 타임스케일이 0이므로 일반 WaitForSeconds를 쓰면 ㅈ댐
+        yield return new WaitForSecondsRealtime(duration);
+
+        // 4. 시간이 다 되면 원래 타임스케일로 복구
+        Time.timeScale = originalTimeScale;
+
+        Debug.Log($"<color=yellow>[역경직 종료]</color> {duration}초 정지 해제!");
+    }
+
+
+    // 씬 뷰에서 공격 범위를 실시간 확인
+    private void OnDrawGizmosSelected()
+    {
+        if (attackPoint == null || attackLibrary == null) return;
+        float dir = isFacingRight ? 1f : -1f;
+        Gizmos.color = Color.red;
+
+        foreach (var data in attackLibrary)
+        {
+            if (data == null) continue;
+            Vector2 drawPos = (Vector2)attackPoint.position + new Vector2(data.offset.x * dir, data.offset.y);
+            Gizmos.DrawWireCube(drawPos, data.size);
+        }
+    }
 
 
 
@@ -132,118 +265,74 @@ public class PlayerController : MonoBehaviour
     public float grappleMinRange = 0.1f;
     public LayerMask grappleLayer;        // "GrapplePoint" 레이어
 
-
-
     [Header("Grapple Animation")]
     public string anim_Grapple = "GrappleStart"; // 방금 주신 스프라이트 애니메이션 이름
 
-
-    // 상태 선언
+    [Header("밑점프 감지 타이머")]
+    public Collider2D ignoredDropCollider;
 
     [Header("비탈길(Slope) 세팅")]
     public float maxSlopeAngle = 45f;
-    private RaycastHit2D slopeHit; // 2D로 전환
+    public RaycastHit2D slopeHit; // 2D로 전환
+
+
+    [Header("라이트닝 컷 변수")]
+    public string anim_LightningReady = "LightningReady";   // 애니메이션 이름은 프로젝트에 맞게 수정
+    public string anim_LightningCharge = "LightningCharge";
+    public string anim_LightningAttack = "LightningAttack";
+    [Header("힐 애니메이션")]
+    public string anim_Heal = "Heal";
+
+
+    [Header("이펙트(FX) 설정")] //middleATK 이펙트설정 
+    //위치 조절용 오프셋 변수 
+    public GameObject thrustChargeFxPrefab;
+    public Transform thrustChargeFxSpawnPoint;
+
+    [Header("변수 선언부")]
+
+    public bool hasUsedAirDash;
+
+    public bool CanDash
+    {
+        get
+        {
+            // 1. 쿨타임이 안 돌았으면 무조건 불가
+            if (dashCooltimer > 0 || landTimer > 0) return false;
+
+            // 2. 👈 핵심: 공중에 떠 있는데 이미 공중 대쉬를 한 번 썼다면 불가!
+            if (!IsGrounded() && !OnSlope() && hasUsedAirDash) return false;
+
+            return true;
+        }
+    }
 
     // 1. 비탈길인지 확인하고 경사면 정보(slopeHit)를 업데이트함
-    public bool OnSlope()
-    {
-        if (cd == null) return false;
+    private float defaultGravityScale;
+    public bool IsActionLocked => StateMachine.CurrentState == HealState;
+    [HideInInspector]
+    public bool isThrustCharged = false;
 
-        Vector2 center = cd.bounds.center;
+    [Header("스킬 데이터 (SO)")]
+    public AttackDataSO diveDropData; // 유니티 에디터에서 방금 만든 SO를 할당할 곳 오직 공중 강공격을 위한 선언;;
 
-        // 폭을 캐릭터 80%로 줄여서 모서리 오작동 방지
-        Vector2 boxSize = new Vector2(cd.bounds.size.x * 0.8f, 0.1f);
-
-        // 여유 거리(Buffer)를 0.15f로 늘려서 중심축이 붕 떠도 바닥을 놓치지 않음
-        float maxDistance = cd.bounds.extents.y + 0.15f;
-
-        slopeHit = Physics2D.BoxCast(center, boxSize, 0f, Vector2.down, maxDistance, groundLayer);
-
-        if (slopeHit.collider != null)
-        {
-            // 박스가 땅속에 파묻혀서 시작될 경우 각도가 튀는 버그 방어
-            if (slopeHit.normal == Vector2.zero) return true;
-
-            float angle = Vector2.Angle(Vector2.up, slopeHit.normal);
-            return angle > 0.1f && angle <= maxSlopeAngle;
-        }
-        return false;
-    }
-
-    // 2. 가고자 하는 방향(Vector3)을 경사면에 맞춰 꺾어주는 함수
-    public Vector2 GetSlopeMoveDirection(Vector2 direction)
-    {
-        // 1. 비탈길의 각도를 구함
-        Vector2 tangent = Vector2.Perpendicular(slopeHit.normal).normalized;
-
-        // 2. [가장 중요] 탄젠트의 X값과 내 입력(direction.x)의 부호가 다르면 무조건 뒤집는다.
-        // 이렇게 하면 입구에서 튕길 일이 없습니다.
-        if (tangent.x * direction.x < 0)
-        {
-            tangent = -tangent;
-        }
-
-        return tangent;
-    }
+    public enum SkillSlot
+    { HeavyAttack, LightningCut, Heal}
+    public SkillSlot currentSkillSlot = SkillSlot.HeavyAttack; // 현재 선택된 스킬 슬롯
 
 
-    // 공중 횟수 초기화 함수
-    public void ResetAirActions() => currentAirActionCount = 0;
-
-    //방어코드 (공중 윗공격 찰나의순간, 땅에서 써버리는거 막기위함)
-    public bool IsTooCloseToGround()
-    {
-        Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
-        return Physics2D.BoxCast(rayStartPos, groundCheckSize / 2, 0f, Vector2.down, 0.5f, groundLayer).collider != null;
-    }
+    [Header("체크포인트 애니메이션")]
+    public string anim_ToRest = "ToRest";     // 앉는 과정 (0~5 프레임)
+    public string anim_Resting = "Resting";   // 앉아서 대기 (0~8 프레임 반복)
+    public string anim_Standing = "Standing"; // 일어나는 과정 (0~1 프레임)
 
 
-    //스프린트 점프 쿨타임 리셋함수
-    public void ResetSprintJumpCooldown()
-    {
-        sprintJumpCooldownTimer = sprintJumpCooldown; // 
-    }
-    //프로퍼티
-    public bool CanSprintJump => sprintJumpCooldownTimer <= 0;
 
+    public PlayerAttack1State Attack1State { get; private set; }
+    public PlayerAttack2State Attack2State { get; private set; }
+    public PlayerAttack3State Attack3State { get; private set; }
 
-    public bool IsGrounded()
-    {
-        if (cd == null) return false;
-        Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
-
-        // [중요] BoxCast는 전체 크기(groundCheckSize)를 사용해야 합니다.
-        var hit = Physics2D.BoxCast(rayStartPos, groundCheckSize, 0f, Vector2.down, groundCheckDistance + 0.1f, groundLayer);
-
-        // 비탈길에 있으면 무조건 Grounded로 인정 (안전장치)
-        if (OnSlope()) return true;
-
-        return hit.collider != null;
-    }
-
-    private void OnDrawGizmos()
-    {
-        if (cd == null) return;
-
-        Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
-
-        Gizmos.color = IsGrounded() ? Color.green : Color.red;
-        Gizmos.DrawWireCube(rayStartPos + Vector2.down * (groundCheckDistance + 0.1f), groundCheckSize);
-
-        Gizmos.color = Color.blue;
-        DrawWallGizmo(1f);
-        DrawWallGizmo(-1f);
-
-    }
-
-    private void DrawWallGizmo(float dir)
-    {
-        Vector2 origin = cd.bounds.center;
-        float checkDist = cd.bounds.extents.x + wallCheckDistance;
-        Vector2 hitCenter = origin + (Vector2.right * dir * checkDist);
-        Gizmos.DrawWireCube(hitCenter, WallCheckSize);
-    }
-
+    public PlayerDashAttackState DashAndSprintATK { get; private set; }
     public PlayerStateMachine StateMachine { get; private set; }
     public PlayerIdleState IdleState { get; private set; }
     public PlayerMoveState MoveState { get; private set; }
@@ -271,6 +360,17 @@ public class PlayerController : MonoBehaviour
     public PlayerGuardState GuardState { get; private set; }
     public PlayerGuardOffState GuardOffState { get; private set; }
     public PlayerGrappleState GrappleState { get; private set; }
+
+    public PlayerDropState DropState { get; private set; }
+
+    public PlayerLightningReadyState LightningReadyState { get; private set; }
+    public PlayerLightningChargeState LightningChargeState { get; private set; }
+    public PlayerLightningAttackState LightningAttackState { get; private set; }
+    public PlayerHealState HealState { get; private set; }
+
+    public PlayerRestState RestState { get; private set; }
+    public PlayerStandUpState StandUpState { get; private set; }
+
 
 
     private void Awake()
@@ -302,7 +402,7 @@ public class PlayerController : MonoBehaviour
         AirAttack1State = new PlayerAirAttack1State(this, StateMachine, "AirAtk1");
         AirAttack2State = new PlayerAirAttack2State(this, StateMachine, "AirAtk2");
 
-        DiveDropState = new PlayerDiveDropState(this, StateMachine, anim_DiveDrop);
+        DiveDropState = new PlayerDiveDropState(this, StateMachine, anim_DiveDrop, diveDropData);
         DiveLandState = new PlayerDiveLandState(this, StateMachine, anim_DiveLand);
         AirUpAttackState = new PlayerAirUpAttackState(this, StateMachine, anim_AirUpAtk);
 
@@ -310,8 +410,29 @@ public class PlayerController : MonoBehaviour
         GuardOffState = new PlayerGuardOffState(this, StateMachine, anim_GuardOff);
         GrappleState = new PlayerGrappleState(this, StateMachine, anim_Grapple);
 
+        DropState = new PlayerDropState(this, StateMachine, "Falling");
+
+        LightningReadyState = new PlayerLightningReadyState(this, StateMachine, anim_LightningReady);
+        LightningChargeState = new PlayerLightningChargeState(this, StateMachine, anim_LightningCharge);
+        LightningAttackState = new PlayerLightningAttackState(this, StateMachine, anim_LightningAttack);
+        HealState = new PlayerHealState(this, StateMachine, anim_Heal);
+        RestState = new PlayerRestState(this, StateMachine, anim_ToRest);
+        StandUpState = new PlayerStandUpState(this, StateMachine, anim_Standing);
+
+
         rb = GetComponent<Rigidbody2D>(); // 2D로 변경
         cd = GetComponent<BoxCollider2D>(); // 2D로 변경
+        defaultGravityScale = rb.gravityScale;
+        playerStats = GetComponent<PlayerStats>(); //시작할 때 내 몸에 붙은 스탯 스크립트를 찾아둠
+
+        if (playerModelForTrail != null)
+        {
+            var trailInstance = playerModelForTrail.GetComponent<TrailInstance>();
+            if (trailInstance != null)
+            {
+                trailInstance.spawnOffset = trailOffset; // 내가 정한 값을 에셋에 덮어씌움
+            }
+        }
     }
 
     private void Start() => StateMachine.Initialize(IdleState);
@@ -351,10 +472,28 @@ public class PlayerController : MonoBehaviour
             ResetAirActions(); // 바닥에 닿으면 공중 공격 횟수 초기화
         }
 
+        // [추가 테스트용] 키보드 Tab 키를 누르면 스킬 슬롯이 실시간으로 교체됨                    
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            if (currentSkillSlot == SkillSlot.HeavyAttack) currentSkillSlot = SkillSlot.LightningCut;
+            else if (currentSkillSlot == SkillSlot.LightningCut) currentSkillSlot = SkillSlot.Heal;
+            else currentSkillSlot = SkillSlot.HeavyAttack;
+
+            Debug.Log($"스킬 슬롯 전환됨: {currentSkillSlot}");
+        }
+
+        if (gizmoDisplayTimer > 0)
+        {
+            gizmoDisplayTimer -= Time.deltaTime;
+            if (gizmoDisplayTimer <= 0)
+            {
+                currentActiveData = null; // 시간이 다 되면 데이터를 비워 기즈모를 끕니다.
+            }
+        }
+
         //딱 idle, move에서만 가능
         HandleThrustAttackInput(); //강공찌르기 판독기 추가
-        HandleHeavyAttackInput(); //스킬찌르기 판독기 추가
-
+        HandleActiveSkillInput();  // [수정] E키(OnSkill) 하나로 슬롯에 따라 스킬을 분배하는 통합 판독기
 
         StateMachine.CurrentState.HandleInput();
         StateMachine.CurrentState.LogicUpdate();
@@ -362,13 +501,145 @@ public class PlayerController : MonoBehaviour
     }
     public void ResetDashCooldown() => dashCooltimer = dashcooltime;
     public void ResetLandTimer() => landTimer = landDashDelay;
-    private void FixedUpdate() => StateMachine.CurrentState.PhysicsUpdate();
+    private void FixedUpdate()
+    {
+        StateMachine.CurrentState.PhysicsUpdate();
+
+
+        #region 중력 안받는 스테이트들
+        // 그래플훅일땐 제외 / 미들찌르기/스킬제외 /공중공격제외
+        if (StateMachine.CurrentState == GrappleState) return;
+        if (StateMachine.CurrentState == ThrustReadyState) return;
+        if (StateMachine.CurrentState == HeavyReadyState) return;
+        if (StateMachine.CurrentState == HeavyChargeState) return;
+        if (StateMachine.CurrentState == HeavyAttackState) return;
+        if (StateMachine.CurrentState == AirAttack1State) return;
+        if (StateMachine.CurrentState == AirAttack2State) return;
+        if (StateMachine.CurrentState == LightningReadyState) return;
+        if (StateMachine.CurrentState == LightningChargeState) return;
+        if (StateMachine.CurrentState == LightningAttackState) return;
+        if (StateMachine.CurrentState == HealState) return;
+
+        bool isMidAir = StateMachine.CurrentState == JumpState ||
+                        StateMachine.CurrentState == AirState ||
+                        StateMachine.CurrentState == DropState ||
+                        StateMachine.CurrentState == DashState;
+        #endregion
+        bool isAttacking = StateMachine.CurrentState is PlayerAttackState;
+        bool isSprintLanding = StateMachine.CurrentState == LandState && isSprinting;
+
+        if (!isAttacking)
+        {
+            if (Mathf.Abs(inputReader.MoveValue.x) < 0.1f && IsGrounded() && !isMidAir && !isSprintLanding)
+            {
+                if (OnSlope())
+                {
+                    rb.linearVelocity = Vector2.zero;
+                    rb.gravityScale = 0f;
+                }
+                else
+                {
+                    rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+                    rb.gravityScale = defaultGravityScale;
+                }
+            }
+            else
+            {
+                rb.gravityScale = defaultGravityScale;
+            }
+        }
+
+        // [핵심 추가] 내리막길 스프린트 시 튀어오름 방지
+        if (isSprinting && OnSlope() && !isMidAir && Mathf.Abs(inputReader.MoveValue.x) >= 0.1f)
+        {
+            Vector2 slopeDir = GetSlopeMoveDirection(rb.linearVelocity.normalized);
+            float currentSpeed = rb.linearVelocity.magnitude;
+            if (StateMachine.CurrentState != JumpState)
+            {
+                rb.linearVelocity = slopeDir * currentSpeed;
+                rb.AddForce(Vector2.down * 50f, ForceMode2D.Force);
+            }
+        }
+
+
+        if (IsPureGrounded() && !OnSlope())
+        {
+            ToggleStairsCollision(false);
+        }
+        else if (StateMachine.CurrentState == DropState)
+        {
+            ToggleStairsCollision(false);
+        }
+        // 수정 3: AirState(낙하) 시 안착 로직 (겹침 방지)
+        else if (StateMachine.CurrentState == AirState)
+        {
+            // 캐릭터 몸통이 계단과 겹쳐있는지 간단히 확인 (0.95f로 약간 작게 해서 오작동 방지)
+            bool isBodyInside = Physics2D.OverlapBox(cd.bounds.center, cd.bounds.size * 0.9f, 0f, stairsLayer) != null;
+
+            // 2. 발밑에 계단이 있는지 확인 (안착할 땅이 있는가?)
+            bool isStairUnder = Physics2D.BoxCast(new Vector2(cd.bounds.center.x, cd.bounds.min.y), new Vector2(cd.bounds.size.x * 0.7f, 0.1f), 0f, Vector2.down, 3.0f, stairsLayer).collider != null;
+
+            // [순위 1] 대시 중일 때 -> 무조건 통과 (대시가 최우선)
+            if (StateMachine.CurrentState == DashState)
+            {
+                ToggleStairsCollision(false);
+            }
+            // [순위 2] 몸통이 계단 안에 겹쳐 있을 때 -> 무조건 통과 (밑점프든, 점프 중이든 끼임 방지)
+            else if (isBodyInside)
+            {
+                ToggleStairsCollision(false);
+            }
+            // [순위 3] 몸통은 밖으로 나왔는데, 발밑에 계단이 있을 때 -> 안착! (계단 위 착지 성공)
+            else if (isStairUnder)
+            {
+                ToggleStairsCollision(true);
+            }
+            // [순위 4] 그 외 허공
+            else
+            {
+                ToggleStairsCollision(false);
+            }
+        }
+
+
+    }
 
     // 2D 리지드바디이므로 Vector2를 사용
     public void SetVelocity(float x, float y)
     {
         rb.linearVelocity = new Vector2(x, y);
     }
+
+    public bool IsPureGrounded()
+    {
+        if (cd == null) return false;
+        Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
+
+        // stairsLayer 없이 오직 groundLayer만 단독으로 검사합니다.
+        RaycastHit2D hit = Physics2D.BoxCast(rayStartPos, groundCheckSize, 0f, Vector2.down, groundCheckDistance + 0.1f, groundLayer);
+        return hit.collider != null;
+    }
+
+    public LayerMask GetCurrentGroundMask()
+    {
+        LayerMask mask = groundLayer;
+
+        // 현재 유니티 물리 엔진에서 플레이어와 계단이 충돌 가능한 상태인지 확인
+        int playerLayer = LayerMask.NameToLayer("Player");
+        int stairsLayerIdx = LayerMask.NameToLayer("Stairs");
+        bool isCollisionEnabled = !Physics2D.GetIgnoreLayerCollision(playerLayer, stairsLayerIdx);
+        if (StateMachine != null)
+        {
+            // 물리 충돌이 켜져 있거나(계단 위), 공중(AirState)일 때만 계단을 감지!
+            if (isCollisionEnabled || StateMachine.CurrentState == AirState)
+            {
+                mask |= stairsLayer;
+            }
+        }
+        return mask;
+    }
+
+
 
     public void FlipController(float xInput)
     {
@@ -407,8 +678,18 @@ public class PlayerController : MonoBehaviour
 
         if (StateMachine.CurrentState == DashState || isSprinting)
         {
-            // 대시 어택 진입 시 스프린트 상태를 강제로 끄기
-            StateMachine.ChangeState(DashAndSprintATK);
+            if (IsGrounded())
+            {
+                StateMachine.ChangeState(DashAndSprintATK);
+            }
+            // 2. 공중(대쉬 중)이라면? 
+            // 굳이 따로 안 만들고 우리가 고쳐놓은 그 '공중 공격'으로 바로 점프!
+            else
+            {
+                if (currentAirActionCount >= maxAirActions) return;
+                // 여기서 공중 공격 상태로 바로 넘김
+                StateMachine.ChangeState(AirAttack1State);
+            }
             return;
         }
         // 2. 만약 땅에 있고, 콤보 중이 아니라면? -> 1타 발동!
@@ -421,6 +702,7 @@ public class PlayerController : MonoBehaviour
             && !(StateMachine.CurrentState is PlayerAirAttack1State)
             && !(StateMachine.CurrentState is PlayerAirAttack2State)
             && !(StateMachine.CurrentState is PlayerAirUpAttackState))
+
         {
             if (IsTooCloseToGround()) return; //공중 윗공격 땅 x
             float yInput = inputReader.MoveValue.y;
@@ -439,39 +721,72 @@ public class PlayerController : MonoBehaviour
 
     }
 
-    //스킬공격 분배기 함수 // 헤비어택(스킬) 할당키 "E"
-    public void HandleHeavyAttackInput()
+    public void HandleActiveSkillInput()
     {
-        // 1.
+
+        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState)
+        {
+            inputReader.HAttackPressed = false;
+            return;
+        }
+        // 1. 공통 기모으기 입력 검사 (InputReader의 HAttackPressed 사용)
         if (!inputReader.HAttackPressed) return;
 
         if (StateMachine.CurrentState is PlayerAttackState)
         {
-            Debug.Log("현재 공격 중이라 강공격 입력을 무시합니다.");
+            Debug.Log("현재 공격 중이라 스킬 입력을 무시합니다.");
             inputReader.HAttackPressed = false;
             return;
         }
-        //스프린트중 강공격막음 없애려면 이거 지워라 기획;;
+
+        // 스프린트중 스킬막음 없애려면 이거 지워라 기획;;
         if (isSprinting)
         {
             inputReader.HAttackPressed = false;
             return;
         }
 
-        // 2. 땅에 있고, 이미 기모으기 준비 중이 아닐 때만 진입
-        if (IsGrounded() && StateMachine.CurrentState != HeavyReadyState &&
-            StateMachine.CurrentState != HeavyChargeState && StateMachine.CurrentState != HeavyAttackState)
+
+
+        // 2. 땅에 있고, 현재 어떤 스킬 상태도 진행 중이 아닐 때만 진입
+        if (IsGrounded() &&
+            StateMachine.CurrentState != HeavyReadyState && StateMachine.CurrentState != HeavyChargeState && StateMachine.CurrentState != HeavyAttackState &&
+            StateMachine.CurrentState != LightningReadyState && StateMachine.CurrentState != LightningChargeState && StateMachine.CurrentState != LightningAttackState &&
+            StateMachine.CurrentState != HealState)
         {
-            // 판독기(ReadyState)로 보냅니다.
-            StateMachine.ChangeState(HeavyReadyState);
+            // 현재 활성화된 슬롯에 따라 전이할 상태 결정
+            if (currentSkillSlot == SkillSlot.HeavyAttack)
+            {
+                StateMachine.ChangeState(HeavyReadyState);
+            }
+            else if (currentSkillSlot == SkillSlot.LightningCut)
+            {
+                StateMachine.ChangeState(LightningReadyState);
+            }
+            else if (currentSkillSlot == SkillSlot.Heal)
+            {
+                if (playerStats.currentMp >= healMpCost)
+                {
+                    StateMachine.ChangeState(HealState);
+                }
+                else
+                {
+                    // 마나가 부족하면 상태를 넘기지 않고 입력을 무시합니다. (애니메이션 절대 안 나감)
+                    Debug.Log("마나가 부족하여 힐 스킬을 사용할 수 없습니다!");
+                    inputReader.HAttackPressed = false;
+                }
+            }
         }
     }
-
-
 
     //강공 찌르기 //키 F
     public void HandleThrustAttackInput()
     {
+        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState)
+        {
+            inputReader.ThrustAttackPressed = false;
+            return;
+        }
         if (!inputReader.ThrustAttackPressed) return;
 
         // 1. 이미 내려찍기 중이면 중복 방지
@@ -550,5 +865,314 @@ public class PlayerController : MonoBehaviour
             // 그래플 상태로 즉시 전이!
             StateMachine.ChangeState(GrappleState);
         }
+    }
+
+    // 통과 가능한 계단이나 원웨이 플랫폼의 콜라이더를 찾아 반환합니다.
+    public Collider2D GetDropThroughCollider()
+    {
+        // 1. 발판 타겟 찾기 (가장 가까운 통과 가능한 발판 탐색)
+        Vector2 rayOrigin = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(rayOrigin, groundCheckSize, 0f, Vector2.down, 0.5f, groundLayer | stairsLayer);
+
+        Collider2D bestTarget = null;
+        float closestDist = float.MaxValue;
+
+        foreach (var hit in hits)
+        {
+            if (hit.collider == null || hit.collider == cd || hit.collider == ignoredDropCollider) continue;
+
+           
+            // hit.collider가 속한 레이어가 stairsLayer에 포함되는지 확인
+            bool isStairs = ((1 << hit.collider.gameObject.layer) & stairsLayer) != 0;
+            bool hasEffector = hit.collider.GetComponent<PlatformEffector2D>() != null;
+
+            // 계단 레이어도 아니고, 이펙터도 없다면? -> 밑점프 불가능한 일반 쌩바닥!
+            if (!isStairs && !hasEffector)
+            {
+                continue; // 타겟으로 잡지 말고 무시해라!
+            }
+
+            if (hit.distance < closestDist)
+            {
+                closestDist = hit.distance;
+                bestTarget = hit.collider;
+            }
+        }
+
+        // 2. 장애물 차단 검사 (bestTarget이 있을 때만 수행)
+        if (bestTarget != null)
+        {
+            // --- 스프린트 상태에 따른 판정 수치 구분 ---
+            // 스프린트면: 더 넓고(1.5f) 깊게(1.5f) 검사해서 깐깐하게 막음
+            // 일반이면: 조금 좁고(0.95f) 얕게(0.9f) 검사해서 관대하게 허용
+            float widthFactor = isSprinting ? 1.3f : 0.6f;
+            float checkDistance = isSprinting ? 1.3f : 0.6f;
+
+            Vector2 footPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y);
+            Vector2 checkSize = new Vector2(cd.bounds.size.x * widthFactor, 0.1f);
+
+            RaycastHit2D[] checkHits = Physics2D.BoxCastAll(footPos, checkSize, 0f, Vector2.down, checkDistance, groundLayer | stairsLayer);
+
+            foreach (var hit in checkHits)
+            {
+                // 자신, 지금 통과하려는 발판, 이미 무시 중인 발판은 제외
+                if (hit.collider == cd || hit.collider == ignoredDropCollider || hit.collider == bestTarget) continue;
+
+                // [차단 로직]
+                // 감지된 것이 '통과 가능한 이펙터'가 없는 땅(Ground/Slope)이라면 좁은 공간으로 간주하고 차단
+                if (hit.collider.GetComponent<PlatformEffector2D>() == null)
+                {
+                    Debug.Log($"[차단] (스프린트:{isSprinting}) {hit.collider.name} 때문에 밑점프 불가");
+                    return null;
+                }
+            }
+        }
+
+        return bestTarget;
+    }
+
+    public bool OnSlope()
+    {
+        if (cd == null || ignoreSlopeDetection) return false; // 🔥 밑점프 중이면 아예 판정 안 함!
+
+        float rayLength = cd.bounds.extents.y + 0.3f;
+        LayerMask currentMask = GetCurrentGroundMask();
+
+        // 기존 hits 로직 그대로 사용하되, 가장 가까운 놈을 잡는 방식을 "약간의 여유"를 둠
+        RaycastHit2D[] hits = Physics2D.RaycastAll(cd.bounds.center, Vector2.down, rayLength, currentMask);
+
+        RaycastHit2D bestHit = default;
+        float minDist = float.MaxValue;
+
+        foreach (var hit in hits)
+        {
+            if (hit.collider != null && hit.collider != ignoredDropCollider)
+            {
+                // ★ 핵심: 현재 저장된 slopeHit(이전 프레임의 비탈길)이 있다면, 
+                // 거리가 아주 크게 변하지 않는 이상 그대로 유지함 (0.1f 오차 허용)
+                if (slopeHit.collider != null && hit.collider == slopeHit.collider)
+                {
+                    bestHit = hit;
+                    break; // 같은 콜라이더라면 고민할 필요도 없이 유지
+                }
+
+                // 새로운 콜라이더라면 거리 비교
+                if (hit.distance < minDist)
+                {
+                    minDist = hit.distance;
+                    bestHit = hit;
+                }
+            }
+        }
+
+        if (bestHit.collider != null)
+        {
+            float angle = Vector2.Angle(Vector2.up, bestHit.normal);
+
+            if (angle <= 0.1f) return false;
+
+            if (angle > 0.1f && angle <= maxSlopeAngle)
+            {
+                // ★ [핵심] 모서리 제외 필터 (Edge Detection)
+                // 콜라이더의 좌우 끝단(min.x, max.x)으로부터 margin 만큼은 경사로 판정에서 제외합니다.
+                // 이렇게 하면 모서리 끝에 도달했을 때 OnSlope가 false를 반환하여 평지로 전환됩니다.
+                float margin = 0.5f;
+                if (bestHit.point.x <= bestHit.collider.bounds.min.x + margin ||
+                    bestHit.point.x >= bestHit.collider.bounds.max.x - margin)
+                {
+                    return false; // 모서리이므로 경사로 취급 안 함!
+                }
+
+                slopeHit = bestHit;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // 2. 가고자 하는 방향(Vector3)을 경사면에 맞춰 꺾어주는 함수
+    public Vector2 GetSlopeMoveDirection(Vector2 direction)
+    {
+        // 1. 비탈길의 각도를 구함
+        Vector2 tangent = Vector2.Perpendicular(slopeHit.normal).normalized;
+
+        // 2. [가장 중요] 탄젠트의 X값과 내 입력(direction.x)의 부호가 다르면 무조건 뒤집는다.
+        // 이렇게 하면 입구에서 튕길 일이 없습니다.
+        if (tangent.x * direction.x < 0)
+        {
+            tangent = -tangent;
+        }
+
+        return tangent * 0.95f;
+    }
+
+
+    // 공중 횟수 초기화 함수
+    public void ResetAirActions()
+    {
+        currentAirActionCount = 0;
+        hasUsedAirDash = false; // 추가: 땅에 닿으면 공중 대쉬 장전!
+    }
+
+    //방어코드 (공중 윗공격 찰나의순간, 땅에서 써버리는거 막기위함)
+    public bool IsTooCloseToGround()
+    {
+        Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
+        return Physics2D.BoxCast(rayStartPos, groundCheckSize / 2, 0f, Vector2.down, 0.5f, groundLayer).collider != null;
+    }
+
+
+    //스프린트 점프 쿨타임 리셋함수
+    public void ResetSprintJumpCooldown()
+    {
+        sprintJumpCooldownTimer = sprintJumpCooldown; // 
+    }
+    //프로퍼티
+    public bool CanSprintJump => sprintJumpCooldownTimer <= 0;
+
+
+    public bool IsGrounded()
+    {
+
+        if (cd == null) return false;
+
+        if (StateMachine != null)
+        {
+            // 착지 모션 중이거나 대쉬 중일 때의 예외 처리
+            if (StateMachine.CurrentState == LandState) return true;
+        }
+
+        Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
+
+        // 방금 만든 GetCurrentGroundMask()를 사용
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(rayStartPos, groundCheckSize, 0f, Vector2.down, groundCheckDistance + 0.1f, GetCurrentGroundMask());
+
+        foreach (var hit in hits)
+        {
+            // 감지된 놈이 내가 지금 통과 중인 그 발판(ignoredDropCollider)이 아니라면? -> 진짜 땅이다!
+            if (hit.collider != null && hit.collider != ignoredDropCollider)
+            {
+
+                return true;
+            }
+        }
+
+        if (OnSlope()) return true;
+
+        return false;
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (cd == null) return;
+
+        Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
+
+        Gizmos.color = IsGrounded() ? Color.green : Color.red;
+        Gizmos.DrawWireCube(rayStartPos + Vector2.down * (groundCheckDistance + 0.1f), groundCheckSize);
+
+        Gizmos.color = Color.blue;
+        DrawWallGizmo(1f);
+        DrawWallGizmo(-1f);
+
+        if (attackPoint == null || attackLibrary == null) return;
+
+        float dir = isFacingRight ? 1f : -1f;
+
+        // 실시간 모드: 게임 플레이 중 공격할 때만 잠깐 반짝이게 그리기
+        if (useLiveGizmoOnly)
+        {
+            if (Application.isPlaying && currentActiveData != null)
+            {
+                Gizmos.color = new Color(1f, 0f, 0f, 0.4f); // 살짝 투명한 빨간색 (속 채우기)
+                Vector2 drawPos = (Vector2)attackPoint.position + new Vector2(currentActiveData.offset.x * dir, currentActiveData.offset.y);
+
+                Gizmos.DrawCube(drawPos, currentActiveData.size);      // 속이 찬 박스
+                Gizmos.color = Color.red;
+                Gizmos.DrawWireCube(drawPos, currentActiveData.size);  // 테두리 선
+            }
+        }
+        // 설계 모드: 게임이 꺼져있거나 인스펙터에서 튜닝할 때 
+        else
+        {
+            for (int i = 0; i < attackLibrary.Count; i++)
+            {
+                var data = attackLibrary[i];
+                if (data == null) continue;
+
+                // 콤보 순서에 따라 색상 다르게 (1타: 빨강, 2타: 노랑, 3타: 파랑)
+                Gizmos.color = i == 0 ? Color.red : (i == 1 ? Color.yellow : Color.blue);
+                Vector2 drawPos = (Vector2)attackPoint.position + new Vector2(data.offset.x * dir, data.offset.y);
+
+                Gizmos.DrawWireCube(drawPos, data.size);
+
+            }
+        }
+
+
+
+    }
+
+    public bool CheckLandingSurface(out Collider2D hitCollider)
+    {
+        hitCollider = null;
+
+        // 1. 플레이어 발바닥 기준점
+        Vector2 footPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y);
+        Vector2 checkSize = new Vector2(cd.bounds.size.x * 0.7f, 0.1f);
+
+        // 2. 밑점프 시에는 현재 밟고 있는 콜라이더(ignoredDropCollider)를 무시해야 함
+        // 레이어 마스크를 이용해 Ground와 Stairs를 한 번에 검사
+        LayerMask landingMask = groundLayer | stairsLayer;
+
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(footPos, checkSize, 0f, Vector2.down, 0.6f, landingMask);
+
+        foreach (var hit in hits)
+        {
+            // 내 몸뚱이(Player)랑 겹친 건 제외
+            if (hit.collider == cd) continue;
+
+            // 밑점프 중이라면, 지금 통과 중인 계단(ignoredDropCollider)은 무시!
+            if (StateMachine.CurrentState == DropState && hit.collider == ignoredDropCollider)
+                continue;
+
+            // 위에 조건 다 통과했으면 이게 진짜 착지할 바닥!
+            hitCollider = hit.collider;
+            return true;
+        }
+        return false;
+    }
+
+    private void DrawWallGizmo(float dir)
+    {
+        Vector2 origin = cd.bounds.center;
+        float checkDist = cd.bounds.extents.x + wallCheckDistance;
+        Vector2 hitCenter = origin + (Vector2.right * dir * checkDist);
+        Gizmos.DrawWireCube(hitCenter, WallCheckSize);
+    }
+
+
+    public LayerMask GetGroundCheckMask() => groundLayer | stairsLayer;
+
+    public void ToggleStairsCollision(bool enable)
+    {
+        int playerLayer = LayerMask.NameToLayer("Player");
+        int stairsLayerIdx = LayerMask.NameToLayer("Stairs");
+        Physics2D.IgnoreLayerCollision(playerLayer, stairsLayerIdx, !enable);
+    }
+
+    public bool IsOnStairs()
+    {
+        if (cd == null) return false;
+
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(cd.bounds.center, cd.bounds.size, 0f, Vector2.down, 0.3f, stairsLayer);
+        foreach (var hit in hits)
+        {
+            if (hit.collider != null && hit.collider != ignoredDropCollider)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

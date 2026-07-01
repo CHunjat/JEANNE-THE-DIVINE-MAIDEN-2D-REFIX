@@ -7,6 +7,12 @@ public class PlayerMoveState : PlayerState
 
     public override void Enter()
     {
+        // ★ 내 발밑이 계단이 아닐 때(평지일 때)만 계단을 통과하도록 물리 충돌 OFF
+        if (!player.IsOnStairs())
+        {
+            Physics2D.SyncTransforms();
+        }
+
         stateTimer = 0f;
         player.wasSprinting = false;
 
@@ -16,7 +22,6 @@ public class PlayerMoveState : PlayerState
             {
                 player.animator.Play(player.anim_SprintStart);
             }
-
             player.isJumpCut = false;
         }
         else
@@ -27,32 +32,58 @@ public class PlayerMoveState : PlayerState
 
     public override void LogicUpdate()
     {
+
+        if (player.StateMachine.CurrentState == player.HealState) return;
         player.HandleGuardInput();
         if (stateMachine.CurrentState == player.GuardState) return;
 
         player.HandleGrappleInput();
-        if (stateMachine.CurrentState == player.GrappleState) return; // 그래플로 넘어갔다면 아래 로직 스킵
+        if (stateMachine.CurrentState == player.GrappleState) return;
 
-        if (!player.IsGrounded())
+        if (player.IsGrounded())
         {
-            stateMachine.ChangeState(player.AirState);
-            return;
+            player.groundedTimer = player.groundedGraceTime;
         }
-        // [1] 입력을 미리 받아둠
+        else
+        {
+            player.groundedTimer -= Time.deltaTime;
+        }
+
+        // groundedTimer가 0보다 크면 아직 땅에 있는 것과 다름없음 (상태 전환 안 함)
+        if (player.groundedTimer <= 0)
+        {
+            if (!player.IsGrounded())
+            {
+                stateMachine.ChangeState(player.AirState);
+                return;
+            }
+        }
+
         float xInput = player.inputReader.MoveValue.x;
         var stateInfo = player.animator.GetCurrentAnimatorStateInfo(0);
 
-        // ★ [핵심 1] 점프와 대쉬를 로직 최상단으로 이동!
-        // 이렇게 해야 브레이크 애니메이션이 재생 중(return)이라도 점프가 씹히지 않습니다.
-        if (player.inputReader.JumpPressed && player.IsGrounded())
+        // 점프
+        bool isJumpBtnPressed = player.inputReader.JumpPressed;
+
+        if (isJumpBtnPressed && player.IsGrounded())
         {
-            player.inputReader.JumpPressed = false;
-            player.wasSprinting = false; // 플래그 리셋
-            // isSprinting을 여기서 끄지 않아야 공중에서도 스프린트 상태가 유지되어 '스프린트 점프'가 됩니다.
+            if (player.inputReader.MoveValue.y < -0.5f)
+            {
+                Collider2D dropCol = player.GetDropThroughCollider();
+                if (dropCol != null)
+                {
+                    player.wasSprinting = false;
+                    stateMachine.ChangeState(player.DropState); // 밑점프 실행!
+                    return;
+                }
+            }
+
+            player.wasSprinting = false;
             stateMachine.ChangeState(player.JumpState);
             return;
         }
 
+        // [대쉬]
         if (player.inputReader.DashPressed && player.CanDash)
         {
             player.inputReader.DashPressed = false;
@@ -61,20 +92,24 @@ public class PlayerMoveState : PlayerState
             return;
         }
 
-
-        // [2] 브레이크 중에는 부모 클래스의 기본 애니메이션 간섭 차단
+        // 브레이크 간섭, 스프린트일때
         if (!(xInput == 0 && player.isSprinting))
         {
             base.LogicUpdate();
         }
 
-
         player.HandleAttackInput();
 
-
-        // [3] 정지 로직 (x == 0)
+        // [정지 로직]
         if (xInput == 0)
         {
+
+
+            if (player.inputReader.HAttackPressed || player.inputReader.HeavyAttackHeld ||
+            player.inputReader.ThrustAttackHeld || player.inputReader.LightningPressed)
+            {
+                return; // 입력 중이니 Idle 전환 스킵하고 버틴다!
+            }
             if (player.isSprinting)
             {
                 if (!player.wasSprinting)
@@ -83,14 +118,12 @@ public class PlayerMoveState : PlayerState
                     player.animator.Play(player.anim_SprintBreak);
                 }
 
-                // 애니메이션이 98% 끝날 때까지 여기서 가둬둠
                 if (stateInfo.IsName(player.anim_SprintBreak))
                 {
                     if (stateInfo.normalizedTime < 0.98f) return;
                 }
                 else { return; }
 
-                // 브레이크가 완전히 끝난 후에만 상태 해제
                 player.isSprinting = false;
                 player.wasSprinting = false;
             }
@@ -99,7 +132,7 @@ public class PlayerMoveState : PlayerState
             return;
         }
 
-        // [4] 이동 및 스프린트 유지 로직 (x != 0)
+        // [이동 스프린트 유지 로직]
         player.wasSprinting = false;
 
         if (player.isSprinting)
@@ -120,29 +153,96 @@ public class PlayerMoveState : PlayerState
     {
         base.PhysicsUpdate();
         float xInput = player.inputReader.MoveValue.x;
+        bool isSlope = player.OnSlope();
 
-        if (xInput != 0)
+        // 스프린트 각도 보정 유지
+        if (isSlope && player.isSprinting)
         {
-            player.FlipController(xInput);
+            float angle = Vector2.Angle(Vector2.up, player.slopeHit.normal);
+            if (angle < 15f) isSlope = false;
         }
 
-        float currentSpeed = player.isSprinting ? player.sprintSpeed : player.moveSpeed;
-        // 비탈길 오르내리기 보정 로직
-        if (player.OnSlope())
+        if (xInput != 0) player.FlipController(xInput);
+        float currentSpeed;
+        if (player.isSprinting)
         {
-            player.rb.gravityScale = 0f; // 2D gravityScale 사용 (덜덜거림 방지)
+            if (isSlope && xInput != 0)
+            {
+                // 비탈길에서 움직이는 중이라면: 위로 가는지 아래로 가는지 체크
+                Vector2 moveDir = new Vector2(xInput, 0f);
+                Vector2 dir = player.GetSlopeMoveDirection(moveDir);
 
-            // xInput을 경사면 방향으로 변환
-            Vector2 moveDir = new Vector2(xInput, 0f); // Vector2로 전환
-            Vector2 slopeMoveDir = player.GetSlopeMoveDirection(moveDir);
-
-            player.SetVelocity(slopeMoveDir.x * currentSpeed, slopeMoveDir.y * currentSpeed);
+                if (dir.y > 0)
+                {
+                    currentSpeed = 8.4f; // 오르막 제한 속도
+                }
+                else
+                {
+                    currentSpeed = player.sprintSpeed;
+                }
+            }
+            else
+            {
+                currentSpeed = player.sprintSpeed;
+            }
         }
         else
         {
-            // 평지 걷기
-            player.rb.gravityScale = 1f; // 2D gravityScale 사용
-            player.SetVelocity(xInput * currentSpeed, player.rb.linearVelocity.y);
+            currentSpeed = player.moveSpeed; // 일반 이동 (4.2f)
+        }
+
+        if (isSlope)
+        {
+            player.rb.gravityScale = 0f;
+
+            if (xInput != 0)
+            {
+                Vector2 moveDir = new Vector2(xInput, 0f);
+                Vector2 slopeMoveDir = player.GetSlopeMoveDirection(moveDir);
+
+                // ★ [해결책] 모서리 직전 정점(Crest) 감지 및 Y축 벡터 강제 고정
+                // 비탈길 콜라이더의 상단 끝(bounds.max.y)까지의 거리를 계산
+                float slopeTopY = player.slopeHit.collider.bounds.max.y;
+                float playerBottomY = player.cd.bounds.min.y;
+
+                // 발밑이 정점 근처(0.2f 이내)에 도달했다면 위로 미는 힘을 강제로 죽임
+                if (playerBottomY >= slopeTopY - 0.2f && slopeMoveDir.y > 0)
+                {
+                    if (player.isSprinting)
+                    {
+
+
+                        slopeMoveDir.y *= 0.3f;
+                    }
+                    else
+                    {
+                        // [걷기 상태]
+                        // 기존처럼 Y축 힘을 0으로 만들어 올라타지는 것 방지
+                        slopeMoveDir.y = 0;
+                    }
+                }
+
+                player.SetVelocity(slopeMoveDir.x * currentSpeed, slopeMoveDir.y * currentSpeed);
+            }
+            else
+            {
+                // 정지 시
+                bool isHovering = player.slopeHit.collider != null && player.slopeHit.distance > 0.05f;
+                if (!isHovering) player.SetVelocity(0f, 0f);
+                else { player.rb.gravityScale = 1f; player.SetVelocity(0f, player.rb.linearVelocity.y); }
+            }
+        }
+        else
+        {
+            // [평지 모드]
+            player.rb.gravityScale = 1f;
+
+            // ★ [안착감 보정] 비탈길 이탈 시점의 Y속도 보정
+            // 위로 튀려는 속도가 남아있다면 즉시 0으로 깎아서 툭 떨어지는 느낌 제거
+            float velY = player.rb.linearVelocity.y;
+            if (velY > 0.1f) velY = 0f;
+
+            player.SetVelocity(xInput * currentSpeed, velY);
         }
     }
 

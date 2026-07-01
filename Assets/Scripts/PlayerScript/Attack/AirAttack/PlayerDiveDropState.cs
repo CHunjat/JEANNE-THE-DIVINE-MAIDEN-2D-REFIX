@@ -1,19 +1,30 @@
 ﻿using UnityEngine;
+using System.Collections.Generic; // 💡 HashSet을 쓰기 위해 추가
 
 public class PlayerDiveDropState : PlayerState
 {
-    public PlayerDiveDropState(PlayerController player, PlayerStateMachine stateMachine, string animName)
-        : base(player, stateMachine, animName) { }
+    // 💡 추가된 변수들: 타격 데이터와 맞은 적을 기억할 명부
+    private AttackDataSO attackData;
+    private HashSet<Collider2D> alreadyHitEnemies = new HashSet<Collider2D>();
+
+    // 💡 생성자: PlayerController에서 상태를 만들 때 SO 데이터를 넘겨받도록 수정
+    public PlayerDiveDropState(PlayerController player, PlayerStateMachine stateMachine, string animName, AttackDataSO data)
+        : base(player, stateMachine, animName)
+    {
+        this.attackData = data;
+    }
 
     public override void Enter()
     {
         base.Enter();
 
-        // 1. 중력 무시 (우리가 직접 엄청난 속도로 끌어내릴 것이기 때문)
-        player.rb.gravityScale = 0f; // 2D gravityScale 사용
+        // 💡 0. 낙하 시작! 명부 초기화 (이전에 맞았던 기록 삭제)
+        alreadyHitEnemies.Clear();
 
-        // 2. X축(앞뒤) 이동을 멈추고, Y축(아래)으로 최대 속도로 꽂아버림!
-        // X축을 0으로 하면 수직으로 떨어지고, 관성을 살리고 싶다면 player.rb.linearVelocity.x 를 넣으세요.
+        // 1. 중력 무시
+        player.rb.gravityScale = 0f;
+
+        // 2. 수직으로 최대 속도 꽂기
         player.SetVelocity(0f, -player.diveDropSpeed);
     }
 
@@ -32,13 +43,33 @@ public class PlayerDiveDropState : PlayerState
     {
         base.PhysicsUpdate();
 
-        // 제자리에서 안정적으로 때리도록 X축 속도를 0으로 꽉 잡아줍니다.
+        // 제자리에서 안정적으로 떨어지도록 X축 고정
         player.SetVelocity(0f, player.rb.linearVelocity.y);
+
+        // 추가된 부분: 낙하 중 타격 판정 로직 (매 물리 프레임마다 체크)
+        Collider2D[] hits = Physics2D.OverlapBoxAll
+        (
+            player.transform.position + (Vector3)attackData.offset,
+            attackData.size, 0f,
+            player.enemyLayer
+        );
+
+        foreach (Collider2D hit in hits)
+        {
+            // 명부에 있으면(이미 맞았으면) 패스
+            if (alreadyHitEnemies.Contains(hit)) continue;
+
+            // hit.GetComponent<EnemyFSM>().TakeDamage(attackData.damage); 
+            Debug.Log($"<color=orange>[타격]</color> <b>{attackData.attackName}</b> -> {hit.name}적중 ( 위치: {hit.transform.position})");
+            // 명부에 이름 적기
+            alreadyHitEnemies.Add(hit);
+
+        }
     }
 
     public override void Exit()
     {
         base.Exit();
-        player.rb.gravityScale = 1f; // 2D gravityScale 사용 (중력 복구)
+        player.rb.gravityScale = 1f; // 중력 복구
     }
 }

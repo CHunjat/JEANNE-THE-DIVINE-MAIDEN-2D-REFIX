@@ -210,7 +210,7 @@ public class PlayerGrappleState : PlayerState
                     // [수평 또는 밑으로 쏠 때 관성 강화]
                     // X축: 비행 가속도감을 받도록 수평 관성력을 대폭 보존 (보존 배율 0.85f)
                     // Y축: 위로 솟구치지 않고 하방 궤적 힘을 유지하며 묵직하게 떨어짐
-                    float launchX = grappleDir.x * player.grappleSpeed * 1.0f;
+                    float launchX = grappleDir.x * player.grappleSpeed * 0.85f;
                     float launchY = grappleDir.y * player.grappleSpeed * 0.85f;
 
                     player.rb.linearVelocity = new Vector2(launchX, launchY);

@@ -35,42 +35,31 @@ public class PlayerThrustAttackState : PlayerAttackState
         base.PhysicsUpdate();
         float facingDir = player.isFacingRight ? 1f : -1f;
 
-        // 🔥 [3타 핵심 로직 1] 독립적 비탈길 앵커
-        // PhysicsUpdate 시작 시 매 프레임 속도를 리셋하여 내리막 가속도를 삭제합니다.
-        if (player.OnSlope())
-        {
-            player.rb.gravityScale = 0f; // 2D gravityScale 사용
-            player.SetVelocity(0f, 0f);
-        }
+        // [미끄러짐 해결]
+        if (player.OnSlope()) player.rb.gravityScale = 0f;
+        else player.rb.gravityScale = 1f;
 
-        // 🔥 [3타 핵심 로직 2] 상수 기반 이동 구간
-        // 커브를 쓰지 않고 정해진 시간(activeThrustTime) 동안만 상수로 밀어줍니다.
         if (stateTimer < activeThrustTime)
         {
             if (player.OnSlope())
             {
-                Vector2 moveVec = new Vector2(facingDir, 0f); // Vector2로 전환
+                // 비탈길 전용 이동
+                Vector2 moveVec = new Vector2(facingDir, 0f);
                 Vector2 slopeVec = player.GetSlopeMoveDirection(moveVec);
-
-                // 3타에서 검증된 자석 수치 (2.0f, -2f)
                 float downwardStickiness = slopeVec.y < 0 ? 2.0f : 1.0f;
-                player.SetVelocity(
-                    slopeVec.x * thrustSpeed,
-                    (slopeVec.y * thrustSpeed * downwardStickiness) - (slopeVec.y < 0 ? 2f : 0f)
-                );
+                player.SetVelocity(slopeVec.x * thrustSpeed, (slopeVec.y * thrustSpeed * downwardStickiness) - (slopeVec.y < 0 ? 2f : 0f));
             }
             else
             {
-                // 평지 상속 전진 (중력은 끄고 수평 속도만 깔끔하게 주입)
+                // [위로 튀는 현상 해결] 평지 전진 (깔끔하게 X축만)
                 player.SetVelocity(facingDir * thrustSpeed, 0f);
             }
         }
         else
         {
-            // 🔥 [3타 핵심 로직 3] 전진 종료 후 0,0 쐐기
-            // 시간이 다 되면 애니메이션이 끝날 때까지 캐릭터를 땅에 박아버립니다.
+            // 종료 시 쐐기
             if (player.OnSlope()) player.SetVelocity(0f, 0f);
-            else player.SetVelocity(0f, 0f); // 평지도 관성 없이 0,0 고정
+            else player.SetVelocity(0f, player.rb.linearVelocity.y);
         }
     }
 

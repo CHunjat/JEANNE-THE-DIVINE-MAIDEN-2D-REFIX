@@ -25,31 +25,33 @@ public class PlayerAttack3State : PlayerAttackState
         base.PhysicsUpdate();
         float facingDir = player.isFacingRight ? 1f : -1f;
 
-        // 비탈길 처리: 중력 끄기
-        if (player.OnSlope())
-        {
-            player.rb.gravityScale = 0f;
-        }
+        // [미끄러짐 해결] 공격 중에는 확실하게 중력을 끄고 켭니다
+        if (player.OnSlope()) player.rb.gravityScale = 0f;
+        else player.rb.gravityScale = 1f;
 
-        // [핵심] 초반 0.15초 동안 전진
         if (stateTimer < 0.15f)
         {
-            Vector2 moveVec = new Vector2(facingDir, 0f);
-            Vector2 slopeVec = player.GetSlopeMoveDirection(moveVec);
-
-            float downwardStickiness = slopeVec.y < 0 ? 2.0f : 1.0f;
-
-            // ⚡ 해결책: slopeVec.x 부호를 믿지 않고, facingDir(현재 보는 방향)과 
-            // Mathf.Abs(절대값)를 사용하여 무조건 정방향으로만 나아가게 강제함
-            float targetSpeedX = facingDir * Mathf.Abs(slopeVec.x) * stepSpeed;
-            float targetSpeedY = (slopeVec.y * stepSpeed * downwardStickiness) - (slopeVec.y < 0 ? 2f : 0f);
-
-            player.SetVelocity(targetSpeedX, targetSpeedY);
+            if (player.OnSlope())
+            {
+                // 비탈길 전용 이동
+                Vector2 moveVec = new Vector2(facingDir, 0f);
+                Vector2 slopeVec = player.GetSlopeMoveDirection(moveVec);
+                float downwardStickiness = slopeVec.y < 0 ? 2.0f : 1.0f;
+                float targetSpeedX = facingDir * Mathf.Abs(slopeVec.x) * stepSpeed;
+                float targetSpeedY = (slopeVec.y * stepSpeed * downwardStickiness) - (slopeVec.y < 0 ? 2f : 0f);
+                player.SetVelocity(targetSpeedX, targetSpeedY);
+            }
+            else
+            {
+                // [위로 튀는 현상 해결] 평지일 때는 무조건 Y축을 0으로 강제!
+                player.SetVelocity(facingDir * stepSpeed, 0f);
+            }
         }
         else
         {
-            // 후딜레이시 정지
-            player.SetVelocity(0f, player.rb.linearVelocity.y);
+            // 전진 종료 후 완벽 정지
+            if (player.OnSlope()) player.SetVelocity(0f, 0f);
+            else player.SetVelocity(0f, player.rb.linearVelocity.y);
         }
     }
 
