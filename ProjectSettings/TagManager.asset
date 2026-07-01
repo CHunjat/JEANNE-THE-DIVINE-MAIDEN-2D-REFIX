@@ -18,12 +18,12 @@ TagManager:
   - Ground
   - Wall
   - grappleLayer
-  - 
-  - 
+  - Stairs
+  - PlayerPass
   - Enemy
-  - 
-  - 
-  - 
+  - Background
+  - DarknessUI
+  - PlayerAndProp
   - 
   - 
   - 
