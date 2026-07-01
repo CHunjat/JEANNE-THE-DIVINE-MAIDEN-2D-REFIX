@@ -290,7 +290,23 @@ public class PlayerController : MonoBehaviour
     public Transform thrustChargeFxSpawnPoint;
 
     [Header("변수 선언부")]
-    public bool CanDash => dashCooltimer <= 0 && landTimer <= 0;
+
+    public bool hasUsedAirDash;
+
+    public bool CanDash
+    {
+        get
+        {
+            // 1. 쿨타임이 안 돌았으면 무조건 불가
+            if (dashCooltimer > 0 || landTimer > 0) return false;
+
+            // 2. 👈 핵심: 공중에 떠 있는데 이미 공중 대쉬를 한 번 썼다면 불가!
+            if (!IsGrounded() && !OnSlope() && hasUsedAirDash) return false;
+
+            return true;
+        }
+    }
+
     // 1. 비탈길인지 확인하고 경사면 정보(slopeHit)를 업데이트함
     private float defaultGravityScale;
     public bool IsActionLocked => StateMachine.CurrentState == HealState;
@@ -554,7 +570,7 @@ public class PlayerController : MonoBehaviour
         {
             ToggleStairsCollision(false);
         }
-        // ★ 수정 3: AirState(낙하) 시 안착 로직 (겹침 방지)
+        // 수정 3: AirState(낙하) 시 안착 로직 (겹침 방지)
         else if (StateMachine.CurrentState == AirState)
         {
             // 캐릭터 몸통이 계단과 겹쳐있는지 간단히 확인 (0.95f로 약간 작게 해서 오작동 방지)
@@ -662,8 +678,18 @@ public class PlayerController : MonoBehaviour
 
         if (StateMachine.CurrentState == DashState || isSprinting)
         {
-            // 대시 어택 진입 시 스프린트 상태를 강제로 끄기
-            StateMachine.ChangeState(DashAndSprintATK);
+            if (IsGrounded())
+            {
+                StateMachine.ChangeState(DashAndSprintATK);
+            }
+            // 2. 공중(대쉬 중)이라면? 
+            // 굳이 따로 안 만들고 우리가 고쳐놓은 그 '공중 공격'으로 바로 점프!
+            else
+            {
+                if (currentAirActionCount >= maxAirActions) return;
+                // 여기서 공중 공격 상태로 바로 넘김
+                StateMachine.ChangeState(AirAttack1State);
+            }
             return;
         }
         // 2. 만약 땅에 있고, 콤보 중이 아니라면? -> 1타 발동!
@@ -971,7 +997,11 @@ public class PlayerController : MonoBehaviour
 
 
     // 공중 횟수 초기화 함수
-    public void ResetAirActions() => currentAirActionCount = 0;
+    public void ResetAirActions()
+    {
+        currentAirActionCount = 0;
+        hasUsedAirDash = false; // 추가: 땅에 닿으면 공중 대쉬 장전!
+    }
 
     //방어코드 (공중 윗공격 찰나의순간, 땅에서 써버리는거 막기위함)
     public bool IsTooCloseToGround()

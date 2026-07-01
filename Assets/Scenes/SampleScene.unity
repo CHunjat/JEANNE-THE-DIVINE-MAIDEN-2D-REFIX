@@ -2636,7 +2636,7 @@ MonoBehaviour:
   dashcooltime: 0.7
   playerModelForTrail: {fileID: 1199457208}
   trailOffset: {x: 0, y: -0.25}
-  landDashDelay: 0.9
+  landDashDelay: 0.3
   isFacingRight: 1
   jumpForce: 8
   airDeceleration: 1
@@ -2769,6 +2769,7 @@ MonoBehaviour:
   anim_Heal: Heal
   thrustChargeFxPrefab: {fileID: 5107921000559936895, guid: 1bdd5be339e01f14a9e27f1f04a11960, type: 3}
   thrustChargeFxSpawnPoint: {fileID: 1064294653}
+  hasUsedAirDash: 0
   isThrustCharged: 0
   diveDropData: {fileID: 11400000, guid: 5ed5b6189047afb48a1272bad16bc44d, type: 2}
   currentSkillSlot: 0
