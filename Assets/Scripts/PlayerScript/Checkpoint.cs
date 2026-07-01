@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System;
 
 public class Checkpoint : MonoBehaviour
 {
@@ -81,6 +82,7 @@ public class Checkpoint : MonoBehaviour
             {
                 if (currentMenuIndex == 0) ExecuteRest();
                 else if (currentMenuIndex == 1) ExecuteTeleport();
+                else if (currentMenuIndex == 2) ExecuteSkillMenu(); // 3번째 메뉴: 스킬창
             }
 
             if (Input.GetKeyDown(KeyCode.Escape))
@@ -125,6 +127,15 @@ public class Checkpoint : MonoBehaviour
                 if (interactPromptUI.activeSelf) interactPromptUI.SetActive(false);
             }
         }
+    }
+
+    private void ExecuteSkillMenu()
+    {
+        Debug.Log("<color=cyan>스킬창 기능은 아직 구현되지 않았습니다.</color>");
+
+        // 아직 기능이 없으므로 메뉴를 닫지 않고 그냥 유지
+        // 나중에 스킬 UI 띄우는 코드 추가하면 됨
+        return;
     }
 
     private IEnumerator OpenMenuRoutine()

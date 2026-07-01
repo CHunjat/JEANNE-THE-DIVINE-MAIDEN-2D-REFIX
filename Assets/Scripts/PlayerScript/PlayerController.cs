@@ -10,6 +10,8 @@ public class PlayerController : MonoBehaviour
 {
     public float groundedGraceTime = 0.8f; // 공중 판정 유예 시간
     public float groundedTimer;
+    public Collider2D ignoredDropCollider;
+    public PlayerStats playerStats; //스탯 컴포넌트 연결
 
     public bool ignoreSlopeDetection = false;
 
@@ -23,7 +25,6 @@ public class PlayerController : MonoBehaviour
     public Rigidbody2D rb; // 2D로 전환
     public BoxCollider2D cd; // 2D로 전환
     public Animator animator;
-    public PlayerStats playerStats; //스탯 컴포넌트 연결
 
 
     [Header("Movement Settings")]
@@ -268,8 +269,6 @@ public class PlayerController : MonoBehaviour
     [Header("Grapple Animation")]
     public string anim_Grapple = "GrappleStart"; // 방금 주신 스프라이트 애니메이션 이름
 
-    [Header("밑점프 감지 타이머")]
-    public Collider2D ignoredDropCollider;
 
     [Header("비탈길(Slope) 세팅")]
     public float maxSlopeAngle = 45f;
@@ -326,6 +325,9 @@ public class PlayerController : MonoBehaviour
     public string anim_Resting = "Resting";   // 앉아서 대기 (0~8 프레임 반복)
     public string anim_Standing = "Standing"; // 일어나는 과정 (0~1 프레임)
 
+    [Header("사망 애니메이션")]
+    public string anim_DieGround = "Die"; // 땅 사망 모션
+    public string anim_DieAir = "AirDie";// 공중 사망 모션
 
 
     public PlayerAttack1State Attack1State { get; private set; }
@@ -370,6 +372,7 @@ public class PlayerController : MonoBehaviour
 
     public PlayerRestState RestState { get; private set; }
     public PlayerStandUpState StandUpState { get; private set; }
+    public PlayerDieState DieState { get; private set; }
 
 
 
@@ -418,6 +421,7 @@ public class PlayerController : MonoBehaviour
         HealState = new PlayerHealState(this, StateMachine, anim_Heal);
         RestState = new PlayerRestState(this, StateMachine, anim_ToRest);
         StandUpState = new PlayerStandUpState(this, StateMachine, anim_Standing);
+        DieState = new PlayerDieState(this, StateMachine, anim_DieGround,anim_DieAir);
 
 
         rb = GetComponent<Rigidbody2D>(); // 2D로 변경
@@ -439,6 +443,18 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        //테스트용 자살버튼 ㅋㅋ
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            Debug.Log("<color=magenta>테스트용 자살 버튼 작동!</color>");
+
+            // 만약 체력 UI도 같이 깎이는 걸 보고 싶다면 아래 주석 해제
+            // if (playerStats != null) playerStats.currentHp = 0;
+
+            StateMachine.ChangeState(DieState);
+            return;
+        }
+
 
         if (sprintJumpCooldownTimer > 0)
             sprintJumpCooldownTimer -= Time.deltaTime;
@@ -492,6 +508,8 @@ public class PlayerController : MonoBehaviour
         }
 
         //딱 idle, move에서만 가능
+        //키보드 버튼은 하나인데, 땅이냐 공중이냐에 따라 다른 스킬을 나가게 해주는 분배기" 역할이 필요
+        //평타는 콤보가 꼬이면 안 되니까 State 안에서만 부르고, 저건 언제든 튀어나가야 하는 스킬이니까 밖으로 뺌
         HandleThrustAttackInput(); //강공찌르기 판독기 추가
         HandleActiveSkillInput();  // [수정] E키(OnSkill) 하나로 슬롯에 따라 스킬을 분배하는 통합 판독기
 
@@ -724,7 +742,7 @@ public class PlayerController : MonoBehaviour
     public void HandleActiveSkillInput()
     {
 
-        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState)
+        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState || StateMachine.CurrentState == DieState)
         {
             inputReader.HAttackPressed = false;
             return;
@@ -782,7 +800,7 @@ public class PlayerController : MonoBehaviour
     //강공 찌르기 //키 F
     public void HandleThrustAttackInput()
     {
-        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState)
+        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState || StateMachine.CurrentState == DieState)
         {
             inputReader.ThrustAttackPressed = false;
             return;
@@ -798,7 +816,7 @@ public class PlayerController : MonoBehaviour
 
         bool isActuallyOnGround = IsGrounded() || OnSlope();
 
-        // --- [A] 지상/비탈길 (찌르기) ---
+        // --- 지상/비탈길 (찌르기) ---
         if (isActuallyOnGround)
         {
             if (!(StateMachine.CurrentState is PlayerAttackState) &&
@@ -813,7 +831,7 @@ public class PlayerController : MonoBehaviour
         // --- [B] 공중 (하강 공격) ---
         else
         {
-            // 🚨 어제 맞췄던 '공격 진행도' 로직 부활
+            // 어제 맞췄던 '공격 진행도' 로직 부활
             // 현재 공중 공격 중이라면 애니메이션이 어느 정도 진행되었는지 확인
             if (StateMachine.CurrentState is PlayerAirAttack1State ||
                 StateMachine.CurrentState is PlayerAirAttack2State ||
