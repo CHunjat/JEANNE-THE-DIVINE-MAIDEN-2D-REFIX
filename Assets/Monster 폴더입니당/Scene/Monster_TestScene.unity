@@ -689,7 +689,7 @@ Transform:
   m_GameObject: {fileID: 359215835}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -67.05, y: 5.94, z: 0}
+  m_LocalPosition: {x: -67.85, y: 5.94, z: 0}
   m_LocalScale: {x: 1, y: 0.79, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -738,7 +738,7 @@ MonoBehaviour:
   attackRange: 2
   enemyLayer:
     serializedVersion: 2
-    m_Bits: 1024
+    m_Bits: 0
 --- !u!114 &359215842
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -797,37 +797,6 @@ MonoBehaviour:
   damageRatio: 1
   destroyOnHit: 0
   hitCooldown: 0.5
---- !u!1 &502651637
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 502651638}
-  m_Layer: 0
-  m_Name: MidBossWebProjectile
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &502651638
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 502651637}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -61.44331, y: 7.16412, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &711584881 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1239616574114665858, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
@@ -1375,6 +1344,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8657742522092995938, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: webPrefab
+      value: 
+      objectReference: {fileID: 9111198009131002786, guid: ff6af48596149654eb174a6e77f1d03e, type: 3}
     - target: {fileID: 8682717951201376092, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -1406,4 +1379,3 @@ SceneRoots:
   - {fileID: 730459479}
   - {fileID: 274430287}
   - {fileID: 9071699632199390113}
-  - {fileID: 502651638}
