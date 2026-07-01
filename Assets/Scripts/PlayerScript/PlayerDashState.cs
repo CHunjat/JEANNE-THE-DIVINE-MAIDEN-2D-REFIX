@@ -21,9 +21,11 @@ public class PlayerDashState : PlayerState
         //}
 
 
-        // 🔥 대쉬 시작할 때 땅이었는지 기록 (공중 대쉬는 경사면 보정을 받지 않게 하기 위함)
-        startedGrounded = player.IsGrounded() || player.OnSlope();
-
+        // 대쉬 시작할 때 땅이었는지 기록 (공중 대쉬는 경사면 보정을 받지 않게 하기 위함)
+        if (!player.IsGrounded() && !player.OnSlope())
+        {
+            player.hasUsedAirDash = true;
+        }
         player.rb.gravityScale = 0f; // 2D gravityScale 사용
         dashTime = player.dashDuration;
 
@@ -106,6 +108,9 @@ public class PlayerDashState : PlayerState
     {
         base.LogicUpdate();
 
+        player.HandleAttackInput();
+        dashTime -= Time.deltaTime;
+
         player.HandleGrappleInput();
         if (stateMachine.CurrentState == player.GrappleState) return; // 그래플로 넘어갔다면 아래 로직 스킵
 
@@ -113,8 +118,6 @@ public class PlayerDashState : PlayerState
         if (stateMachine.CurrentState == player.GuardState) return;
 
 
-        player.HandleAttackInput();
-        dashTime -= Time.deltaTime;
 
         // 벽에 닿았을 때 예외 처리
         if (player.IsTouchingWall(dashDirection))

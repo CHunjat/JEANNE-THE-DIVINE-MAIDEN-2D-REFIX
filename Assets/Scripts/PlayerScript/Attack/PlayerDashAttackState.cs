@@ -3,7 +3,7 @@
 public class PlayerDashAttackState : PlayerAttackState
 {
     private float slideSpeed;
-    // 🔥 비탈길 전용 상수 속도 (찌르기보다 조금 더 빠른 느낌으로 설정)
+    // 비탈길 전용 상수 속도 (찌르기보다 조금 더 빠른 느낌으로 설정)
     private float slopeFixedSpeed = 4f;
 
     private float airborneTimer;
@@ -43,7 +43,7 @@ public class PlayerDashAttackState : PlayerAttackState
         float normalizedTime = GetNormalizedTime();
 
         // ----------------------------------------------------
-        // 🔥 [핵심 1] 발 밑을 넓게 스캔해서 '평지(각도 0)'가 있는지 독자적으로 찾습니다.
+        // [핵심 1] 발 밑을 넓게 스캔해서 '평지(각도 0)'가 있는지 독자적으로 찾습니다.
         // ----------------------------------------------------
         bool detectedFlatGround = false;
         RaycastHit2D[] hits = Physics2D.BoxCastAll(player.cd.bounds.center, player.cd.bounds.size * 0.9f, 0f, Vector2.down, 0.3f, player.GetCurrentGroundMask());
@@ -61,7 +61,7 @@ public class PlayerDashAttackState : PlayerAttackState
         }
 
         // ----------------------------------------------------
-        // 🔥 [비탈길 전용 상수 로직 + 평지 교차점 보정]
+        // [비탈길 전용 상수 로직 + 평지 교차점 보정]
         // ----------------------------------------------------
         if (player.OnSlope())
         {
@@ -111,7 +111,7 @@ public class PlayerDashAttackState : PlayerAttackState
             }
         }
         // ----------------------------------------------------
-        // 🔥 [평지 로직]
+        // [평지 로직]
         // ----------------------------------------------------
         else
         {
