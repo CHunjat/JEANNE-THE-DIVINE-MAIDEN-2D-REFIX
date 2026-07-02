@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: HolySlash_UI
   m_EditorClassIdentifier: Assembly-CSharp::SkillData
   skillName: ChargingAtk
-  skillIcon: {fileID: 21300000, guid: 1ae174dbadc9c6c45b7ed9fa4a76e762, type: 3}
+  skillIcon: {fileID: -129298164, guid: 0e8f28032826a1142bf5c7cf0432e7b1, type: 3}
   cost: 1~3

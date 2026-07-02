@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Lightning_UI
   m_EditorClassIdentifier: Assembly-CSharp::SkillData
   skillName: LightningAttack
-  skillIcon: {fileID: 21300000, guid: 385f6ba0c11060144b63769f0fc16f15, type: 3}
+  skillIcon: {fileID: 594302065, guid: 29c0df7a0c882c5458a79c86337ad21b, type: 3}
   cost: 1
