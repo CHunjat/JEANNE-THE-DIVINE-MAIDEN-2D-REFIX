@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 
 // =====================================================
-// MidBossPattern8.cs (필살 패턴 슬롯 최적화 완료)
+// MidBossPattern8.cs (필살 패턴 - 클리어링 → 거미줄 → 점프 낙하)
 // =====================================================
 public class MidBossPattern8 : BossPatternBase
 {
@@ -15,13 +15,16 @@ public class MidBossPattern8 : BossPatternBase
     [SerializeField] private float bindDuration = 3f;
     [SerializeField] private float airTime = 2f;
     [SerializeField] private float landingHitboxDuration = 0.4f;
+
+    // [기획] 구속 중인 적이 구속을 제시간에 못 풀면 큰 데미지
+    // 병합 후 플레이어 담당자와 협의해서 ApplyBind 연동 시 사용할 것
     [SerializeField] private float boundDamageMultiplier = 2f;
 
-    [Header("발사체 프리팹 연결 (새로 굽는 거라 유지함)")]
+    [Header("발사체 프리팹 연결")]
     [SerializeField] private GameObject webPrefab;
 
-    private GameObject clearingHitbox; // 인스펙터 슬롯 삭제함.
-    private GameObject landingHitbox;  // 인스펙터 슬롯 삭제함.
+    private GameObject clearingHitbox;
+    private GameObject landingHitbox;
     private Animator visualAnimator;
     private bool isExecuting = false;
 
@@ -47,6 +50,7 @@ public class MidBossPattern8 : BossPatternBase
         if (visualAnimator != null) visualAnimator.SetTrigger("doSpit");
     }
 
+    // 1단계: 클리어링 (플레이어 밀어내기)
     public void AnimEvent_UltClearing()
     {
         ApplyClearing();
@@ -57,11 +61,24 @@ public class MidBossPattern8 : BossPatternBase
         }
     }
 
+    // 2단계: 거미줄 발사 후 점프 루틴 시작
     public void AnimEvent_UltWeb()
     {
         if (webPrefab == null) return;
+
+        SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
+        bool isFacingLeft = (sr != null && sr.flipX);
+
         GameObject playerObj = GameObject.FindWithTag("Player");
-        Vector2 dir = playerObj != null ? ((Vector2)(playerObj.transform.position - transform.position)).normalized : Vector2.right;
+        Vector2 dir;
+        if (playerObj != null)
+        {
+            dir = ((Vector2)(playerObj.transform.position - transform.position)).normalized;
+        }
+        else
+        {
+            dir = new Vector2(isFacingLeft ? -1f : 1f, 0f);
+        }
 
         GameObject web = Instantiate(webPrefab, transform.position, Quaternion.identity);
         MidBossWebProjectile webScript = web.GetComponent<MidBossWebProjectile>();
@@ -70,6 +87,7 @@ public class MidBossPattern8 : BossPatternBase
         StartCoroutine(UltJumpRoutine());
     }
 
+    // 3단계: 공중에서 플레이어 위치로 이동 후 낙하
     private IEnumerator UltJumpRoutine()
     {
         Transform visual = transform.Find("Visual");
@@ -84,6 +102,7 @@ public class MidBossPattern8 : BossPatternBase
         if (visualAnimator != null) visualAnimator.SetTrigger("doLand");
     }
 
+    // 4단계: 낙하 충격 히트박스
     public void AnimEvent_UltLandImpact()
     {
         if (landingHitbox != null)
@@ -91,19 +110,28 @@ public class MidBossPattern8 : BossPatternBase
             landingHitbox.SetActive(true);
             Invoke(nameof(DeactivateLanding), landingHitboxDuration);
         }
+
+        // [기획] 구속 중인 플레이어한테 boundDamageMultiplier 배율 추가 데미지
+        // 병합 후 플레이어 담당자와 협의해서 구현할 것
+        Debug.Log($"<color=red>[Pattern8] 낙하 충격! 구속 중이면 {boundDamageMultiplier}배 데미지 (미구현, 병합 후 처리)</color>");
+
         isExecuting = false;
     }
 
     private void ApplyClearing()
     {
         GameObject playerObj = GameObject.FindWithTag("Player");
-        if (playerObj == null || Vector2.Distance(transform.position, playerObj.transform.position) > clearingRange) return;
+        if (playerObj == null) return;
+        if (Vector2.Distance(transform.position, playerObj.transform.position) > clearingRange) return;
 
         float xDiff = playerObj.transform.position.x - transform.position.x;
-        Vector2 knockbackDir = Mathf.Abs(xDiff) < 0.01f ? ((Vector2)(playerObj.transform.position - transform.position)).normalized : (xDiff > 0 ? Vector2.right : Vector2.left);
+        Vector2 knockbackDir = Mathf.Abs(xDiff) < 0.01f
+            ? ((Vector2)(playerObj.transform.position - transform.position)).normalized
+            : (xDiff > 0 ? Vector2.right : Vector2.left);
 
         Rigidbody2D playerRb = playerObj.GetComponent<Rigidbody2D>();
-        if (playerRb != null) playerRb.linearVelocity = knockbackDir * (knockbackDistance / 0.3f);
+        if (playerRb != null)
+            playerRb.linearVelocity = knockbackDir * (knockbackDistance / 0.3f);
     }
 
     private void DeactivateClearing() { if (clearingHitbox != null) clearingHitbox.SetActive(false); }

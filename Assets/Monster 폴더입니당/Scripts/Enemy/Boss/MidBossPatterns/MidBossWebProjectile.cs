@@ -1,62 +1,77 @@
 using UnityEngine;
-
 // =====================================================
 // MidBossWebProjectile.cs
-// 거미 보스 거미줄 발사체 스크립트임.
-// MidBossPattern3에서 Instantiate할 때 자동으로 설정됨.
-//
-// [구속 상태이상 처리]
-// 플레이어에 닿으면 PlayerHealth의 ApplyBind()를 호출함.
-// Player 담당자가 ApplyBind(float duration) 함수를 구현해야 함.
-// → Player 담당자에게 요청할 것: "public void ApplyBind(float duration)"
-//
-// [이 스크립트가 붙은 오브젝트 구성]
-// - CircleCollider2D (Is Trigger 체크)
-// - EnemyHitbox 스크립트 (데미지 처리)
-// - MidBossWebProjectile 스크립트 (이것 - 이동 + 구속 처리)
 // =====================================================
 public class MidBossWebProjectile : MonoBehaviour
 {
-    private Vector2 direction;
+    [Header("유도탄 설정 (기획자 조절)")]
+    [SerializeField] private float homingSensitivity = 2f;
+    [SerializeField] private float playerYOffset = 1.5f;
+
     private float speed;
     private float maxRange;
     private float bindDuration;
     private Vector2 startPos;
+    private Transform target;
+    private Vector2 currentDir;
+    private Transform visual;
 
     public void Initialize(Vector2 dir, float spd, float range, float bind)
     {
-        direction = dir;
         speed = spd;
         maxRange = range;
         bindDuration = bind;
         startPos = transform.position;
+        currentDir = dir.normalized;
 
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-        transform.rotation = Quaternion.Euler(0, 0, angle);
+        // Visual 트랜스폼 캐싱
+        SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
+        if (sr != null) visual = sr.transform;
+
+        // 방향에 따라 Scale X 반전 (Flip X 대신)
+        FlipVisual(dir.x < 0f);
+
+        GameObject playerObj = GameObject.FindWithTag("Player");
+        if (playerObj != null) target = playerObj.transform;
     }
 
     private void Update()
     {
-        transform.Translate(Vector2.right * speed * Time.deltaTime);
+        if (target != null)
+        {
+            Vector2 targetPos = (Vector2)target.position + new Vector2(0, playerYOffset);
+            Vector2 dirToTarget = (targetPos - (Vector2)transform.position).normalized;
+            currentDir = Vector2.Lerp(currentDir, dirToTarget, homingSensitivity * Time.deltaTime).normalized;
+
+            // 방향 바뀌면 Flip도 업데이트
+            FlipVisual(currentDir.x < 0f);
+        }
+
+        transform.position += (Vector3)(currentDir * speed * Time.deltaTime);
 
         if (Vector2.Distance(startPos, transform.position) >= maxRange)
             Destroy(gameObject);
+    }
+
+    private void FlipVisual(bool facingLeft)
+    {
+        if (visual == null) return;
+        Vector3 scale = visual.localScale;
+        scale.x = facingLeft ? -Mathf.Abs(scale.x) : Mathf.Abs(scale.x);
+        visual.localScale = scale;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.gameObject.layer != LayerMask.NameToLayer("Player")) return;
 
-        // 구속 상태이상 적용 - Player 담당자의 ApplyBind 함수 호출
-        // Player 담당자에게 요청: public void ApplyBind(float duration) 구현 필요
         PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
         if (playerHealth != null)
         {
-            // playerHealth.ApplyBind(bindDuration);  ← Player 담당자가 ApplyBind 만들면 주석 해제
-            Debug.Log($"[MidBossWebProjectile] 플레이어 구속 상태이상 적용! 지속시간: {bindDuration}초");
-            Debug.Log("[MidBossWebProjectile] Player 담당자에게 ApplyBind(float duration) 구현 요청할 것.");
+            // playerHealth.ApplyBind(bindDuration); ← 병합 후 주석 해제
+            Debug.Log($"<color=cyan>[MidBossWebProjectile] 플레이어 타격! 구속 {bindDuration}초</color>");
         }
 
-        Destroy(gameObject);  // 거미줄은 맞으면 사라짐
+        Destroy(gameObject);
     }
 }
