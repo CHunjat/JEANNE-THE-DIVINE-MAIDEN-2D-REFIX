@@ -738,7 +738,7 @@ MonoBehaviour:
   attackRange: 2
   enemyLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 4096
 --- !u!114 &359215842
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1230,7 +1230,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1606379841}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: WebSpawnPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1264,9 +1264,21 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 415669578595818735, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 664767348250161357, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
     - target: {fileID: 664767348250161357, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1239616574114665858, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 1239616574114665858, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_IsActive
@@ -1311,6 +1323,10 @@ PrefabInstance:
     - target: {fileID: 3012287259468978372, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_Enabled
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3422334648348411454, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 3577488209630876407, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_Size.x
@@ -1372,6 +1388,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: MidBoss_Spider
       objectReference: {fileID: 0}
+    - target: {fileID: 5145147845001952587, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
     - target: {fileID: 5656119948597351064, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: hitBox_BackKick
       value: 
@@ -1401,6 +1421,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7114147065876900842, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 7114147065876900842, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
@@ -1421,8 +1445,16 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1606379841}
     - target: {fileID: 8682717951201376092, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 8682717951201376092, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9125756724598772400, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 9125756724598772400, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_IsActive
