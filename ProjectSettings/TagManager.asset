@@ -24,8 +24,8 @@ TagManager:
   - Background
   - DarknessUI
   - PlayerAndProp
-  - 
-  - 
+  - PlayerHitBox
+  - EnemyHitBox
   - 
   - 
   - 

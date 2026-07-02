@@ -13,12 +13,12 @@ public class PlayerDashState : PlayerState
     public override void Enter()
     {
         base.Enter();
-
-        ////대쉬 잔상 패리대쉬시 사용
-        //if (player.playerModelForTrail != null)
-        //{
-        //    TrailManager.Instance.StartTrail(player.playerModelForTrail);
-        //}
+        player.playerStats.isInvincible = true;
+        //대쉬 잔상 패리대쉬시 사용
+        if (player.playerModelForTrail != null)
+        {
+            TrailManager.Instance.StartTrail(player.playerModelForTrail);
+        }
 
 
         // 대쉬 시작할 때 땅이었는지 기록 (공중 대쉬는 경사면 보정을 받지 않게 하기 위함)
@@ -48,10 +48,9 @@ public class PlayerDashState : PlayerState
         Vector2 dashVec = new Vector2(dashDirection, 0f);
         float finalDashSpeed = player.dashSpeed;
 
-        // 1. [핵심 1] 발 밑을 넓게 스캔해서 '평지(각도 0)'가 있는지 독자적으로 찾습니다.
+        // 1. 발 밑을 넓게 스캔해서 '평지(각도 0)'가 있는지 독자적으로 찾습니다.
         bool detectedFlatGround = false;
 
-        // 캐릭터 사이즈만큼 넓게 레이를 쏴서 윗평지가 발밑에 들어왔는지 확인
         RaycastHit2D[] hits = Physics2D.BoxCastAll(player.cd.bounds.center, player.cd.bounds.size * 0.9f, 0f, Vector2.down, 0.3f, player.GetCurrentGroundMask());
 
         foreach (var hit in hits)
@@ -67,25 +66,30 @@ public class PlayerDashState : PlayerState
         }
 
         // 2. 비탈길 로직 처리
-        if (player.OnSlope())
+        if (player.OnSlope(isDashing: true))
         {
-            // ★ [핵심 2] 비탈길과 평지가 '동시 감지'되었다면? (윗평지 교차점)
-            if (detectedFlatGround)
+            //  비탈길을 탔을 때, 내가 갈 방향(내리막인지 오르막인지)
+            Vector2 slopeDir = player.GetSlopeMoveDirection(dashVec);
+
+            // slopeDir.y가 0보다 작으면 아래로 향하는 '내리막길 대쉬'라는 뜻!
+            bool isDownhill = slopeDir.y < -0.01f;
+
+            // [핵심 2] 윗평지와 비탈길이 동시 감지되었을 때의 처리
+            // 오르막 대쉬 중(!isDownhill)에 평지를 만났을 때만 평지 모드로 부드럽게 전환!
+            if (detectedFlatGround && !isDownhill)
             {
-                // 비탈길의 오르막 각도를 즉시 무시하고 평지 대시 모드로 전환합니다.
-                // 비탈길이 더 높더라도 윗평지에 찰싹 달라붙도록 미세한 하강 벡터(-0.1f)를 주입!
                 dashVec.y = -0.1f;
-                finalDashSpeed = player.dashSpeed; // 평지 진입이므로 속도 100% 쾌속 유지
+                finalDashSpeed = player.dashSpeed;
             }
             else
             {
-                // 순수 비탈길일 때 (동시 감지 아님)
-                dashVec = player.GetSlopeMoveDirection(dashVec);
+                // 내리막 대쉬이거나 (평지가 뒤에 감지되든 말든 무시하고 비탈길 탑승!), 순수 비탈길일 때
+                dashVec = slopeDir;
 
                 if (dashVec.y > 0.05f)
                 {
-                    // 오르막 댐핑 (너무 느리다 싶으면 0.6f ~ 1.0f 사이로 올리세요)
-                    finalDashSpeed *= 0.6f;
+                    // 오르막 댐핑
+                    finalDashSpeed *= 0.9f;
                 }
                 else
                 {
@@ -130,6 +134,7 @@ public class PlayerDashState : PlayerState
         {
             player.inputReader.JumpPressed = false;
             player.ResetDashCooldown();
+
             player.SetDashJumpVelocity(player.isFacingRight ? 1f : -1f);
             stateMachine.ChangeState(player.JumpState);
             return;
@@ -174,12 +179,12 @@ public class PlayerDashState : PlayerState
     public override void Exit()
     {
         base.Exit();
+        player.playerStats.isInvincible = false;
 
-        //패리대쉬일때 잔상 밑에 추가
-        //if (player.playerModelForTrail != null)
-        //{
-        //    TrailManager.Instance.StopTrail(player.playerModelForTrail);
-        //}
+        if (player.playerModelForTrail != null)
+        {
+            TrailManager.Instance.StopTrail(player.playerModelForTrail);
+        }
 
 
         player.rb.gravityScale = 1f; // 2D gravityScale 원복

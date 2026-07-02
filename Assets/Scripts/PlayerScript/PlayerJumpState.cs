@@ -74,7 +74,7 @@ public class PlayerJumpState : PlayerState
         if (Mathf.Abs(xInput) > 0.1f)
         {
             // 방향키를 누르고 있다면: 현재 x속도(대시 관성 포함)를 그대로 유지하며 점프!
-            player.rb.linearVelocity = new Vector2(player.rb.linearVelocity.x, finalJumpForce);
+            player.rb.linearVelocity = new Vector2(player.rb.linearVelocity.x * 0.5f, finalJumpForce);
         }
         else
         {

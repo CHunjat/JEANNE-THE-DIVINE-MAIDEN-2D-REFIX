@@ -18,6 +18,7 @@ public class PlayerController : MonoBehaviour
     [Header("Layer Settings")]
     public LayerMask stairsLayer; //
     public LayerMask enemyLayer; // 
+   
     [Header("Input Data")]
     public InputReader inputReader;
 
@@ -130,6 +131,9 @@ public class PlayerController : MonoBehaviour
     [Header("힐 스킬(Heal) 데이터")]
     public float healAmount = 50f;  // 체력 회복량
     public float healMpCost = 30f;  // 마나 소모량
+
+    [Header("히트 애니메이션 변수값")]
+    public string anim_Hit = "Hit";
 
     [Header("패링")]
 
@@ -299,7 +303,7 @@ public class PlayerController : MonoBehaviour
             // 1. 쿨타임이 안 돌았으면 무조건 불가
             if (dashCooltimer > 0 || landTimer > 0) return false;
 
-            // 2. 👈 핵심: 공중에 떠 있는데 이미 공중 대쉬를 한 번 썼다면 불가!
+            // 2.핵심: 공중에 떠 있는데 이미 공중 대쉬를 한 번 썼다면 불가!
             if (!IsGrounded() && !OnSlope() && hasUsedAirDash) return false;
 
             return true;
@@ -374,6 +378,8 @@ public class PlayerController : MonoBehaviour
     public PlayerStandUpState StandUpState { get; private set; }
     public PlayerDieState DieState { get; private set; }
 
+    public PlayerHitState HitState { get; private set; }
+
 
 
     private void Awake()
@@ -422,6 +428,7 @@ public class PlayerController : MonoBehaviour
         RestState = new PlayerRestState(this, StateMachine, anim_ToRest);
         StandUpState = new PlayerStandUpState(this, StateMachine, anim_Standing);
         DieState = new PlayerDieState(this, StateMachine, anim_DieGround,anim_DieAir);
+        HitState = new PlayerHitState(this, StateMachine, anim_Hit);
 
 
         rb = GetComponent<Rigidbody2D>(); // 2D로 변경
@@ -453,6 +460,11 @@ public class PlayerController : MonoBehaviour
 
             StateMachine.ChangeState(DieState);
             return;
+        }
+        //테스트용 쳐맞기버튼 ㅋㅋ
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            GetComponent<PlayerStats>().TakeDamage(1f);
         }
 
 
@@ -537,6 +549,7 @@ public class PlayerController : MonoBehaviour
         if (StateMachine.CurrentState == LightningChargeState) return;
         if (StateMachine.CurrentState == LightningAttackState) return;
         if (StateMachine.CurrentState == HealState) return;
+        if (StateMachine.CurrentState == HitState) return;
 
         bool isMidAir = StateMachine.CurrentState == JumpState ||
                         StateMachine.CurrentState == AirState ||
@@ -548,7 +561,10 @@ public class PlayerController : MonoBehaviour
 
         if (!isAttacking)
         {
-            if (Mathf.Abs(inputReader.MoveValue.x) < 0.1f && IsGrounded() && !isMidAir && !isSprintLanding)
+            if (Mathf.Abs(inputReader.MoveValue.x) < 0.1f && IsGrounded() && !isMidAir && !isSprintLanding 
+                && StateMachine.CurrentState != HitState)
+
+
             {
                 if (OnSlope())
                 {
@@ -837,7 +853,7 @@ public class PlayerController : MonoBehaviour
                 StateMachine.CurrentState is PlayerAirAttack2State ||
                 StateMachine.CurrentState is PlayerAirUpAttackState)
             {
-                // 🔥 normalizedTime이 0.4f~0.5f 정도는 지나야 하강 공격으로 캔슬 가능
+                // normalizedTime이 0.4f~0.5f 정도는 지나야 하강 공격으로 캔슬 가능
                 float nTime = animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
 
                 if (nTime < 0.4f)
@@ -949,9 +965,11 @@ public class PlayerController : MonoBehaviour
         return bestTarget;
     }
 
-    public bool OnSlope()
+    public bool OnSlope(bool isDashing = false)
     {
-        if (cd == null || ignoreSlopeDetection) return false; // 🔥 밑점프 중이면 아예 판정 안 함!
+        if (cd == null || ignoreSlopeDetection || 
+            (StateMachine != null && StateMachine.CurrentState == DropState))
+            return false;
 
         float rayLength = cd.bounds.extents.y + 0.3f;
         LayerMask currentMask = GetCurrentGroundMask();
@@ -966,7 +984,7 @@ public class PlayerController : MonoBehaviour
         {
             if (hit.collider != null && hit.collider != ignoredDropCollider)
             {
-                // ★ 핵심: 현재 저장된 slopeHit(이전 프레임의 비탈길)이 있다면, 
+                // 핵심: 현재 저장된 slopeHit(이전 프레임의 비탈길)이 있다면, 
                 // 거리가 아주 크게 변하지 않는 이상 그대로 유지함 (0.1f 오차 허용)
                 if (slopeHit.collider != null && hit.collider == slopeHit.collider)
                 {
@@ -991,10 +1009,11 @@ public class PlayerController : MonoBehaviour
 
             if (angle > 0.1f && angle <= maxSlopeAngle)
             {
-                // ★ [핵심] 모서리 제외 필터 (Edge Detection)
+                // 모서리 제외 필터 (Edge Detection)
                 // 콜라이더의 좌우 끝단(min.x, max.x)으로부터 margin 만큼은 경사로 판정에서 제외합니다.
                 // 이렇게 하면 모서리 끝에 도달했을 때 OnSlope가 false를 반환하여 평지로 전환됩니다.
-                float margin = 0.5f;
+                float margin = isDashing ? 0.05f : 0.5f;
+                
                 if (bestHit.point.x <= bestHit.collider.bounds.min.x + margin ||
                     bestHit.point.x >= bestHit.collider.bounds.max.x - margin)
                 {
@@ -1048,34 +1067,54 @@ public class PlayerController : MonoBehaviour
     //프로퍼티
     public bool CanSprintJump => sprintJumpCooldownTimer <= 0;
 
-
+    private float lastGroundedTime; // 클래스 멤버 변수로 반드시 선언되어 있어야 함
     public bool IsGrounded()
     {
-
         if (cd == null) return false;
 
+        // 1. 착지 모션 등 강제 상태 예외
         if (StateMachine != null)
         {
-            // 착지 모션 중이거나 대쉬 중일 때의 예외 처리
             if (StateMachine.CurrentState == LandState) return true;
+            // [핵심 추가] 밑점프 중이면 강제로 공중 판정!
+            if (StateMachine.CurrentState == DropState) return false;
         }
 
-        Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
 
-        // 방금 만든 GetCurrentGroundMask()를 사용
+
+        // 2. 바닥 체크 (BoxCast)
+        Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
         RaycastHit2D[] hits = Physics2D.BoxCastAll(rayStartPos, groundCheckSize, 0f, Vector2.down, groundCheckDistance + 0.1f, GetCurrentGroundMask());
+
+        bool isCurrentlyTouchingGround = false;
 
         foreach (var hit in hits)
         {
-            // 감지된 놈이 내가 지금 통과 중인 그 발판(ignoredDropCollider)이 아니라면? -> 진짜 땅이다!
+            // ignoredDropCollider가 있으면 밑점프 중이라는 뜻이니까 일단 무시
             if (hit.collider != null && hit.collider != ignoredDropCollider)
             {
-
-                return true;
+                isCurrentlyTouchingGround = true;
+                break;
             }
         }
 
-        if (OnSlope()) return true;
+        // 경사로 판정
+        if (OnSlope()) isCurrentlyTouchingGround = true;
+
+        // 3. 땅에 닿았다면 시간 갱신
+        if (isCurrentlyTouchingGround)
+        {
+            lastGroundedTime = Time.time;
+            return true;
+        }
+
+        // 4. [핵심 수정] Coyote Time 적용
+        // 만약 밑점프 중(ignoredDropCollider != null)이라면 버퍼를 무시하고 바로 false를 리턴!
+        // 이게 밑점프를 뚫어주는 열쇠야.
+        if (ignoredDropCollider == null && Time.time < lastGroundedTime + 0.1f)
+        {
+            return true;
+        }
 
         return false;
     }

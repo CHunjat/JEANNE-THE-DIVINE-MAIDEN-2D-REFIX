@@ -15,7 +15,7 @@ public class PlayerStats : MonoBehaviour
 
     [Header("상태 이상 및 무적 (Status)")]
     public bool isInvincible = false;   // 무적 상태 여부
-    public float invincibilityDuration = 1.0f; // 피격 시 무적 시간
+    public float invincibilityDuration = 0.5f; // 피격 시 무적 시간
 
     private PlayerController playerController;
     private void Awake()
@@ -53,11 +53,7 @@ public class PlayerStats : MonoBehaviour
             // 살아있다면 피격 무적 시간 발동
             StartCoroutine(InvincibilityRoutine());
 
-            //피격 스테이트 ㄱㄱ
-            //if (playerController.StateMachine.CurrentState != playerController.HitState)
-            //{
-            //    playerController.StateMachine.ChangeState(playerController.HitState);
-            //}
+            playerController.StateMachine.ChangeState(playerController.HitState);
         }
     }
 
@@ -83,7 +79,6 @@ public class PlayerStats : MonoBehaviour
     private IEnumerator InvincibilityRoutine()
     {
         isInvincible = true;
-        // TODO: 여기서 플레이어 스프라이트를 깜빡거리게 하는 등 피격 시각 효과 추가 가능
         yield return new WaitForSeconds(invincibilityDuration);
         isInvincible = false;
     }

@@ -123,28 +123,6 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Hurt4_0
-      rect:
-        serializedVersion: 2
-        x: 21
-        y: 45
-        width: 27
-        height: 15
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: c1fd5d9196eeb454c853071fd035e2fb
-      internalID: 920756836
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
       name: Hurt4_1
       rect:
         serializedVersion: 2
