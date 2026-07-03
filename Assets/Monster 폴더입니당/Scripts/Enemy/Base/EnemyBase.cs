@@ -2,7 +2,6 @@ using UnityEngine;
 
 // =====================================================
 // EnemyBase.cs
-// 모든 적(몬스터, 보스)의 공통 기반 클래스
 // =====================================================
 public abstract class EnemyBase : MonoBehaviour
 {
@@ -27,7 +26,6 @@ public abstract class EnemyBase : MonoBehaviour
         col = GetComponent<Collider2D>();
         currentHp = maxHp;
 
-        // 자식 오브젝트(Visual)에 있는 Animator를 가져옴
         animator = GetComponentInChildren<Animator>();
         if (animator == null)
         {
@@ -37,19 +35,20 @@ public abstract class EnemyBase : MonoBehaviour
 
     protected virtual void Start()
     {
+        FindPlayer();
+    }
+
+    protected void FindPlayer()
+    {
         GameObject playerObj = GameObject.FindWithTag("Player");
-        if (playerObj != null)
-            player = playerObj.transform;
-        else
-            Debug.LogWarning($"[{gameObject.name}] Player 태그를 가진 오브젝트를 찾지 못함.");
+        if (playerObj != null) player = playerObj.transform;
     }
 
     public virtual void TakeDamage(float amount)
     {
         currentHp -= amount;
         Debug.Log($"[{gameObject.name}] 피격! 남은 체력: {currentHp}/{maxHp}");
-        if (currentHp <= 0)
-            Die();
+        if (currentHp <= 0) Die();
     }
 
     protected virtual void Die()
@@ -60,29 +59,29 @@ public abstract class EnemyBase : MonoBehaviour
 
     protected float GetDistanceToPlayer()
     {
+        if (player == null) FindPlayer();
         if (player == null) return Mathf.Infinity;
         return Vector2.Distance(transform.position, player.position);
     }
 
     protected Vector2 GetDirectionToPlayer()
     {
+        if (player == null) FindPlayer();
         if (player == null) return Vector2.zero;
         return (player.position - transform.position).normalized;
     }
 
-    // [추가된 핵심 기능] 플레이어 위치에 따라 좌우 반전(Scale X 조절)
+    // 문제 해결 : 이름 검색 안 하고 자식의 SpriteRenderer를 확실하게 뒤집음
     protected void FlipTowardsPlayer()
     {
+        if (player == null) FindPlayer();
         if (player == null) return;
 
-        // Scale 대신 Visual의 SpriteRenderer Flip X로 처리
-        Transform visual = transform.Find("Visual");
-        if (visual == null) return;
-
-        SpriteRenderer sr = visual.GetComponent<SpriteRenderer>();
-        if (sr == null) return;
-
-        sr.flipX = player.position.x < transform.position.x;
+        SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
+        if (sr != null)
+        {
+            sr.flipX = player.position.x < transform.position.x;
+        }
     }
 
     protected void SetCollisionWithPlayer(bool enable)

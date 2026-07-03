@@ -1,8 +1,8 @@
 using UnityEngine;
 using System.Collections;
-
 // =====================================================
-// MidBossPattern6.cs (인스펙터 슬롯 2개 전면 자동화 완료)
+// MidBossPattern6.cs
+// 강화 앞발 찍기 - 중거리, 쿨타임 0초, 우선순위 5
 // =====================================================
 public class MidBossPattern6 : BossPatternBase
 {
@@ -15,9 +15,8 @@ public class MidBossPattern6 : BossPatternBase
     [SerializeField] private float backKickRange = 3f;
     [SerializeField] private float backKickHitboxDuration = 0.3f;
 
-    private GameObject stampHitbox;    // 인스펙터 슬롯 삭제함.
-    private GameObject backKickHitbox; // 인스펙터 슬롯 삭제함.
-
+    private GameObject stampHitbox;
+    private GameObject backKickHitbox;
     private Rigidbody2D rb;
     private Animator visualAnimator;
     private bool isExecuting = false;
@@ -36,6 +35,11 @@ public class MidBossPattern6 : BossPatternBase
 
         if (stampHitbox != null) stampHitbox.SetActive(false);
         if (backKickHitbox != null) backKickHitbox.SetActive(false);
+
+        // 기획서 반영
+        cooldown = 0f;
+        priority = 5;
+        distanceType = DistanceType.Mid;
     }
 
     protected override void OnExecute()
@@ -54,7 +58,6 @@ public class MidBossPattern6 : BossPatternBase
             Vector2 moveDir = ((Vector2)(playerObj.transform.position - transform.position)).normalized;
             float elapsed = 0f;
             float moveDuration = moveDistance / moveSpeed;
-
             while (elapsed < moveDuration)
             {
                 rb.linearVelocity = moveDir * moveSpeed;
@@ -65,7 +68,6 @@ public class MidBossPattern6 : BossPatternBase
         }
     }
 
-    // [애니메이션 이벤트 연동용 함수 1]
     public void AnimEvent_DoubleStamp()
     {
         if (stampHitbox != null)
@@ -75,13 +77,11 @@ public class MidBossPattern6 : BossPatternBase
         }
     }
 
-    // [애니메이션 이벤트 연동용 함수 2]
     public void AnimEvent_CheckBackKick()
     {
         GameObject playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null && Vector2.Distance(transform.position, playerObj.transform.position) <= backKickRange)
         {
-            // [수정] doDouble 중복 트리거 대신 조건부 뒷발차기 전용 트리거를 쏴서 모션 끊김 방지함!
             if (visualAnimator != null) visualAnimator.SetTrigger("doConditionBackKick");
         }
         else
@@ -90,7 +90,6 @@ public class MidBossPattern6 : BossPatternBase
         }
     }
 
-    // [애니메이션 이벤트 연동용 함수 3]
     public void AnimEvent_BackKickHit()
     {
         if (backKickHitbox != null)

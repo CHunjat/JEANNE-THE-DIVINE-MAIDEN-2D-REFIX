@@ -1,7 +1,7 @@
 using UnityEngine;
-
 // =====================================================
-// MidBossPattern5.cs (무한루프 버그 완벽 수정)
+// MidBossPattern5.cs
+// 클리어링 - 근거리, 쿨타임 0초(내부 5초), 우선순위 1, 2페이즈 관계없이 적용
 // =====================================================
 public class MidBossPattern5 : BossPatternBase
 {
@@ -20,20 +20,17 @@ public class MidBossPattern5 : BossPatternBase
         visualAnimator = GetComponentInChildren<Animator>();
 
         MidBoss parent = GetComponent<MidBoss>();
-        if (parent != null)
-        {
-            clearingHitbox = parent.hitBox_Clearing;
-        }
-
+        if (parent != null) clearingHitbox = parent.hitBox_Clearing;
         if (clearingHitbox != null) clearingHitbox.SetActive(false);
 
-        // [핵심 해결 1] 인스펙터 값 무시하고 강제로 5초 쿨타임 박아버림 (무한루프 방지)
+        // 기획서 반영 (무한루프 방지용 내부 쿨타임 5초 유지)
         cooldown = 5f;
+        priority = 1;
+        distanceType = DistanceType.Close;
     }
 
     public override bool IsUsable()
     {
-        // [핵심 해결 2] 쿨타임이 아직 덜 돌았으면 거리 검사도 안 하고 칼같이 컷!
         if (!base.IsUsable()) return false;
 
         targetPlayer = GameObject.FindWithTag("Player");
@@ -69,10 +66,7 @@ public class MidBossPattern5 : BossPatternBase
 
         Rigidbody2D playerRb = targetPlayer.GetComponent<Rigidbody2D>();
         if (playerRb != null)
-        {
-            float knockbackSpeed = knockbackDistance / knockbackDuration;
-            playerRb.linearVelocity = knockbackDir * knockbackSpeed;
-        }
+            playerRb.linearVelocity = knockbackDir * (knockbackDistance / knockbackDuration);
     }
 
     private void DeactivateClearing() { if (clearingHitbox != null) clearingHitbox.SetActive(false); }
