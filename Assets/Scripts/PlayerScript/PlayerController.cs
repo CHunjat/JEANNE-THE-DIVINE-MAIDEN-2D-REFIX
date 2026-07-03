@@ -122,11 +122,7 @@ public class PlayerController : MonoBehaviour
 
     public bool hasUsedAirUp;   // 윗공격 1회 제한 스위치
 
-    [Header("방어")]
-    public string anim_GuardNormal = "BlockNormal";
-    public string anim_GuardOff = "Blockoff";
-    public string anim_BlockHit = "BlockNormalHit";
-    public string anim_BlockBreak = "BlockBreak";
+  
 
     [Header("힐 스킬(Heal) 데이터")]
     public float healAmount = 50f;  // 체력 회복량
@@ -135,9 +131,87 @@ public class PlayerController : MonoBehaviour
     [Header("히트 애니메이션 변수값")]
     public string anim_Hit = "Hit";
 
-    [Header("패링")]
 
+    [Header("방어 및 패리 애니메이션 관리")]
+    public string anim_GuardNormal = "BlockNormal";
+    public string anim_GuardOff = "Blockoff";
+    public string anim_BlockHit = "BlockNormalHit";
+    public string anim_GuardParry = "GuardParry";
+    public string anim_ParryLightCounter = "ParryLightCounter";
+    public string anim_ParryHeavyCounter = "ParryHeavyCounter";
 
+    [Header("가드 및 패링 수치세팅")]
+    public float parryWindowDuration = 0.2f;//패링 타이밍 시간 가드 키를 누른 직후, 정확히 0.2초 안에 적의 공격에 맞아야
+    public float chipDamageMultiplier = 0.4f;//가드관통 데미지(내상) 가드 뎀감률
+    public float guardKnockbackForce = 2f; // 일반 가드 넉백수치
+    public float parryKnockbackForce = 1f; // 패리 성공 넉백수치
+    [Header("패링 카운터 세팅")]
+    public float parryCounterWindow = 0.3f;//유예시간(패링을하고 몇초안에 눌러야 나갈것인가(패리카운터를 위함)
+
+    [HideInInspector] public float guardStartTime;
+
+    // 에너미 공격의 유일한 진입점 (앞뒤 판별을 위해 몬스터 위치가 필요함)
+    public void EvaluateAttack(float damage, Vector2 enemyPosition)
+    {
+        if (playerStats.isInvincible || playerStats.currentHp <= 0) return;
+
+        // 패링 상태(ParryState 삭제됨) 대신 GuardState에서 처리함.
+        // 카운터 상태들은 여전히 무적 로직 유지
+        if (StateMachine.CurrentState == ParryLightCounterState ||
+            StateMachine.CurrentState == ParryHeavyCounterState) return;
+
+        // 공격 방향 판별
+        float dirToEnemy = enemyPosition.x - transform.position.x;
+        bool isHitFromFront = (isFacingRight && dirToEnemy > 0) || (!isFacingRight && dirToEnemy < 0);
+
+        // 1. 가드를 올렸고, 앞에서 날아온 공격일 때
+        if (StateMachine.CurrentState == GuardState && isHitFromFront)
+        {
+            float timeSinceGuard = Time.time - guardStartTime;
+            float pushDir = transform.position.x > enemyPosition.x ? 1f : -1f;
+
+            if (timeSinceGuard <= parryWindowDuration)
+            {
+                // 패리 성공 (내상 HP 소멸 없음, 데미지 무효)
+                Debug.Log("<color=cyan>패링 성공! 내상 유지 & 살짝 밀림</color>");
+                rb.linearVelocity = new Vector2(pushDir * parryKnockbackForce, rb.linearVelocity.y);
+
+                // 상태 전환 없이 GuardState 내부에서 애니메이션만 재생
+                ((PlayerGuardState)GuardState).SetKnockbackLock(0.2f);
+                ((PlayerGuardState)GuardState).TriggerParryAnimation();
+                return;
+            }
+            else
+            {
+                Debug.Log("<color=yellow>일반 가드!</color>");
+                float chipDamage = damage * chipDamageMultiplier;
+                playerStats.TakeDamage(chipDamage, true);
+                if (playerStats.currentHp <= 0) return;
+
+                float newInternalHp = chipDamage * playerStats.recoverableRatio;
+                playerStats.SetInternalHp(newInternalHp);
+
+                rb.linearVelocity = new Vector2(pushDir * guardKnockbackForce, rb.linearVelocity.y);
+
+                // 넉백 보호 Lock 적용
+                ((PlayerGuardState)GuardState).SetKnockbackLock(0.2f);
+                animator.Play(anim_BlockHit, 0, 0f);
+                return;
+            }
+        }
+
+        // 2. 가드를 안 했거나, 뒤통수를 맞았을 때 (쌩 피격)
+        // 룰 2-1: 모아둔 내상 즉시 증발
+        if (playerStats.loseInternalHpOnHit)
+        {
+            playerStats.currentRecoverableHp = 0f;
+            Debug.Log("<color=red>피격당함! 내상 HP 즉시 증발</color>");
+        }
+
+        // 체력 깎고 HitState로 넘김 (쌩 피격이므로 무적 발동 -> false 전달)
+        playerStats.TakeDamage(damage, false);
+        StateMachine.ChangeState(HitState);
+    }
 
 
     [Header("차지 공격 설정")]
@@ -187,7 +261,7 @@ public class PlayerController : MonoBehaviour
         Vector2 hitCenter = (Vector2)attackPoint.position + finalOffset;
 
         Collider2D[] hitEnemies = Physics2D.OverlapBoxAll(hitCenter, data.size, 0f, enemyLayer);
-
+        float totalDealtDamage = 0f; // 다수 적 타격 시 총 데미지 합산 변수;
         bool hasHitEnemy = false;
 
         foreach (Collider2D enemy in hitEnemies)
@@ -205,9 +279,29 @@ public class PlayerController : MonoBehaviour
                     finalDamage *= data.chargeMultiplier;
                 }
                 enemyFSM.TakeDamage(finalDamage);
+                totalDealtDamage += finalDamage;
             }
             Debug.Log($"<color=orange>[타격 적중]</color> <b>{data.attackName}</b> -> {enemy.name}에게 적중! (타격 이펙트 생성 위치: {enemy.transform.position})");
 
+        }
+
+        // 2.다수 타격 피흡 로직
+        if (hasHitEnemy && playerStats.currentRecoverableHp > 0)
+        {
+            // 총 준 데미지를 기준으로 피흡량 계산
+            float healAmount = totalDealtDamage * playerStats.lifestealRatio;
+
+            // 단, 모아둔 내상 HP(currentRecoverableHp) 이상으로는 회복 불가
+            healAmount = Mathf.Min(healAmount, playerStats.currentRecoverableHp);
+
+            // 체력 회복 & 내상 게이지 차감
+            playerStats.currentHp += healAmount;
+            playerStats.currentRecoverableHp -= healAmount;
+
+            // 최대 체력 오버 방지
+            if (playerStats.currentHp > playerStats.maxHp) playerStats.currentHp = playerStats.maxHp;
+
+            Debug.Log($"<color=green>적중! 누적 데미지 {totalDealtDamage} 기반으로 {healAmount} 회복!</color>");
         }
 
         // 3. 적을 한 명이라도 맞췄을 때 한 번만 실행되는 '타격감' 연출
@@ -365,6 +459,8 @@ public class PlayerController : MonoBehaviour
 
     public PlayerGuardState GuardState { get; private set; }
     public PlayerGuardOffState GuardOffState { get; private set; }
+    public PlayerParryLightCounterState ParryLightCounterState { get; private set; }
+    public PlayerParryHeavyCounterState ParryHeavyCounterState { get; private set; }
     public PlayerGrappleState GrappleState { get; private set; }
 
     public PlayerDropState DropState { get; private set; }
@@ -417,6 +513,9 @@ public class PlayerController : MonoBehaviour
 
         GuardState = new PlayerGuardState(this, StateMachine, anim_GuardNormal);
         GuardOffState = new PlayerGuardOffState(this, StateMachine, anim_GuardOff);
+        ParryLightCounterState = new PlayerParryLightCounterState(this, StateMachine, anim_ParryLightCounter);
+        ParryHeavyCounterState = new PlayerParryHeavyCounterState(this, StateMachine, anim_ParryHeavyCounter);
+      
         GrappleState = new PlayerGrappleState(this, StateMachine, anim_Grapple);
 
         DropState = new PlayerDropState(this, StateMachine, "Falling");
@@ -429,7 +528,7 @@ public class PlayerController : MonoBehaviour
         StandUpState = new PlayerStandUpState(this, StateMachine, anim_Standing);
         DieState = new PlayerDieState(this, StateMachine, anim_DieGround,anim_DieAir);
         HitState = new PlayerHitState(this, StateMachine, anim_Hit);
-
+        
 
         rb = GetComponent<Rigidbody2D>(); // 2D로 변경
         cd = GetComponent<BoxCollider2D>(); // 2D로 변경
@@ -464,7 +563,14 @@ public class PlayerController : MonoBehaviour
         //테스트용 쳐맞기버튼 ㅋㅋ
         if (Input.GetKeyDown(KeyCode.L))
         {
-            GetComponent<PlayerStats>().TakeDamage(1f);
+            Debug.Log("<color=magenta>테스트: 가상의 적에게 10 데미지 피격!</color>");
+
+            // 플레이어의 살짝 앞(오른쪽을 보면 오른쪽, 왼쪽을 보면 왼쪽)에 가짜 적 위치를 만듦
+            float dir = isFacingRight ? 1f : -1f;
+            Vector2 fakeEnemyPos = transform.position + new Vector3(dir * 2f, 0f, 0f);
+
+            // 이제 순수 계산기(TakeDamage) 대신, 통합 판독기(EvaluateAttack)로 데미지를 보냄!
+            EvaluateAttack(10f, fakeEnemyPos);
         }
 
 
