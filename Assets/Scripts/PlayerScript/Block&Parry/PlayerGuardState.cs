@@ -1,34 +1,96 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class PlayerGuardState : PlayerState
 {
+    public bool isParrying = false;
+    private float knockbackTimer = 0f; // ë„‰ë°± ë³´í˜¸ íƒ€ì´ë¨¸
+
     public PlayerGuardState(PlayerController player, PlayerStateMachine stateMachine, string animName)
         : base(player, stateMachine, animName) { }
 
     public override void Enter()
     {
         base.Enter();
-        // ¹æ¾î ½ÃÀÛ ½Ã ¹Ì²ô·¯Áü ¹æÁö ¹× Á¤Áö
-        player.rb.linearVelocity = Vector3.zero;
-        player.animator.Play(player.anim_GuardNormal);
+        player.rb.linearVelocity = new Vector2(0f, player.rb.linearVelocity.y);
+
+        // ê°€ë“œ ì§„ì… ì‹œ ê°•ì œ ì´ˆê¸°í™”
+        player.animator.CrossFade(player.anim_GuardNormal, 0f, 0);
+        player.guardStartTime = Time.time;
+        isParrying = false;
+        knockbackTimer = 0f;
+    }
+
+    // [ì¤‘ìš”] ì™¸ë¶€(EvaluateAttack)ì—ì„œ ë„‰ë°± ë°œìƒ ì‹œ í˜¸ì¶œ
+    public void SetKnockbackLock(float duration)
+    {
+        knockbackTimer = duration;
+    }
+
+    public void TriggerParryAnimation()
+    {
+        isParrying = true;
+        player.animator.Play(player.anim_GuardParry, 0, 0f);
     }
 
     public override void LogicUpdate()
     {
         base.LogicUpdate();
 
-        // [Áß¿ä] ¹æ¾î Å°¸¦ ¶¼¸é ¹Ù·Î ÇØÁ¦ »óÅÂ·Î ÀüÀÌ
+        // 1. ê°€ë“œ í‚¤ í•´ì œ ì‹œ
         if (!player.inputReader.GuardHeld)
         {
             stateMachine.ChangeState(player.GuardOffState);
             return;
+        }
+
+        AnimatorStateInfo stateInfo = player.animator.GetCurrentAnimatorStateInfo(0);
+
+        // 2. íŒ¨ë¦¬ ì¤‘ ì²˜ë¦¬
+        if (isParrying)
+        {
+            // ì¹´ìš´í„° ì…ë ¥
+            if (player.inputReader.AttackPressed)
+            {
+                player.inputReader.AttackPressed = false;
+                stateMachine.ChangeState(player.ParryLightCounterState);
+                return;
+            }
+            if (player.inputReader.ThrustAttackPressed)
+            {
+                player.inputReader.ThrustAttackPressed = false;
+                stateMachine.ChangeState(player.ParryHeavyCounterState);
+                return;
+            }
+
+            // íŒ¨ë¦¬ ì¢…ë£Œ ì‹œ ìë™ ë³µê·€
+            if (stateInfo.IsName(player.anim_GuardParry) && stateInfo.normalizedTime >= 0.95f)
+            {
+                isParrying = false;
+                player.animator.Play(player.anim_GuardNormal);
+            }
+            return;
+        }
+
+        // 3. ì¼ë°˜ ê°€ë“œ í”¼ê²© í›„ ë³µê·€
+        if (stateInfo.IsName(player.anim_BlockHit) && stateInfo.normalizedTime >= 1.0f)
+        {
+            player.animator.Play(player.anim_GuardNormal);
         }
     }
 
     public override void PhysicsUpdate()
     {
         base.PhysicsUpdate();
-        // ¹æ¾î Áß¿¡´Â ÀÌµ¿ÇÏÁö ¸øÇÏµµ·Ï ¼Óµµ °íÁ¤ (ÇÊ¿ä ½Ã)
-        player.SetVelocity(0f, player.rb.linearVelocity.y);
+
+        // ë„‰ë°± ë³´í˜¸ íƒ€ì´ë¨¸ê°€ ì‘ë™ ì¤‘ì´ë©´ ìŠ¬ë¼ì´ë”© ê°ì† ë¡œì§ì„ ê±´ë„ˆëœ€ (ë„‰ë°± ë³´ì¡´)
+        if (knockbackTimer > 0)
+        {
+            knockbackTimer -= Time.fixedDeltaTime;
+            return;
+        }
+
+        // ë„‰ë°± íƒ€ì´ë¨¸ê°€ ëë‚¬ì„ ë•Œë§Œ ìŠ¤ë¥´ë¥µ ë©ˆì¶”ëŠ” ë¡œì§ ì ìš©
+        float slideDecay = Mathf.Lerp(player.rb.linearVelocity.x, 0f, Time.fixedDeltaTime * 10f);
+        player.SetVelocity(slideDecay, player.rb.linearVelocity.y);
     }
 }

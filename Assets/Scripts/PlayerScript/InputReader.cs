@@ -161,10 +161,13 @@ public class InputReader : ScriptableObject, PlayerControls.IPlayerActions
     }
 
     public bool GuardHeld;
+    public bool GuardPressed;
+
     public void OnGuard(InputAction.CallbackContext context)
     {
         if(context.started)
         {
+            GuardPressed = true;
             GuardHeld = true;
         }
         else if (context.canceled)
@@ -172,6 +175,9 @@ public class InputReader : ScriptableObject, PlayerControls.IPlayerActions
             GuardHeld = false;
         }
     }
+
+
+    
 
     private bool _grapplePressed;
     public bool GrapplePressed

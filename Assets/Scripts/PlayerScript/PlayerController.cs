@@ -10,12 +10,15 @@ public class PlayerController : MonoBehaviour
 {
     public float groundedGraceTime = 0.8f; // 공중 판정 유예 시간
     public float groundedTimer;
+    public Collider2D ignoredDropCollider;
+    public PlayerStats playerStats; //스탯 컴포넌트 연결
 
     public bool ignoreSlopeDetection = false;
 
     [Header("Layer Settings")]
     public LayerMask stairsLayer; //
     public LayerMask enemyLayer; // 
+   
     [Header("Input Data")]
     public InputReader inputReader;
 
@@ -23,7 +26,6 @@ public class PlayerController : MonoBehaviour
     public Rigidbody2D rb; // 2D로 전환
     public BoxCollider2D cd; // 2D로 전환
     public Animator animator;
-    public PlayerStats playerStats; //스탯 컴포넌트 연결
 
 
     [Header("Movement Settings")]
@@ -120,19 +122,96 @@ public class PlayerController : MonoBehaviour
 
     public bool hasUsedAirUp;   // 윗공격 1회 제한 스위치
 
-    [Header("방어")]
-    public string anim_GuardNormal = "BlockNormal";
-    public string anim_GuardOff = "Blockoff";
-    public string anim_BlockHit = "BlockNormalHit";
-    public string anim_BlockBreak = "BlockBreak";
+  
 
     [Header("힐 스킬(Heal) 데이터")]
     public float healAmount = 50f;  // 체력 회복량
     public float healMpCost = 30f;  // 마나 소모량
 
-    [Header("패링")]
+    [Header("히트 애니메이션 변수값")]
+    public string anim_Hit = "Hit";
 
 
+    [Header("방어 및 패리 애니메이션 관리")]
+    public string anim_GuardNormal = "BlockNormal";
+    public string anim_GuardOff = "Blockoff";
+    public string anim_BlockHit = "BlockNormalHit";
+    public string anim_GuardParry = "GuardParry";
+    public string anim_ParryLightCounter = "ParryLightCounter";
+    public string anim_ParryHeavyCounter = "ParryHeavyCounter";
+
+    [Header("가드 및 패링 수치세팅")]
+    public float parryWindowDuration = 0.2f;//패링 타이밍 시간 가드 키를 누른 직후, 정확히 0.2초 안에 적의 공격에 맞아야
+    public float chipDamageMultiplier = 0.4f;//가드관통 데미지(내상) 가드 뎀감률
+    public float guardKnockbackForce = 2f; // 일반 가드 넉백수치
+    public float parryKnockbackForce = 1f; // 패리 성공 넉백수치
+    [Header("패링 카운터 세팅")]
+    public float parryCounterWindow = 0.3f;//유예시간(패링을하고 몇초안에 눌러야 나갈것인가(패리카운터를 위함)
+
+    [HideInInspector] public float guardStartTime;
+
+    // 에너미 공격의 유일한 진입점 (앞뒤 판별을 위해 몬스터 위치가 필요함)
+    public void EvaluateAttack(float damage, Vector2 enemyPosition)
+    {
+        if (playerStats.isInvincible || playerStats.currentHp <= 0) return;
+
+        // 패링 상태(ParryState 삭제됨) 대신 GuardState에서 처리함.
+        // 카운터 상태들은 여전히 무적 로직 유지
+        if (StateMachine.CurrentState == ParryLightCounterState ||
+            StateMachine.CurrentState == ParryHeavyCounterState) return;
+
+        // 공격 방향 판별
+        float dirToEnemy = enemyPosition.x - transform.position.x;
+        bool isHitFromFront = (isFacingRight && dirToEnemy > 0) || (!isFacingRight && dirToEnemy < 0);
+
+        // 1. 가드를 올렸고, 앞에서 날아온 공격일 때
+        if (StateMachine.CurrentState == GuardState && isHitFromFront)
+        {
+            float timeSinceGuard = Time.time - guardStartTime;
+            float pushDir = transform.position.x > enemyPosition.x ? 1f : -1f;
+
+            if (timeSinceGuard <= parryWindowDuration)
+            {
+                // 패리 성공 (내상 HP 소멸 없음, 데미지 무효)
+                Debug.Log("<color=cyan>패링 성공! 내상 유지 & 살짝 밀림</color>");
+                rb.linearVelocity = new Vector2(pushDir * parryKnockbackForce, rb.linearVelocity.y);
+
+                // 상태 전환 없이 GuardState 내부에서 애니메이션만 재생
+                ((PlayerGuardState)GuardState).SetKnockbackLock(0.2f);
+                ((PlayerGuardState)GuardState).TriggerParryAnimation();
+                return;
+            }
+            else
+            {
+                Debug.Log("<color=yellow>일반 가드!</color>");
+                float chipDamage = damage * chipDamageMultiplier;
+                playerStats.TakeDamage(chipDamage, true);
+                if (playerStats.currentHp <= 0) return;
+
+                float newInternalHp = chipDamage * playerStats.recoverableRatio;
+                playerStats.SetInternalHp(newInternalHp);
+
+                rb.linearVelocity = new Vector2(pushDir * guardKnockbackForce, rb.linearVelocity.y);
+
+                // 넉백 보호 Lock 적용
+                ((PlayerGuardState)GuardState).SetKnockbackLock(0.2f);
+                animator.Play(anim_BlockHit, 0, 0f);
+                return;
+            }
+        }
+
+        // 2. 가드를 안 했거나, 뒤통수를 맞았을 때 (쌩 피격)
+        // 룰 2-1: 모아둔 내상 즉시 증발
+        if (playerStats.loseInternalHpOnHit)
+        {
+            playerStats.currentRecoverableHp = 0f;
+            Debug.Log("<color=red>피격당함! 내상 HP 즉시 증발</color>");
+        }
+
+        // 체력 깎고 HitState로 넘김 (쌩 피격이므로 무적 발동 -> false 전달)
+        playerStats.TakeDamage(damage, false);
+        StateMachine.ChangeState(HitState);
+    }
 
 
     [Header("차지 공격 설정")]
@@ -182,7 +261,7 @@ public class PlayerController : MonoBehaviour
         Vector2 hitCenter = (Vector2)attackPoint.position + finalOffset;
 
         Collider2D[] hitEnemies = Physics2D.OverlapBoxAll(hitCenter, data.size, 0f, enemyLayer);
-
+        float totalDealtDamage = 0f; // 다수 적 타격 시 총 데미지 합산 변수;
         bool hasHitEnemy = false;
 
         foreach (Collider2D enemy in hitEnemies)
@@ -200,9 +279,29 @@ public class PlayerController : MonoBehaviour
                     finalDamage *= data.chargeMultiplier;
                 }
                 enemyFSM.TakeDamage(finalDamage);
+                totalDealtDamage += finalDamage;
             }
             Debug.Log($"<color=orange>[타격 적중]</color> <b>{data.attackName}</b> -> {enemy.name}에게 적중! (타격 이펙트 생성 위치: {enemy.transform.position})");
 
+        }
+
+        // 2.다수 타격 피흡 로직
+        if (hasHitEnemy && playerStats.currentRecoverableHp > 0)
+        {
+            // 총 준 데미지를 기준으로 피흡량 계산
+            float healAmount = totalDealtDamage * playerStats.lifestealRatio;
+
+            // 단, 모아둔 내상 HP(currentRecoverableHp) 이상으로는 회복 불가
+            healAmount = Mathf.Min(healAmount, playerStats.currentRecoverableHp);
+
+            // 체력 회복 & 내상 게이지 차감
+            playerStats.currentHp += healAmount;
+            playerStats.currentRecoverableHp -= healAmount;
+
+            // 최대 체력 오버 방지
+            if (playerStats.currentHp > playerStats.maxHp) playerStats.currentHp = playerStats.maxHp;
+
+            Debug.Log($"<color=green>적중! 누적 데미지 {totalDealtDamage} 기반으로 {healAmount} 회복!</color>");
         }
 
         // 3. 적을 한 명이라도 맞췄을 때 한 번만 실행되는 '타격감' 연출
@@ -268,8 +367,6 @@ public class PlayerController : MonoBehaviour
     [Header("Grapple Animation")]
     public string anim_Grapple = "GrappleStart"; // 방금 주신 스프라이트 애니메이션 이름
 
-    [Header("밑점프 감지 타이머")]
-    public Collider2D ignoredDropCollider;
 
     [Header("비탈길(Slope) 세팅")]
     public float maxSlopeAngle = 45f;
@@ -300,7 +397,7 @@ public class PlayerController : MonoBehaviour
             // 1. 쿨타임이 안 돌았으면 무조건 불가
             if (dashCooltimer > 0 || landTimer > 0) return false;
 
-            // 2. 👈 핵심: 공중에 떠 있는데 이미 공중 대쉬를 한 번 썼다면 불가!
+            // 2.핵심: 공중에 떠 있는데 이미 공중 대쉬를 한 번 썼다면 불가!
             if (!IsGrounded() && !OnSlope() && hasUsedAirDash) return false;
 
             return true;
@@ -326,6 +423,9 @@ public class PlayerController : MonoBehaviour
     public string anim_Resting = "Resting";   // 앉아서 대기 (0~8 프레임 반복)
     public string anim_Standing = "Standing"; // 일어나는 과정 (0~1 프레임)
 
+    [Header("사망 애니메이션")]
+    public string anim_DieGround = "Die"; // 땅 사망 모션
+    public string anim_DieAir = "AirDie";// 공중 사망 모션
 
 
     public PlayerAttack1State Attack1State { get; private set; }
@@ -359,6 +459,8 @@ public class PlayerController : MonoBehaviour
 
     public PlayerGuardState GuardState { get; private set; }
     public PlayerGuardOffState GuardOffState { get; private set; }
+    public PlayerParryLightCounterState ParryLightCounterState { get; private set; }
+    public PlayerParryHeavyCounterState ParryHeavyCounterState { get; private set; }
     public PlayerGrappleState GrappleState { get; private set; }
 
     public PlayerDropState DropState { get; private set; }
@@ -370,6 +472,9 @@ public class PlayerController : MonoBehaviour
 
     public PlayerRestState RestState { get; private set; }
     public PlayerStandUpState StandUpState { get; private set; }
+    public PlayerDieState DieState { get; private set; }
+
+    public PlayerHitState HitState { get; private set; }
 
 
 
@@ -408,6 +513,9 @@ public class PlayerController : MonoBehaviour
 
         GuardState = new PlayerGuardState(this, StateMachine, anim_GuardNormal);
         GuardOffState = new PlayerGuardOffState(this, StateMachine, anim_GuardOff);
+        ParryLightCounterState = new PlayerParryLightCounterState(this, StateMachine, anim_ParryLightCounter);
+        ParryHeavyCounterState = new PlayerParryHeavyCounterState(this, StateMachine, anim_ParryHeavyCounter);
+      
         GrappleState = new PlayerGrappleState(this, StateMachine, anim_Grapple);
 
         DropState = new PlayerDropState(this, StateMachine, "Falling");
@@ -418,7 +526,9 @@ public class PlayerController : MonoBehaviour
         HealState = new PlayerHealState(this, StateMachine, anim_Heal);
         RestState = new PlayerRestState(this, StateMachine, anim_ToRest);
         StandUpState = new PlayerStandUpState(this, StateMachine, anim_Standing);
-
+        DieState = new PlayerDieState(this, StateMachine, anim_DieGround,anim_DieAir);
+        HitState = new PlayerHitState(this, StateMachine, anim_Hit);
+        
 
         rb = GetComponent<Rigidbody2D>(); // 2D로 변경
         cd = GetComponent<BoxCollider2D>(); // 2D로 변경
@@ -439,6 +549,30 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        //테스트용 자살버튼 ㅋㅋ
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            Debug.Log("<color=magenta>테스트용 자살 버튼 작동!</color>");
+
+            // 만약 체력 UI도 같이 깎이는 걸 보고 싶다면 아래 주석 해제
+            // if (playerStats != null) playerStats.currentHp = 0;
+
+            StateMachine.ChangeState(DieState);
+            return;
+        }
+        //테스트용 쳐맞기버튼 ㅋㅋ
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            Debug.Log("<color=magenta>테스트: 가상의 적에게 10 데미지 피격!</color>");
+
+            // 플레이어의 살짝 앞(오른쪽을 보면 오른쪽, 왼쪽을 보면 왼쪽)에 가짜 적 위치를 만듦
+            float dir = isFacingRight ? 1f : -1f;
+            Vector2 fakeEnemyPos = transform.position + new Vector3(dir * 2f, 0f, 0f);
+
+            // 이제 순수 계산기(TakeDamage) 대신, 통합 판독기(EvaluateAttack)로 데미지를 보냄!
+            EvaluateAttack(10f, fakeEnemyPos);
+        }
+
 
         if (sprintJumpCooldownTimer > 0)
             sprintJumpCooldownTimer -= Time.deltaTime;
@@ -492,6 +626,8 @@ public class PlayerController : MonoBehaviour
         }
 
         //딱 idle, move에서만 가능
+        //키보드 버튼은 하나인데, 땅이냐 공중이냐에 따라 다른 스킬을 나가게 해주는 분배기" 역할이 필요
+        //평타는 콤보가 꼬이면 안 되니까 State 안에서만 부르고, 저건 언제든 튀어나가야 하는 스킬이니까 밖으로 뺌
         HandleThrustAttackInput(); //강공찌르기 판독기 추가
         HandleActiveSkillInput();  // [수정] E키(OnSkill) 하나로 슬롯에 따라 스킬을 분배하는 통합 판독기
 
@@ -519,6 +655,7 @@ public class PlayerController : MonoBehaviour
         if (StateMachine.CurrentState == LightningChargeState) return;
         if (StateMachine.CurrentState == LightningAttackState) return;
         if (StateMachine.CurrentState == HealState) return;
+        if (StateMachine.CurrentState == HitState) return;
 
         bool isMidAir = StateMachine.CurrentState == JumpState ||
                         StateMachine.CurrentState == AirState ||
@@ -530,7 +667,10 @@ public class PlayerController : MonoBehaviour
 
         if (!isAttacking)
         {
-            if (Mathf.Abs(inputReader.MoveValue.x) < 0.1f && IsGrounded() && !isMidAir && !isSprintLanding)
+            if (Mathf.Abs(inputReader.MoveValue.x) < 0.1f && IsGrounded() && !isMidAir && !isSprintLanding 
+                && StateMachine.CurrentState != HitState)
+
+
             {
                 if (OnSlope())
                 {
@@ -724,7 +864,7 @@ public class PlayerController : MonoBehaviour
     public void HandleActiveSkillInput()
     {
 
-        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState)
+        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState || StateMachine.CurrentState == DieState)
         {
             inputReader.HAttackPressed = false;
             return;
@@ -782,7 +922,7 @@ public class PlayerController : MonoBehaviour
     //강공 찌르기 //키 F
     public void HandleThrustAttackInput()
     {
-        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState)
+        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState || StateMachine.CurrentState == DieState)
         {
             inputReader.ThrustAttackPressed = false;
             return;
@@ -798,7 +938,7 @@ public class PlayerController : MonoBehaviour
 
         bool isActuallyOnGround = IsGrounded() || OnSlope();
 
-        // --- [A] 지상/비탈길 (찌르기) ---
+        // --- 지상/비탈길 (찌르기) ---
         if (isActuallyOnGround)
         {
             if (!(StateMachine.CurrentState is PlayerAttackState) &&
@@ -813,13 +953,13 @@ public class PlayerController : MonoBehaviour
         // --- [B] 공중 (하강 공격) ---
         else
         {
-            // 🚨 어제 맞췄던 '공격 진행도' 로직 부활
+            // 어제 맞췄던 '공격 진행도' 로직 부활
             // 현재 공중 공격 중이라면 애니메이션이 어느 정도 진행되었는지 확인
             if (StateMachine.CurrentState is PlayerAirAttack1State ||
                 StateMachine.CurrentState is PlayerAirAttack2State ||
                 StateMachine.CurrentState is PlayerAirUpAttackState)
             {
-                // 🔥 normalizedTime이 0.4f~0.5f 정도는 지나야 하강 공격으로 캔슬 가능
+                // normalizedTime이 0.4f~0.5f 정도는 지나야 하강 공격으로 캔슬 가능
                 float nTime = animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
 
                 if (nTime < 0.4f)
@@ -931,9 +1071,11 @@ public class PlayerController : MonoBehaviour
         return bestTarget;
     }
 
-    public bool OnSlope()
+    public bool OnSlope(bool isDashing = false)
     {
-        if (cd == null || ignoreSlopeDetection) return false; // 🔥 밑점프 중이면 아예 판정 안 함!
+        if (cd == null || ignoreSlopeDetection || 
+            (StateMachine != null && StateMachine.CurrentState == DropState))
+            return false;
 
         float rayLength = cd.bounds.extents.y + 0.3f;
         LayerMask currentMask = GetCurrentGroundMask();
@@ -948,7 +1090,7 @@ public class PlayerController : MonoBehaviour
         {
             if (hit.collider != null && hit.collider != ignoredDropCollider)
             {
-                // ★ 핵심: 현재 저장된 slopeHit(이전 프레임의 비탈길)이 있다면, 
+                // 핵심: 현재 저장된 slopeHit(이전 프레임의 비탈길)이 있다면, 
                 // 거리가 아주 크게 변하지 않는 이상 그대로 유지함 (0.1f 오차 허용)
                 if (slopeHit.collider != null && hit.collider == slopeHit.collider)
                 {
@@ -973,10 +1115,11 @@ public class PlayerController : MonoBehaviour
 
             if (angle > 0.1f && angle <= maxSlopeAngle)
             {
-                // ★ [핵심] 모서리 제외 필터 (Edge Detection)
+                // 모서리 제외 필터 (Edge Detection)
                 // 콜라이더의 좌우 끝단(min.x, max.x)으로부터 margin 만큼은 경사로 판정에서 제외합니다.
                 // 이렇게 하면 모서리 끝에 도달했을 때 OnSlope가 false를 반환하여 평지로 전환됩니다.
-                float margin = 0.5f;
+                float margin = isDashing ? 0.05f : 0.5f;
+                
                 if (bestHit.point.x <= bestHit.collider.bounds.min.x + margin ||
                     bestHit.point.x >= bestHit.collider.bounds.max.x - margin)
                 {
@@ -1030,34 +1173,54 @@ public class PlayerController : MonoBehaviour
     //프로퍼티
     public bool CanSprintJump => sprintJumpCooldownTimer <= 0;
 
-
+    private float lastGroundedTime; // 클래스 멤버 변수로 반드시 선언되어 있어야 함
     public bool IsGrounded()
     {
-
         if (cd == null) return false;
 
+        // 1. 착지 모션 등 강제 상태 예외
         if (StateMachine != null)
         {
-            // 착지 모션 중이거나 대쉬 중일 때의 예외 처리
             if (StateMachine.CurrentState == LandState) return true;
+            // [핵심 추가] 밑점프 중이면 강제로 공중 판정!
+            if (StateMachine.CurrentState == DropState) return false;
         }
 
-        Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
 
-        // 방금 만든 GetCurrentGroundMask()를 사용
+
+        // 2. 바닥 체크 (BoxCast)
+        Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
         RaycastHit2D[] hits = Physics2D.BoxCastAll(rayStartPos, groundCheckSize, 0f, Vector2.down, groundCheckDistance + 0.1f, GetCurrentGroundMask());
+
+        bool isCurrentlyTouchingGround = false;
 
         foreach (var hit in hits)
         {
-            // 감지된 놈이 내가 지금 통과 중인 그 발판(ignoredDropCollider)이 아니라면? -> 진짜 땅이다!
+            // ignoredDropCollider가 있으면 밑점프 중이라는 뜻이니까 일단 무시
             if (hit.collider != null && hit.collider != ignoredDropCollider)
             {
-
-                return true;
+                isCurrentlyTouchingGround = true;
+                break;
             }
         }
 
-        if (OnSlope()) return true;
+        // 경사로 판정
+        if (OnSlope()) isCurrentlyTouchingGround = true;
+
+        // 3. 땅에 닿았다면 시간 갱신
+        if (isCurrentlyTouchingGround)
+        {
+            lastGroundedTime = Time.time;
+            return true;
+        }
+
+        // 4. [핵심 수정] Coyote Time 적용
+        // 만약 밑점프 중(ignoredDropCollider != null)이라면 버퍼를 무시하고 바로 false를 리턴!
+        // 이게 밑점프를 뚫어주는 열쇠야.
+        if (ignoredDropCollider == null && Time.time < lastGroundedTime + 0.1f)
+        {
+            return true;
+        }
 
         return false;
     }

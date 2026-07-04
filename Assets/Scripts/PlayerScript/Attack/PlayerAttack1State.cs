@@ -41,7 +41,7 @@ public class PlayerAttack1State : PlayerAttackState
     {
         base.PhysicsUpdate();
 
-        // 🔥 공격 중에는 비탈길에서 본드처럼 딱 붙어있어야 함
+        // 공격 중에는 비탈길에서 본드처럼 딱 붙어있어야 함
         if (player.OnSlope())
         {
             player.rb.gravityScale = 0f; // 2D gravityScale 사용 (중력 끄기)
