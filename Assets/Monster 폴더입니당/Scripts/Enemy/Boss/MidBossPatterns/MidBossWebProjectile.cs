@@ -65,10 +65,10 @@ public class MidBossWebProjectile : MonoBehaviour
     {
         if (other.gameObject.layer != LayerMask.NameToLayer("Player")) return;
 
-        PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
-        if (playerHealth != null)
+        PlayerStats playerStats = other.GetComponent<PlayerStats>();
+        if (playerStats != null)
         {
-            // playerHealth.ApplyBind(bindDuration); ← 병합 후 주석 해제
+            // playerStats.ApplyBind(bindDuration); // ← 병합 후 주석 해제
             Debug.Log($"<color=cyan>[MidBossWebProjectile] 플레이어 타격! 구속 {bindDuration}초</color>");
         }
 

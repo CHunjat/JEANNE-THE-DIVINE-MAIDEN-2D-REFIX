@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1715139335864007623}
   - component: {fileID: 2707820844834777167}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: Hurtbox_Body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66,7 +66,7 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 1.38}
+  m_Offset: {x: -1.5, y: 1.38}
   m_Size: {x: 8.2, y: 4.92}
   m_Direction: 1
 --- !u!1 &664767348250161357
@@ -80,7 +80,7 @@ GameObject:
   - component: {fileID: 9059265861085555662}
   - component: {fileID: 3746359268979658637}
   - component: {fileID: 5644885836432651869}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: Hitbox_Landing
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -175,7 +175,7 @@ GameObject:
   - component: {fileID: 1635709444993881001}
   - component: {fileID: 6457070799411734426}
   - component: {fileID: 6336373510405001901}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: Hitbox_BackKick
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -279,7 +279,7 @@ GameObject:
   - component: {fileID: 6799756993731638914}
   - component: {fileID: 4925484290603104269}
   - component: {fileID: 176479052352664105}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: MidBoss_Spider
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -369,8 +369,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0.75}
-  m_Size: {x: 7.85, y: 1.5}
+  m_Offset: {x: -0.99, y: 2.62}
+  m_Size: {x: 8.18, y: 5.06}
   m_Direction: 1
 --- !u!114 &5656119948597351064
 MonoBehaviour:
@@ -393,6 +393,10 @@ MonoBehaviour:
   currentState: 0
   currentPhase: 1
   phase2Threshold: 0.5
+  attackCooldown: 2.5
+  closeRangeMax: 5
+  midRangeMax: 10
+  farRangeMax: 20
   spriteRenderer: {fileID: 9048727077953290674}
   flashMaterial: {fileID: 2100000, guid: b6adf41d5d8d57e478fee5210526b32f, type: 2}
   hitBox_Stamp: {fileID: 9125756724598772400}
@@ -413,8 +417,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern1
   cooldown: 3
+  priority: 3
+  distanceType: 1
+  canUseInChase: 0
   hitboxActiveDuration: 1
-  stampHitbox: {fileID: 9125756724598772400}
 --- !u!114 &8694899636596785465
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -428,9 +434,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern2
   cooldown: 3
-  slashSpeed: 8
-  slashRange: 6
-  slashEffectPrefab: {fileID: 0}
+  priority: 3
+  distanceType: 1
+  canUseInChase: 0
 --- !u!114 &8657742522092995938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -444,10 +450,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern3
   cooldown: 3
+  priority: 3
+  distanceType: 1
+  canUseInChase: 0
   webSpeed: 6
   webRange: 12
   bindDuration: 3
+  playerYOffset: 1.5
   webPrefab: {fileID: 0}
+  webSpawnPoint: {fileID: 0}
 --- !u!114 &3012287259468978372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -461,11 +472,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern4
   cooldown: 3
-  jumpPrepareTime: 0.5
+  priority: 3
+  distanceType: 1
+  canUseInChase: 0
   trackTime: 2.7
   dropDelay: 0.3
   hitboxActiveDuration: 1
-  landingHitbox: {fileID: 664767348250161357}
 --- !u!114 &3832418321723928890
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -479,11 +491,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern5
   cooldown: 3
+  priority: 3
+  distanceType: 1
+  canUseInChase: 0
   clearingRange: 3
   knockbackDistance: 10
   knockbackDuration: 0.3
   hitboxActiveDuration: 0.5
-  clearingHitbox: {fileID: 8682717951201376092}
 --- !u!114 &6799756993731638914
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -497,13 +511,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern6
   cooldown: 3
+  priority: 3
+  distanceType: 1
+  canUseInChase: 0
   moveDistance: 3
   moveSpeed: 5
   stampHitboxDuration: 0.2
   backKickRange: 3
   backKickHitboxDuration: 0.3
-  stampHitbox: {fileID: 0}
-  backKickHitbox: {fileID: 0}
 --- !u!114 &4925484290603104269
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -517,12 +532,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern7
   cooldown: 3
+  priority: 3
+  distanceType: 1
+  canUseInChase: 0
   slashHitboxDuration: 0.25
   returnHitboxDuration: 0.25
   conditionStampRange: 2
-  slashHitbox: {fileID: 0}
   returnHitbox: {fileID: 0}
-  stampHitbox: {fileID: 0}
 --- !u!114 &176479052352664105
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -536,6 +552,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern8
   cooldown: 3
+  priority: 3
+  distanceType: 1
+  canUseInChase: 0
   clearingRange: 3
   knockbackDistance: 10
   clearingDuration: 0.5
@@ -545,8 +564,6 @@ MonoBehaviour:
   airTime: 2
   landingHitboxDuration: 0.4
   boundDamageMultiplier: 2
-  clearingHitbox: {fileID: 0}
-  landingHitbox: {fileID: 0}
   webPrefab: {fileID: 0}
 --- !u!1 &7114147065876900842
 GameObject:
@@ -558,7 +575,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5235956993873760103}
   - component: {fileID: 3577488209630876407}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: HitBox_Slash
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -637,7 +654,7 @@ GameObject:
   - component: {fileID: 5017100076092921432}
   - component: {fileID: 9208634869621675309}
   - component: {fileID: 1872169411897046296}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: Hitbox_Clearing
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -733,7 +750,7 @@ GameObject:
   - component: {fileID: 5657985745739050364}
   - component: {fileID: 4955032158290105240}
   - component: {fileID: 6541097352673568587}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: Hitbox_Stamp
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -864,6 +881,10 @@ PrefabInstance:
     - target: {fileID: -2253911629886400664, guid: 2041a89f54b9b4b45ab1c04d6bfcfa4b, type: 3}
       propertyPath: m_Name
       value: Visual
+      objectReference: {fileID: 0}
+    - target: {fileID: -2253911629886400664, guid: 2041a89f54b9b4b45ab1c04d6bfcfa4b, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 3626916397498700004, guid: 2041a89f54b9b4b45ab1c04d6bfcfa4b, type: 3}
       propertyPath: m_Sprite
