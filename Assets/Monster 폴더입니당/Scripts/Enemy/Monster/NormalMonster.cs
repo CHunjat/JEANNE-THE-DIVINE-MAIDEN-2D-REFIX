@@ -113,7 +113,7 @@ public class NormalMonster : EnemyFSM
         Collider2D hit = Physics2D.OverlapCircle(transform.position, attackRange, playerLayer);
         if (hit != null)
         {
-            PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();
+            PlayerStats playerHealth = hit.GetComponent<PlayerStats>();
             if (playerHealth != null)
             {
                 float damage = attackDamage * damageRatio;  // 공격력 × 반영 비율

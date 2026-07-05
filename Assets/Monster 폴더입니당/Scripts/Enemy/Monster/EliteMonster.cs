@@ -108,11 +108,11 @@ public class EliteMonster : EnemyFSM
         Collider2D hit = Physics2D.OverlapCircle(transform.position, attackRange, playerLayer);
         if (hit != null)
         {
-            PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
+            PlayerStats playerStats = hit.GetComponent<PlayerStats>();
+            if (playerStats != null)
             {
                 float damage = attackDamage * damageRatio;
-                playerHealth.TakeDamage(damage);
+                playerStats.TakeDamage(damage);
                 Debug.Log($"[{gameObject.name}] 플레이어에게 {damage} 데미지 적용함.");
             }
         }
