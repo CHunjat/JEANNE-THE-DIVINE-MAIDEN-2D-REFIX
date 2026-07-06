@@ -10,8 +10,7 @@ public class PlayerParryHeavyCounterState : PlayerState
         base.Enter();
         player.rb.linearVelocity = Vector2.zero;
 
-        // 🔥 카운터 중 무적!
-        player.playerStats.isInvincible = true;
+        // 카운터 중 무적!
 
         // 애니메이션 0프레임부터 재생
         player.animator.Play(animHash, 0, 0f);

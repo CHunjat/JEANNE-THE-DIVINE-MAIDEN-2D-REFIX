@@ -668,8 +668,7 @@ public class PlayerController : MonoBehaviour
         if (!isAttacking)
         {
             if (Mathf.Abs(inputReader.MoveValue.x) < 0.1f && IsGrounded() && !isMidAir && !isSprintLanding 
-                && StateMachine.CurrentState != HitState)
-
+                && StateMachine.CurrentState != HitState && StateMachine.CurrentState != GuardState)
 
             {
                 if (OnSlope())
@@ -922,12 +921,36 @@ public class PlayerController : MonoBehaviour
     //강공 찌르기 //키 F
     public void HandleThrustAttackInput()
     {
-        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState || StateMachine.CurrentState == DieState)
+        if (!inputReader.ThrustAttackPressed) return;
+
+        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState || StateMachine.CurrentState == DieState
+            || StateMachine.CurrentState == ParryLightCounterState || StateMachine.CurrentState == ParryHeavyCounterState)
         {
+
             inputReader.ThrustAttackPressed = false;
             return;
         }
-        if (!inputReader.ThrustAttackPressed) return;
+
+        //만약 패링중이면 패링카운터가 나가게끔 수정
+        if (StateMachine.CurrentState == GuardState)
+        {
+            if (((PlayerGuardState)GuardState).isParrying)
+            {
+                // 패리 중일 때 찌르기 키를 누르면 
+                // 입력을 소비하고 그 즉시 '강 카운터 상태'로 전환!
+                inputReader.ThrustAttackPressed = false;
+                StateMachine.ChangeState(ParryHeavyCounterState); // player. 안 붙여도 됨
+                return;
+            }
+            else
+            {
+                // 일반 가드 중일 때는 찌르기가 나가면 안 되니까 입력 무시
+                inputReader.ThrustAttackPressed = false;
+                return;
+            }
+        }
+
+
 
         // 1. 이미 내려찍기 중이면 중복 방지
         if (StateMachine.CurrentState == DiveDropState || StateMachine.CurrentState == DiveLandState)

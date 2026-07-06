@@ -2,9 +2,9 @@
 
 public class PlayerThrustAttackState : PlayerAttackState
 {
-    // 🔥 3타의 stepSpeed(4f)를 참고하여 찌르기 맛에 맞게 상수화
+    // stepSpeed(4f)를 참고하여 찌르기 맛에 맞게 상수화
     private float thrustSpeed = 6f;
-    // 🔥 너무 멀리 가는 걸 방지하기 위해 전진 시간을 3타(0.15f)와 비슷하게 조절
+    // 너무 멀리 가는 걸 방지하기 위해 전진 시간을 3타(0.15f)와 비슷하게 조절
     private float activeThrustTime = 0.2f;
 
     public PlayerThrustAttackState(PlayerController player, PlayerStateMachine stateMachine, string animName)

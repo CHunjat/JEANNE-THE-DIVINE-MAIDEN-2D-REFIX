@@ -4,7 +4,7 @@ public class PlayerGuardState : PlayerState
 {
     public bool isParrying = false;
     private float knockbackTimer = 0f; // 넉백 보호 타이머
-
+    private float parryStartTime = 0f;
     public PlayerGuardState(PlayerController player, PlayerStateMachine stateMachine, string animName)
         : base(player, stateMachine, animName) { }
 
@@ -18,6 +18,7 @@ public class PlayerGuardState : PlayerState
         player.guardStartTime = Time.time;
         isParrying = false;
         knockbackTimer = 0f;
+        parryStartTime = 0f;
     }
 
     // [중요] 외부(EvaluateAttack)에서 넉백 발생 시 호출
@@ -35,20 +36,13 @@ public class PlayerGuardState : PlayerState
     public override void LogicUpdate()
     {
         base.LogicUpdate();
-
-        // 1. 가드 키 해제 시
-        if (!player.inputReader.GuardHeld)
-        {
-            stateMachine.ChangeState(player.GuardOffState);
-            return;
-        }
-
         AnimatorStateInfo stateInfo = player.animator.GetCurrentAnimatorStateInfo(0);
 
-        // 2. 패리 중 처리
+        // ==========================================
+        // [1. 패리 구역] 무조건 여기부터 검사해야 함!
+        // ==========================================
         if (isParrying)
         {
-            // 카운터 입력
             if (player.inputReader.AttackPressed)
             {
                 player.inputReader.AttackPressed = false;
@@ -62,16 +56,36 @@ public class PlayerGuardState : PlayerState
                 return;
             }
 
-            // 패리 종료 시 자동 복귀
-            if (stateInfo.IsName(player.anim_GuardParry) && stateInfo.normalizedTime >= 0.95f)
+            if (Time.time - parryStartTime > 0.1f)
             {
-                isParrying = false;
-                player.animator.Play(player.anim_GuardNormal);
+                if (stateInfo.IsName(player.anim_GuardParry) && stateInfo.normalizedTime >= 0.95f)
+                {
+                    isParrying = false;
+
+                    if (player.inputReader.GuardHeld)
+                    {
+                        player.animator.Play(player.anim_GuardNormal);
+                    }
+                    else
+                    {
+                        stateMachine.ChangeState(player.GuardOffState);
+                    }
+                }
             }
+
+            // 패리 중일 때는 여기서 강제로 끝냄. 
             return;
         }
 
-        // 3. 일반 가드 피격 후 복귀
+        // 패리가 아닐 때만 밑코드
+
+        // 일반 가드일 때만 S키 떼면 가드 해제!
+        if (!player.inputReader.GuardHeld)
+        {
+            stateMachine.ChangeState(player.GuardOffState);
+            return;
+        }
+
         if (stateInfo.IsName(player.anim_BlockHit) && stateInfo.normalizedTime >= 1.0f)
         {
             player.animator.Play(player.anim_GuardNormal);
