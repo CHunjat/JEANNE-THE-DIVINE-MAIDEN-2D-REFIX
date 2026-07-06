@@ -831,19 +831,24 @@ public class PlayerController : MonoBehaviour
             }
             return;
         }
-        // 2. 만약 땅에 있고, 콤보 중이 아니라면? -> 1타 발동!
-        if (IsGrounded() && StateMachine.CurrentState != Attack1State)
+
+
+
+        bool isReallyInAir = !IsGrounded() || StateMachine.CurrentState == JumpState || StateMachine.CurrentState == AirState;
+
+        // 2. 만약 확실하게 땅에 있고, 콤보 중이 아니라면? -> 지상 1타 발동!
+        if (!isReallyInAir && StateMachine.CurrentState != Attack1State)
         {
             StateMachine.ChangeState(Attack1State);
         }
-        //공중 1타 분배
-        else if (!IsGrounded() && currentAirActionCount < maxAirActions
+        // 3. 공중 1타 분배
+        else if (isReallyInAir && currentAirActionCount < maxAirActions
             && !(StateMachine.CurrentState is PlayerAirAttack1State)
             && !(StateMachine.CurrentState is PlayerAirAttack2State)
             && !(StateMachine.CurrentState is PlayerAirUpAttackState))
-
         {
-            if (IsTooCloseToGround()) return; //공중 윗공격 땅 x
+            if (IsTooCloseToGround()) return; // 공중 윗공격 땅 x
+
             float yInput = inputReader.MoveValue.y;
 
             if (yInput > 0.5f)

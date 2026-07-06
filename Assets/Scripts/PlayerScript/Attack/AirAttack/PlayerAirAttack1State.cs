@@ -48,7 +48,7 @@ public class PlayerAirAttack1State : PlayerState
         // 4. [디버깅] 만약 애니메이션 길이가 0이라면 강제로 0.5초로 고정 (붕쯔 버그 방지)
         if (animLength <= 0.01f) animLength = 0.5f;
 
-        // ⚔️ 2타 콤보 예약
+        // 2타 콤보 예약
         if (player.inputReader.AttackPressed && player.currentAirActionCount < player.maxAirActions && nTime >= 0.5f)
         {
             isExitingState = true;
@@ -56,7 +56,7 @@ public class PlayerAirAttack1State : PlayerState
             return;
         }
 
-        // 🚪 애니메이션 다 끝나면 다시 떨어지기 시작
+        // 애니메이션 다 끝나면 다시 떨어지기 시작
         // stateTimer >= animLength 로직은 이제 안전함 (animLength가 0일 리 없으니까)
         if (stateTimer >= animLength && !isExitingState)
         {
