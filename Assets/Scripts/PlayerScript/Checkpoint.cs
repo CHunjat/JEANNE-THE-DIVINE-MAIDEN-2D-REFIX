@@ -188,8 +188,8 @@ public class Checkpoint : MonoBehaviour
 
         if (playerObj != null && playerObj.playerStats != null)
         {
-            playerObj.playerStats.currentHp = playerObj.playerStats.maxHp;
-            playerObj.playerStats.currentMp = playerObj.playerStats.MaxMp;
+            playerObj.playerStats.currentHp = playerObj.playerStats.baseMaxHp;
+            playerObj.playerStats.currentMp = playerObj.playerStats.baseMaxMp;
         }
 
         yield return new WaitForSeconds(1f);

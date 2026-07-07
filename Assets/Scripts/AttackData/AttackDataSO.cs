@@ -19,7 +19,7 @@ public class AttackDataSO : ScriptableObject
     public AttackCategory attackCategory; // [핵심] 이 공격이 어떤 타입인지 인스펙터에서 선택!
     public Vector2 size;                  // 타격 범위 크기
     public Vector2 offset;                // 공격 중심점 오프셋
-    public float damage;                  // 기본 데미지 수치
+    public float damageMultiplier;                  // 기본 데미지 수치
 
     [Header("타격감 (Game Feel) 요소")]
     public float hitStopDuration;         // 역경직(멈춤) 시간 (예: 0.05초)

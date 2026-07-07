@@ -267,6 +267,8 @@ public class PlayerController : MonoBehaviour
         // [추가] 플레이어 스탯에서 기본 그로기 수치를 가져옵니다.
         float baseGroggy = playerStats.GetFinalGroggyPower();
 
+        float totalAttackPower = playerStats.GetTotalAttackPower();
+
         foreach (Collider2D enemy in hitEnemies)
         {
             hasHitEnemy = true;
@@ -274,8 +276,8 @@ public class PlayerController : MonoBehaviour
             EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
             if (enemyFSM != null)
             {
-                float finalDamage = data.damage;
-                float finalGroggy = baseGroggy; // 기본 그로기 수치 복사
+                float finalDamage = totalAttackPower * data.damageMultiplier;
+                float finalGroggy = baseGroggy;
 
                 // [추가] 인스펙터에서 설정한 Enum 카테고리에 맞춰 그로기 배율 곱하기
                 switch (data.attackCategory)
@@ -313,7 +315,7 @@ public class PlayerController : MonoBehaviour
             playerStats.currentHp += healAmount;
             playerStats.currentRecoverableHp -= healAmount;
 
-            if (playerStats.currentHp > playerStats.maxHp) playerStats.currentHp = playerStats.maxHp;
+            if (playerStats.currentHp > playerStats.baseMaxHp) playerStats.currentHp = playerStats.baseMaxHp;
 
             Debug.Log($"<color=green>적중! 누적 데미지 {totalDealtDamage} 기반으로 {healAmount} 회복!</color>");
         }
