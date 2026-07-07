@@ -1318,9 +1318,14 @@ MonoBehaviour:
   attackDamage: 10
   detectRange: 10
   attackRange: 2.5
+  player: {fileID: 0}
+  rb: {fileID: 0}
+  animator: {fileID: 0}
+  col: {fileID: 0}
   currentState: 3
   hitAnimName: Hit
   idleAnimName: Idle
+  isHitAnimationStarted: 0
 --- !u!61 &457128638
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -2452,6 +2457,29 @@ MonoBehaviour:
       BarrelClipping: 0.25
       Anamorphism: 0
   BlendHint: 0
+--- !u!1 &1059021566 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5145147845001952587, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+  m_PrefabInstance: {fileID: 1754357195}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1059021579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1059021566}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86a1c2e011514314ba221bd104b0cde3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyGroggy
+  maxGauge: 100
+  groggyDuration: 5
+  recoverPerSecond: 2
+  recoverDelayAfterHit: 2
+  damageMultiplier: 2.5
+  groggyTriggerName: doKnockDown
 --- !u!1 &1064294652
 GameObject:
   m_ObjectHideFlags: 0
@@ -4553,6 +4581,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: MidBoss_Spider
       objectReference: {fileID: 0}
+    - target: {fileID: 5656119948597351064, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: maxHp
+      value: 300
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656119948597351064, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: attackRange
+      value: 5.2
+      objectReference: {fileID: 0}
     - target: {fileID: 5765147012955405796, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_Size.y
       value: 1.74
@@ -4597,6 +4633,9 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5145147845001952587, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1059021579}
     - targetCorrespondingSourceObject: {fileID: 415669578595818735, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1441072980}

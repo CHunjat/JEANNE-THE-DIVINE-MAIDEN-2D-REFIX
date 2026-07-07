@@ -25,7 +25,6 @@ public abstract class EnemyBase : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         col = GetComponent<Collider2D>();
         currentHp = maxHp;
-
         animator = GetComponentInChildren<Animator>();
         if (animator == null)
         {
@@ -44,9 +43,11 @@ public abstract class EnemyBase : MonoBehaviour
         if (playerObj != null) player = playerObj.transform;
     }
 
-    public virtual void TakeDamage(float amount)
+    // [수정됨] 인수 2개(체력 데미지, 그로기 데미지) 받도록 추가
+    public virtual void TakeDamage(float amount, float groggyDamage = 0f)
     {
         currentHp -= amount;
+        currentHp = Mathf.Max(currentHp, 0f); // 체력 0 아래로 안 내려가게
         Debug.Log($"[{gameObject.name}] 피격! 남은 체력: {currentHp}/{maxHp}");
         if (currentHp <= 0) Die();
     }
@@ -71,12 +72,10 @@ public abstract class EnemyBase : MonoBehaviour
         return (player.position - transform.position).normalized;
     }
 
-    // 문제 해결 : 이름 검색 안 하고 자식의 SpriteRenderer를 확실하게 뒤집음
     protected void FlipTowardsPlayer()
     {
         if (player == null) FindPlayer();
         if (player == null) return;
-
         SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
         if (sr != null)
         {
@@ -88,7 +87,6 @@ public abstract class EnemyBase : MonoBehaviour
     {
         int playerLayer = LayerMask.NameToLayer("Player");
         int enemyLayer = gameObject.layer;
-
         if (playerLayer == -1 || enemyLayer == -1) return;
         Physics2D.IgnoreLayerCollision(enemyLayer, playerLayer, !enable);
     }
@@ -97,7 +95,6 @@ public abstract class EnemyBase : MonoBehaviour
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, detectRange);
-
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
     }

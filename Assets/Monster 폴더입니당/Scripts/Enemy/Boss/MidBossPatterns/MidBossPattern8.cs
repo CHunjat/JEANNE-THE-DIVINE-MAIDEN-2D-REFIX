@@ -81,10 +81,15 @@ public class MidBossPattern8 : BossPatternBase
     {
         if (!isExecuting) return;
 
+        // Visual 끄기
         Transform visual = transform.Find("Visual");
         if (visual != null) visual.gameObject.SetActive(false);
 
-        // 콜라이더 끄기
+        // Hurtbox_Body 끄기
+        Transform hurtbox = transform.Find("Hurtbox_Body");
+        if (hurtbox != null) hurtbox.gameObject.SetActive(false);
+
+        // 본체 콜라이더 끄기
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 
@@ -98,10 +103,15 @@ public class MidBossPattern8 : BossPatternBase
         GameObject playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null) transform.position = playerObj.transform.position;
 
+        // Visual 켜기
         Transform visual = transform.Find("Visual");
         if (visual != null) visual.gameObject.SetActive(true);
 
-        // 콜라이더 켜기
+        // Hurtbox_Body 켜기
+        Transform hurtbox = transform.Find("Hurtbox_Body");
+        if (hurtbox != null) hurtbox.gameObject.SetActive(true);
+
+        // 본체 콜라이더 켜기
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = true;
 
