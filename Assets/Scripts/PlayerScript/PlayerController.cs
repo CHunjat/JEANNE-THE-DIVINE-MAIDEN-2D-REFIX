@@ -256,6 +256,7 @@ public class PlayerController : MonoBehaviour
 
     private void PerformMeleeAttack(AttackDataSO data)
     {
+        Debug.Log($"<color=red>[진짜 파일 확인]</color> 이름: {data.name} | 데미지 배율: {data.damageMultiplier}");
         float dir = isFacingRight ? 1f : -1f;
         Vector2 finalOffset = new Vector2(data.offset.x * dir, data.offset.y);
         Vector2 hitCenter = (Vector2)attackPoint.position + finalOffset;
@@ -278,7 +279,7 @@ public class PlayerController : MonoBehaviour
             {
                 float finalDamage = totalAttackPower * data.damageMultiplier;
                 float finalGroggy = baseGroggy;
-
+               // Debug.Log($"<color=cyan>[데미지 추적]</color> 기량스탯: {playerStats.statDex} / 근력스탯: {playerStats.statStr} / 기준치(SO): {playerStats.statBalance.baseAttackPerStat} / 캐릭터총공격력: {totalAttackPower} / 모션배율: {data.damageMultiplier}");
                 // [추가] 인스펙터에서 설정한 Enum 카테고리에 맞춰 그로기 배율 곱하기
                 switch (data.attackCategory)
                 {
@@ -290,12 +291,7 @@ public class PlayerController : MonoBehaviour
                     case AttackCategory.ParryCounterHeavy: finalGroggy *= data.parryCounterHeavyGroggyRatio; break;
                 }
 
-                // 차지 보너스 적용 (데미지와 그로기 모두 뻥튀기)
-                if (data.canCharge && isThrustCharged)
-                {
-                    finalDamage *= data.chargeMultiplier;
-                    finalGroggy *= data.heavyChargeGroggyRatio; // 차지 전용 그로기 배율 반영
-                }
+              
 
                 // [수정] 몬스터에게 데미지와 그로기 데미지 2개를 전달!
                 // ※ EnemyFSM 스크립트의 TakeDamage 함수 인자를 2개 받도록(float damage, float groggy) 수정해 주세요.

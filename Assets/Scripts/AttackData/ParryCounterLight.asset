@@ -13,9 +13,16 @@ MonoBehaviour:
   m_Name: ParryCounterLight
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   attackName: ParryCounterLight
+  attackCategory: 0
   size: {x: 1.39, y: 0.64}
   offset: {x: -0.07, y: 0}
-  damage: 5
+  damageMultiplier: 1
   hitStopDuration: 0.1
-  canCharge: 0
-  chargeMultiplier: 1.5
+  lightAttackGroggyRatio: 1
+  heavyAttackGroggyRatio: 1.5
+  heavyChargeGroggyRatio: 2
+  jumpLightGroggyRatio: 1.2
+  jumpHeavyGroggyRatio: 1.8
+  parryCounterSpeedRatio: 1.2
+  parryCounterLightGroggyRatio: 2.5
+  parryCounterHeavyGroggyRatio: 3.5

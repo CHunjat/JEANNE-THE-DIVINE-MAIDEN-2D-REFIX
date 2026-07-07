@@ -24,14 +24,12 @@ public class AttackDataSO : ScriptableObject
     [Header("타격감 (Game Feel) 요소")]
     public float hitStopDuration;         // 역경직(멈춤) 시간 (예: 0.05초)
 
-    [Header("차지(기 모으기) 설정")]
-    public bool canCharge = false;        // 이 공격이 기 모으기가 가능한가?
-    public float chargeMultiplier = 1.5f; // 풀 차지 시 데미지 몇 배? (예: 1.5배)
 
     // =========================================================
     // 그로기 및 패리 카운터 시스템 (기획자 조절 영역)
     // =========================================================
 
+    [Header("지누게가 설정할 그로기 수치비율, 카테고리 선택후 그에 맞는 수치만 입력하면됨")]
     [Header("일반 및 점프 공격 그로기 반영 비율")]
     [Tooltip("일반 약공격 그로기 공격력 반영비율")]
     public float lightAttackGroggyRatio = 1.0f;

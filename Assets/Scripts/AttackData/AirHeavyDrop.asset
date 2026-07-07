@@ -13,7 +13,16 @@ MonoBehaviour:
   m_Name: AirHeavyDrop
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   attackName: AirHeavyDrop
+  attackCategory: 0
   size: {x: 1.23, y: 1.48}
   offset: {x: -0.23, y: 0.17}
-  damage: 7
+  damageMultiplier: 1
   hitStopDuration: 0.05
+  lightAttackGroggyRatio: 1
+  heavyAttackGroggyRatio: 1.5
+  heavyChargeGroggyRatio: 2
+  jumpLightGroggyRatio: 1.2
+  jumpHeavyGroggyRatio: 1.8
+  parryCounterSpeedRatio: 1.2
+  parryCounterLightGroggyRatio: 2.5
+  parryCounterHeavyGroggyRatio: 3.5
