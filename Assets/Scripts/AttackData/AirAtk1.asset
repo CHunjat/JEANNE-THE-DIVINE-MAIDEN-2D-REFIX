@@ -15,5 +15,7 @@ MonoBehaviour:
   attackName: AirAtk1
   size: {x: 1.31, y: -1.51}
   offset: {x: 0.01, y: 0.1}
-  damage: 2
+  damage: 1
   hitStopDuration: 0.1
+  canCharge: 0
+  chargeMultiplier: 1.5
