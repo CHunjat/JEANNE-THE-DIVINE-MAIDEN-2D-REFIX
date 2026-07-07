@@ -79,11 +79,19 @@ public class MidBossPattern8 : BossPatternBase
 
     public void AnimEvent_JumpAir()
     {
-        // 핵심 : 지금 2페이즈 필살기를 쓴 상태가 아니라면 4번 스킬이 뛴 거니까 신호 무시!
         if (!isExecuting) return;
 
+        // Visual 끄기
         Transform visual = transform.Find("Visual");
         if (visual != null) visual.gameObject.SetActive(false);
+
+        // Hurtbox_Body 끄기
+        Transform hurtbox = transform.Find("Hurtbox_Body");
+        if (hurtbox != null) hurtbox.gameObject.SetActive(false);
+
+        // 본체 콜라이더 끄기
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = false;
 
         StartCoroutine(UltAirRoutine());
     }
@@ -95,8 +103,18 @@ public class MidBossPattern8 : BossPatternBase
         GameObject playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null) transform.position = playerObj.transform.position;
 
+        // Visual 켜기
         Transform visual = transform.Find("Visual");
         if (visual != null) visual.gameObject.SetActive(true);
+
+        // Hurtbox_Body 켜기
+        Transform hurtbox = transform.Find("Hurtbox_Body");
+        if (hurtbox != null) hurtbox.gameObject.SetActive(true);
+
+        // 본체 콜라이더 켜기
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = true;
+
         if (visualAnimator != null) visualAnimator.SetTrigger("doLand");
     }
 

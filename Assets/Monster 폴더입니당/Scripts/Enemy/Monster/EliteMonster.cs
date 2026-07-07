@@ -94,10 +94,10 @@ public class EliteMonster : EnemyFSM
         // 사망 연출 - 기획 확정 후 채울 것
     }
 
-    // 피격 처리 오버라이드 - 넉백 추가 (경직은 없지만 넉백은 있음 - 기획 확정 후 수정 또는 삭제)
-    public override void TakeDamage(float amount)
+    // 피격 처리 오버라이드 - 부모 인수에 맞춰 변경 완료!
+    public override void TakeDamage(float amount, float groggyDamage = 0f)
     {
-        base.TakeDamage(amount);
+        base.TakeDamage(amount, groggyDamage);
         if (currentHp > 0)
             ApplyKnockback();
     }

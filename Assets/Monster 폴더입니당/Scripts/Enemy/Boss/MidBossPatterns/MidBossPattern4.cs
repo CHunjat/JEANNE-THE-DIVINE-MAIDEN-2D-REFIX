@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-
 // =====================================================
 // MidBossPattern4.cs (2중 착지 버그 완벽 해결본)
 // =====================================================
@@ -10,7 +9,6 @@ public class MidBossPattern4 : BossPatternBase
     [SerializeField] private float trackTime = 2.7f;
     [SerializeField] private float dropDelay = 0.3f;
     [SerializeField] private float hitboxActiveDuration = 1.0f;
-
     private GameObject landingHitbox;
     private MidBoss owner;
     private bool isJumping = false;
@@ -23,9 +21,7 @@ public class MidBossPattern4 : BossPatternBase
         owner = GetComponent<MidBoss>();
         if (owner != null) landingHitbox = owner.hitBox_Landing;
         if (landingHitbox != null) landingHitbox.SetActive(false);
-
         originalGroundY = transform.position.y;
-
         cooldown = 20f;
         priority = 2;
         distanceType = DistanceType.Any;
@@ -41,11 +37,19 @@ public class MidBossPattern4 : BossPatternBase
 
     public void AnimEvent_JumpAir()
     {
-        // 핵심 : 지금 1페이즈 점프 스킬을 쓴 상태가 아니라면 8번 스킬이 뛴 거니까 신호 무시
         if (!isJumping) return;
 
+        // Visual 끄기
         Transform visual = transform.Find("Visual");
         if (visual != null) visual.gameObject.SetActive(false);
+
+        // Hurtbox_Body 끄기
+        Transform hurtbox = transform.Find("Hurtbox_Body");
+        if (hurtbox != null) hurtbox.gameObject.SetActive(false);
+
+        // 본체 콜라이더 끄기
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = false;
 
         StartCoroutine(TrackAndDropRoutine());
     }
@@ -54,7 +58,6 @@ public class MidBossPattern4 : BossPatternBase
     {
         GameObject playerObj = GameObject.FindWithTag("Player");
         float timer = 0f;
-
         while (timer < trackTime)
         {
             if (playerObj != null)
@@ -62,15 +65,22 @@ public class MidBossPattern4 : BossPatternBase
             timer += Time.deltaTime;
             yield return null;
         }
-
         yield return new WaitForSeconds(dropDelay);
-
         transform.position = new Vector2(transform.position.x, originalGroundY);
 
+        // Visual 켜기
         Transform visual = transform.Find("Visual");
         if (visual != null) visual.gameObject.SetActive(true);
-        if (visualAnimator != null) visualAnimator.SetTrigger("doLand");
 
+        // Hurtbox_Body 켜기
+        Transform hurtbox = transform.Find("Hurtbox_Body");
+        if (hurtbox != null) hurtbox.gameObject.SetActive(true);
+
+        // 본체 콜라이더 켜기
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = true;
+
+        if (visualAnimator != null) visualAnimator.SetTrigger("doLand");
         isJumping = false;
     }
 

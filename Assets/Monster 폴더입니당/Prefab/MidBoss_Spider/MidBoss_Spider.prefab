@@ -403,7 +403,7 @@ MonoBehaviour:
   hitBox_Landing: {fileID: 664767348250161357}
   hitBox_Clearing: {fileID: 8682717951201376092}
   hitBox_Slash: {fileID: 7114147065876900842}
-  hitBox_BackKick: {fileID: 0}
+  hitBox_BackKick: {fileID: 1239616574114665858}
 --- !u!114 &7507116261981487563
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -494,7 +494,7 @@ MonoBehaviour:
   priority: 3
   distanceType: 1
   canUseInChase: 0
-  clearingRange: 3
+  clearingRange: 7
   knockbackDistance: 10
   knockbackDuration: 0.3
   hitboxActiveDuration: 0.5
@@ -756,7 +756,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &8672044948271143492
 Transform:
   m_ObjectHideFlags: 0

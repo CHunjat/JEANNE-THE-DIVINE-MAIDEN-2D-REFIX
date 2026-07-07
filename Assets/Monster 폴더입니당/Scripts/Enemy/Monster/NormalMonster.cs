@@ -99,10 +99,10 @@ public class NormalMonster : EnemyFSM
         // 사망 연출 - 기획 확정 후 채울 것 (파티클, 드롭 아이템 등)
     }
 
-    // 피격 처리 오버라이드 - 넉백 추가
-    public override void TakeDamage(float amount, float groggy)
+    // 피격 처리 오버라이드 - 부모 인수에 맞춰 변경 완료!
+    public override void TakeDamage(float amount, float groggyDamage = 0f)
     {
-        base.TakeDamage(amount,groggy);  // 체력 감소 및 사망 처리
+        base.TakeDamage(amount, groggyDamage);  // 체력 감소 및 사망 처리
         if (currentHp > 0)
             ApplyKnockback();     // 살아있을 때만 넉백 적용
     }
