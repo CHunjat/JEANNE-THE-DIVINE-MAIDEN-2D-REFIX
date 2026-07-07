@@ -20,22 +20,22 @@ public class PlayerStats : MonoBehaviour
     public bool loseInternalHpOnHit = true; // 피격 시 내상 즉시 소멸 여부
 
     [Header("기본 스탯 (Base Stats)")]
-    public float baseAttackPower = 0f; // 기본 공격력
+    public float baseAttackPower = 0f;  // 기본 공격력
     public float defense = 0f;          // 방어력
+    public float baseGroggyPower = 10f; // [추가] 캐릭터의 기본 그로기 파괴력
 
     [Header("상태 이상 및 무적 (Status)")]
     public bool isInvincible = false;   // 무적 상태 여부
     public float invincibilityDuration = 0.5f; // 피격 시 무적 시간
 
     private PlayerController playerController;
+
     private void Awake()
     {
         playerController = GetComponent<PlayerController>();
-        // 게임 시작 시 체력을 최대치로 초기화
         currentHp = maxHp;
         currentMp = MaxMp;
     }
-
 
     private void Update()
     {
@@ -51,13 +51,12 @@ public class PlayerStats : MonoBehaviour
         }
     }
 
-    public void SetInternalHp(float amount) //가드로 새로운 내성이 생겼을때 필요한 함수임 ㄷ
+    public void SetInternalHp(float amount)
     {
         currentRecoverableHp = amount;
         internalHpTimer = internalHpDuration;
     }
 
-    //파트너 호출용 몬스터가 플레이어를 때릴 때 사용할 함수
     public void TakeDamage(float amount, bool isGuard = false)
     {
         if (isInvincible || currentHp <= 0) return;
@@ -77,7 +76,6 @@ public class PlayerStats : MonoBehaviour
         }
         else
         {
-            // 가드로 데미지를 입은 게 아닐 때(쌩으로 쳐맞았을 때)만 무적 발동!
             if (!isGuard)
             {
                 StartCoroutine(InvincibilityRoutine());
@@ -85,10 +83,9 @@ public class PlayerStats : MonoBehaviour
         }
     }
 
-    //힐 스킬이나 물약을 먹었을 때 사용할 함수
     public void Heal(float amount, float mpCost)
     {
-        if (currentHp <= 0) return; // 죽었을 땐 힐 불가
+        if (currentHp <= 0) return;
 
         if (currentMp < mpCost)
         {
@@ -96,14 +93,12 @@ public class PlayerStats : MonoBehaviour
             return;
         }
 
-        // 3. MP 소모 및 체력 회복
         currentMp -= mpCost;
         currentHp = Mathf.Min(currentHp + amount, maxHp);
 
         Debug.Log($"힐 사용! MP 소모: {mpCost} / 현재 체력: {currentHp} / 남은 MP: {currentMp}");
     }
 
-    // 피격 시 잠시 무적이 되는 코루틴
     private IEnumerator InvincibilityRoutine()
     {
         isInvincible = true;
@@ -111,6 +106,11 @@ public class PlayerStats : MonoBehaviour
         isInvincible = false;
     }
 
-   
-   
+    // =========================================================
+    // [추가] 컨트롤러에서 호출할 '최종 그로기 힘' 계산기
+    // =========================================================
+    public float GetFinalGroggyPower()
+    {
+        return baseGroggyPower;
+    }
 }

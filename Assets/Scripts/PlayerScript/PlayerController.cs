@@ -264,55 +264,66 @@ public class PlayerController : MonoBehaviour
         float totalDealtDamage = 0f; // 다수 적 타격 시 총 데미지 합산 변수;
         bool hasHitEnemy = false;
 
+        // [추가] 플레이어 스탯에서 기본 그로기 수치를 가져옵니다.
+        float baseGroggy = playerStats.GetFinalGroggyPower();
+
         foreach (Collider2D enemy in hitEnemies)
         {
-            hasHitEnemy = true; // 한 명이라도 맞았다면 true
+            hasHitEnemy = true;
 
-            //enemyfsm 스크립트 확보시 주석해제(기초연동완료)
-             EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
+            EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
             if (enemyFSM != null)
             {
                 float finalDamage = data.damage;
+                float finalGroggy = baseGroggy; // 기본 그로기 수치 복사
 
+                // [추가] 인스펙터에서 설정한 Enum 카테고리에 맞춰 그로기 배율 곱하기
+                switch (data.attackCategory)
+                {
+                    case AttackCategory.Light: finalGroggy *= data.lightAttackGroggyRatio; break;
+                    case AttackCategory.Heavy: finalGroggy *= data.heavyAttackGroggyRatio; break;
+                    case AttackCategory.JumpLight: finalGroggy *= data.jumpLightGroggyRatio; break;
+                    case AttackCategory.JumpHeavy: finalGroggy *= data.jumpHeavyGroggyRatio; break;
+                    case AttackCategory.ParryCounterLight: finalGroggy *= data.parryCounterLightGroggyRatio; break;
+                    case AttackCategory.ParryCounterHeavy: finalGroggy *= data.parryCounterHeavyGroggyRatio; break;
+                }
+
+                // 차지 보너스 적용 (데미지와 그로기 모두 뻥튀기)
                 if (data.canCharge && isThrustCharged)
                 {
                     finalDamage *= data.chargeMultiplier;
+                    finalGroggy *= data.heavyChargeGroggyRatio; // 차지 전용 그로기 배율 반영
                 }
-                enemyFSM.TakeDamage(finalDamage);
+
+                // [수정] 몬스터에게 데미지와 그로기 데미지 2개를 전달!
+                // ※ EnemyFSM 스크립트의 TakeDamage 함수 인자를 2개 받도록(float damage, float groggy) 수정해 주세요.
+                enemyFSM.TakeDamage(finalDamage, finalGroggy);
+
                 totalDealtDamage += finalDamage;
             }
             Debug.Log($"<color=orange>[타격 적중]</color> <b>{data.attackName}</b> -> {enemy.name}에게 적중! (타격 이펙트 생성 위치: {enemy.transform.position})");
-
         }
 
-        // 2.다수 타격 피흡 로직
+        // [기존 동일] 다수 타격 피흡 로직
         if (hasHitEnemy && playerStats.currentRecoverableHp > 0)
         {
-            // 총 준 데미지를 기준으로 피흡량 계산
             float healAmount = totalDealtDamage * playerStats.lifestealRatio;
-
-            // 단, 모아둔 내상 HP(currentRecoverableHp) 이상으로는 회복 불가
             healAmount = Mathf.Min(healAmount, playerStats.currentRecoverableHp);
 
-            // 체력 회복 & 내상 게이지 차감
             playerStats.currentHp += healAmount;
             playerStats.currentRecoverableHp -= healAmount;
 
-            // 최대 체력 오버 방지
             if (playerStats.currentHp > playerStats.maxHp) playerStats.currentHp = playerStats.maxHp;
 
             Debug.Log($"<color=green>적중! 누적 데미지 {totalDealtDamage} 기반으로 {healAmount} 회복!</color>");
         }
 
-        // 3. 적을 한 명이라도 맞췄을 때 한 번만 실행되는 '타격감' 연출
+        // [기존 동일] 적을 한 명이라도 맞췄을 때 한 번만 실행되는 '타격감' 연출
         if (hasHitEnemy)
         {
-         
-            // [역경직 HitStop] 시간이 0보다 크다면 실행
             if (data.hitStopDuration > 0f)
             {
-                // 코루틴 등을 활용해 Time.timeScale을 아주 잠깐 0으로 만들었다가 푸는 로직을 호출합니다.
-                StartCoroutine(HitStopRoutine(data.hitStopDuration)); //아직 안만듬
+                StartCoroutine(HitStopRoutine(data.hitStopDuration));
                 Debug.Log($"<color=yellow>[역경직 발생]</color> <b>{data.attackName}</b> 타격감 연출! {data.hitStopDuration}초 동안 정지!");
             }
         }
