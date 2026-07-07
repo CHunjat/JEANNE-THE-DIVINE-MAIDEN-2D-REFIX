@@ -92,6 +92,8 @@ public class MidBoss : EnemyFSM
     // [수정됨] 부모랑 똑같이 인수 2개로 맞춤
     public override void TakeDamage(float amount, float groggyDamage = 0f)
     {
+        Debug.Log($"<color=red>[거미 피격]</color> 데미지: {amount} / 현재 체력: {currentHp}");
+
         if (isPhaseChanging || GetCurrentState() == EnemyState.Dead) return;
 
         float finalDamage = (groggy != null) ? amount * groggy.GetDamageMultiplier() : amount;

@@ -2,7 +2,7 @@
 using System.Collections;
 
 // =====================================================
-// MidBossPattern8.cs (2중 착지 버그 완벽 해결본)
+// MidBossPattern8.cs (거미줄 스폰 위치 수정본)
 // =====================================================
 public class MidBossPattern8 : BossPatternBase
 {
@@ -18,6 +18,9 @@ public class MidBossPattern8 : BossPatternBase
     [SerializeField] private float boundDamageMultiplier = 2f;
 
     [SerializeField] private GameObject webPrefab;
+
+    [Header("거미줄 발사 위치 (입 위치에 빈 오브젝트를 만들어 연결할 것)")]
+    [SerializeField] private Transform mouthSpawnPoint;
 
     private GameObject clearingHitbox;
     private GameObject landingHitbox;
@@ -67,9 +70,15 @@ public class MidBossPattern8 : BossPatternBase
             SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
             bool isFacingLeft = (sr != null && sr.flipX);
             GameObject playerObj = GameObject.FindWithTag("Player");
-            Vector2 dir = playerObj != null ? ((Vector2)(playerObj.transform.position - transform.position)).normalized : new Vector2(isFacingLeft ? -1f : 1f, 0f);
 
-            GameObject web = Instantiate(webPrefab, transform.position, Quaternion.identity);
+            // 스폰 위치: 입 위치(mouthSpawnPoint)가 연결되어 있으면 그걸 쓰고, 없으면 기존처럼 보스 루트 위치 사용
+            Vector3 spawnPos = mouthSpawnPoint != null ? mouthSpawnPoint.position : transform.position;
+
+            Vector2 dir = playerObj != null
+                ? ((Vector2)(playerObj.transform.position - spawnPos)).normalized
+                : new Vector2(isFacingLeft ? -1f : 1f, 0f);
+
+            GameObject web = Instantiate(webPrefab, spawnPos, Quaternion.identity);
             MidBossWebProjectile webScript = web.GetComponent<MidBossWebProjectile>();
             if (webScript != null) webScript.Initialize(dir, webSpeed, webRange, bindDuration);
         }

@@ -4259,6 +4259,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: MidBoss_Spider
       objectReference: {fileID: 0}
+    - target: {fileID: 5145147845001952587, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5656119948597351064, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: maxHp
       value: 300

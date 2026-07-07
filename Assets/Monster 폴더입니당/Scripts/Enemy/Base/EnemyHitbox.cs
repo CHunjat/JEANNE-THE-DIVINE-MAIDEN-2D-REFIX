@@ -1,7 +1,6 @@
 using UnityEngine;
-
 // =====================================================
-// EnemyHitbox.cs (로컬 테스트 및 파트너 협업 준비 완벽 버전)
+// EnemyHitbox.cs (PlayerController.EvaluateAttack 연동 버전)
 // =====================================================
 public class EnemyHitbox : MonoBehaviour
 {
@@ -34,37 +33,28 @@ public class EnemyHitbox : MonoBehaviour
 
         float finalDamage = ownerDamage * damageRatio;
 
-        // 메인 프로젝트와 병합 후 주석 해제할 것들
-        // 파트너의 메인 프로젝트와 합쳤을 때는 아래 주석을 풀어서 
-        // 가드/패링 판정용 EvaluateAttack으로 배달하게 함.
-        /*
+        // PlayerStats.TakeDamage 직접 호출 대신
+        // PlayerController.EvaluateAttack으로 넘겨서
+        // 가드/패링 판정을 플레이어 쪽 로직에서 처리하도록 위임함.
         PlayerController playerCtrl = other.GetComponentInParent<PlayerController>();
         if (playerCtrl != null)
         {
-            Vector2 attackerPos = ownerTransform != null ? (Vector2)ownerTransform.position : (Vector2)transform.position;
+            Vector2 attackerPos = ownerTransform != null
+                ? (Vector2)ownerTransform.position
+                : (Vector2)transform.position;
+
             playerCtrl.EvaluateAttack(finalDamage, attackerPos);
-            
+
             lastHitTime = Time.time;
-            Debug.Log($"[{gameObject.name}] 직접 타격 -> PlayerController.EvaluateAttack 호출 완료!");
+            Debug.Log($"[{gameObject.name}] 히트박스 발동 -> PlayerController.EvaluateAttack 호출 완료! (데미지: {finalDamage})");
+
             if (destroyOnHit) Destroy(gameObject);
             return;
         }
-        */
-
-        // 현재 로컬 테스트용 백업 파트
-        // 파트너 코드가 합쳐지기 전까지는 현재 씬의 PlayerHealth를 찾아 때림.
-        // 파트너가 말한 선택적 매개변수 규칙을 존중해서 TakeDamage(finalDamage)만 깔끔하게 호출
-        PlayerStats playerStats = other.GetComponentInParent<PlayerStats>();
-
-        if (playerStats != null)
-        {
-            playerStats.TakeDamage(finalDamage); // 뒤에 bool 안 적어도 에러 안 남
-            lastHitTime = Time.time;
-            Debug.Log($"[{gameObject.name}] 히트박스 발동! 플레이어에게 {finalDamage} 데미지 적용 완료!");
-        }
         else
         {
-            Debug.LogWarning($"[{gameObject.name}] 플레이어와 충돌했으나 PlayerHealth 컴포넌트를 찾지 못함!");
+            Debug.LogWarning($"[{gameObject.name}] 플레이어와 충돌했으나 PlayerController 컴포넌트를 찾지 못함! " +
+                              "(병합이 안 됐거나, Player 프리팹에 PlayerController가 없는 구조일 수 있음)");
         }
 
         if (destroyOnHit)

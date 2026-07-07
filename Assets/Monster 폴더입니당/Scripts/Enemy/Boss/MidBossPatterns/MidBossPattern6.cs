@@ -3,6 +3,7 @@ using System.Collections;
 // =====================================================
 // MidBossPattern6.cs
 // 강화 앞발 찍기 - 중거리, 쿨타임 0초, 우선순위 5
+// (isExecuting 영구 고착 방지 안전장치 추가본)
 // =====================================================
 public class MidBossPattern6 : BossPatternBase
 {
@@ -15,17 +16,21 @@ public class MidBossPattern6 : BossPatternBase
     [SerializeField] private float backKickRange = 3f;
     [SerializeField] private float backKickHitboxDuration = 0.3f;
 
+    [Header("안전장치 - 애니메이션 이벤트 누락 시 강제 리셋 (기획자 조절)")]
+    [Tooltip("이 시간이 지나도 패턴이 끝나지 않으면 강제로 isExecuting을 false로 되돌림. 애니메이션 이벤트 연결 누락 시 보스가 영구히 멈추는 것을 방지함.")]
+    [SerializeField] private float maxExecutionTime = 5f;
+
     private GameObject stampHitbox;
     private GameObject backKickHitbox;
     private Rigidbody2D rb;
     private Animator visualAnimator;
     private bool isExecuting = false;
+    private Coroutine failsafeCoroutine;
 
     private void Awake()
     {
         visualAnimator = GetComponentInChildren<Animator>();
         rb = GetComponent<Rigidbody2D>();
-
         MidBoss parent = GetComponent<MidBoss>();
         if (parent != null)
         {
@@ -45,13 +50,18 @@ public class MidBossPattern6 : BossPatternBase
     protected override void OnExecute()
     {
         if (isExecuting) return;
+        isExecuting = true;
+
         if (visualAnimator != null) visualAnimator.SetTrigger("doDouble");
         StartCoroutine(MoveRoutine());
+
+        // 안전장치 시작: maxExecutionTime 안에 정상 종료 안 되면 강제 리셋
+        if (failsafeCoroutine != null) StopCoroutine(failsafeCoroutine);
+        failsafeCoroutine = StartCoroutine(FailsafeRoutine());
     }
 
     private IEnumerator MoveRoutine()
     {
-        isExecuting = true;
         GameObject playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null)
         {
@@ -86,7 +96,7 @@ public class MidBossPattern6 : BossPatternBase
         }
         else
         {
-            isExecuting = false;
+            EndExecution();
         }
     }
 
@@ -97,7 +107,35 @@ public class MidBossPattern6 : BossPatternBase
             backKickHitbox.SetActive(true);
             Invoke(nameof(DeactivateBackKick), backKickHitboxDuration);
         }
+        EndExecution();
+    }
+
+    // 패턴 정상 종료 처리 (isExecuting 리셋 + 안전장치 코루틴 정리)를 한 곳으로 모음
+    private void EndExecution()
+    {
         isExecuting = false;
+        if (failsafeCoroutine != null)
+        {
+            StopCoroutine(failsafeCoroutine);
+            failsafeCoroutine = null;
+        }
+    }
+
+    private IEnumerator FailsafeRoutine()
+    {
+        yield return new WaitForSeconds(maxExecutionTime);
+
+        // 여기까지 왔다는 건 애니메이션 이벤트(AnimEvent_BackKickHit 등)가
+        // 정상적으로 호출되지 않았다는 뜻. 강제로 리셋해서 보스가 영구히 멈추지 않게 함.
+        if (isExecuting)
+        {
+            Debug.LogWarning($"[{gameObject.name}] MidBossPattern6 안전장치 발동! " +
+                              $"{maxExecutionTime}초 안에 정상 종료되지 않아 강제 리셋함. " +
+                              "Animator의 doConditionBackKick 클립에 AnimEvent_BackKickHit 이벤트가 " +
+                              "제대로 연결되어 있는지 확인 필요.");
+            isExecuting = false;
+        }
+        failsafeCoroutine = null;
     }
 
     private void DeactivateStamp() { if (stampHitbox != null) stampHitbox.SetActive(false); }
