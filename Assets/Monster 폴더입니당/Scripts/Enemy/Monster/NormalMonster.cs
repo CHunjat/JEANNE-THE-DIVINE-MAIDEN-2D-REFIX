@@ -100,9 +100,9 @@ public class NormalMonster : EnemyFSM
     }
 
     // 피격 처리 오버라이드 - 넉백 추가
-    public override void TakeDamage(float amount)
+    public override void TakeDamage(float amount, float groggy)
     {
-        base.TakeDamage(amount);  // 체력 감소 및 사망 처리
+        base.TakeDamage(amount,groggy);  // 체력 감소 및 사망 처리
         if (currentHp > 0)
             ApplyKnockback();     // 살아있을 때만 넉백 적용
     }

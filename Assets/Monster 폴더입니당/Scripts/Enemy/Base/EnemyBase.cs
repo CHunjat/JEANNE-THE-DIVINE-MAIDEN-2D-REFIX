@@ -44,7 +44,7 @@ public abstract class EnemyBase : MonoBehaviour
         if (playerObj != null) player = playerObj.transform;
     }
 
-    public virtual void TakeDamage(float amount)
+    public virtual void TakeDamage(float amount, float groggy)
     {
         currentHp -= amount;
         Debug.Log($"[{gameObject.name}] 피격! 남은 체력: {currentHp}/{maxHp}");

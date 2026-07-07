@@ -9,11 +9,11 @@ public class DummyEnemy : EnemyFSM
     private bool isHitAnimationStarted = false;
 
     // 💥 플레이어한테 맞았을 때 무조건 실행되는 곳
-    public override void TakeDamage(float amount)
+    public override void TakeDamage(float amount, float groggy)
     {
         if (GetCurrentState() == EnemyState.Dead) return;
 
-        base.TakeDamage(amount); // 체력 깎기
+        base.TakeDamage(amount, groggy); // 체력 깎기
 
         // 살아있다면 맞았을 때 무조건 Hit 상태로 강제 변환!
         if (currentHp > 0)
