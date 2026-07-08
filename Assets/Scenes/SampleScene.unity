@@ -3468,6 +3468,23 @@ RectTransform:
   m_AnchoredPosition: {x: -109.6, y: -88.67499}
   m_SizeDelta: {x: 42.38, y: 39.59}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1423393034 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3422334648348411454, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+  m_PrefabInstance: {fileID: 1754357195}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1423393039
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1423393034}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51672afd06cb27c49aab89e2f7cac534, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossSFXController
 --- !u!1 &1426053304
 GameObject:
   m_ObjectHideFlags: 0
@@ -4289,7 +4306,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5145147845001952587, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5656119948597351064, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: maxHp
@@ -4346,6 +4363,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5145147845001952587, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1059021579}
+    - targetCorrespondingSourceObject: {fileID: 3422334648348411454, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1423393039}
     - targetCorrespondingSourceObject: {fileID: 415669578595818735, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1441072980}

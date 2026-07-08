@@ -72,21 +72,21 @@ public class PlayerLightningAttackState : PlayerAttackState
     public override void PhysicsUpdate()
     {
         base.PhysicsUpdate();
-        // [요구사항 4] 적 감지 로직 (물리 적용 전 즉시 확인)
-        if (facingDir != 0) // 움직일 때만 감지
-        {
-            Vector2 boxPos = (Vector2)player.transform.position + new Vector2(facingDir * hitRange, 0);
-            Collider2D hitEnemy = Physics2D.OverlapBox(boxPos, hitSize, 0f, player.enemyLayer);
+        //// [요구사항 4] 적 감지 로직 (물리 적용 전 즉시 확인)
+        //if (facingDir != 0) // 움직일 때만 감지
+        //{
+        //    Vector2 boxPos = (Vector2)player.transform.position + new Vector2(facingDir * hitRange, 0);
+        //    Collider2D hitEnemy = Physics2D.OverlapBox(boxPos, hitSize, 0f, player.enemyLayer);
 
-            if (hitEnemy != null && hitEnemy.CompareTag("Enemy"))
-            {
-                Debug.Log("적중! 돌진 중단!");
-                dashTimer = 0; // 즉시 돌진 종료
-                // 여기서 바로 공격 상태(예: player.AttackState)로 전이하고 싶다면
-                // stateMachine.ChangeState(player.XXXState); 
-                return;
-            }
-        }
+        //    if (hitEnemy != null && hitEnemy.CompareTag("Enemy"))
+        //    {
+        //        Debug.Log("적중! 돌진 중단!");
+        //        dashTimer = 0; // 즉시 돌진 종료
+        //        // 여기서 바로 공격 상태(예: player.AttackState)로 전이하고 싶다면
+        //        // stateMachine.ChangeState(player.XXXState); 
+        //        return;
+        //    }
+        //}
 
         // --- 기존 비탈길 로직 유지 ---
         bool detectedFlatGround = false;

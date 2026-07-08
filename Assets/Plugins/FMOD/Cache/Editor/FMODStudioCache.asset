@@ -96,7 +96,7 @@ MonoBehaviour:
   Path: Assets/StreamingAssets/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639191057326295802
+  lastModified: 639191146419340289
   FileSizes:
   - Name: 
     Value: 2478
@@ -397,7 +397,7 @@ MonoBehaviour:
   Parameters: []
   MinDistance: 1
   MaxDistance: 20
-  Length: 1600
+  Length: 5774
 --- !u!114 &-1186223177692977431
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -562,7 +562,7 @@ MonoBehaviour:
   StringsBanks:
   - {fileID: -8124024757644268347}
   cacheVersion: 131860
-  cacheTime: 639191057326295802
+  cacheTime: 639191146419340289
   SerializableEventsDict:
   - key: event:/Player/Player_Foot_Step_Sprint
     index: 0
@@ -674,7 +674,7 @@ MonoBehaviour:
   Path: Assets/StreamingAssets/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639191057326275869
+  lastModified: 639191146419320360
   FileSizes: []
   Exists: 1
 --- !u!114 &1694854564234410638
@@ -946,7 +946,7 @@ MonoBehaviour:
   Parameters: []
   MinDistance: 1
   MaxDistance: 20
-  Length: 1142
+  Length: 1102
 --- !u!114 &7235546124526541545
 MonoBehaviour:
   m_ObjectHideFlags: 0
