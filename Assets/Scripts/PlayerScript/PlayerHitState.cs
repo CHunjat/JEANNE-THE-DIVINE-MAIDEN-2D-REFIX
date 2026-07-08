@@ -3,7 +3,7 @@
 public class PlayerHitState : PlayerState
 {
     private float hitStunDuration = 0.4f; 
-    private float knockbackForce = 6f;    // 뒤로 밀려나는 힘
+    private float knockbackForce = 5f;    // 뒤로 밀려나는 힘
 
     public PlayerHitState(PlayerController player, PlayerStateMachine stateMachine, string animBoolName) 
         : base(player, stateMachine, animBoolName)

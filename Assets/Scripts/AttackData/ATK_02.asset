@@ -19,10 +19,10 @@ MonoBehaviour:
   damageMultiplier: 1
   hitStopDuration: 0.05
   lightAttackGroggyRatio: 1
-  heavyAttackGroggyRatio: 1.5
-  heavyChargeGroggyRatio: 2
-  jumpLightGroggyRatio: 1.2
-  jumpHeavyGroggyRatio: 1.8
-  parryCounterSpeedRatio: 1.2
-  parryCounterLightGroggyRatio: 2.5
-  parryCounterHeavyGroggyRatio: 3.5
+  heavyAttackGroggyRatio: 0
+  heavyChargeGroggyRatio: 0
+  jumpLightGroggyRatio: 0
+  jumpHeavyGroggyRatio: 0
+  parryCounterSpeedRatio: 0
+  parryCounterLightGroggyRatio: 0
+  parryCounterHeavyGroggyRatio: 0

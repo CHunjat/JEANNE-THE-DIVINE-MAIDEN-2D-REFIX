@@ -210,7 +210,10 @@ public class PlayerController : MonoBehaviour
 
         // 체력 깎고 HitState로 넘김 (쌩 피격이므로 무적 발동 -> false 전달)
         playerStats.TakeDamage(damage, false);
-        StateMachine.ChangeState(HitState);
+        if (playerStats.currentHp > 0)
+        {
+            StateMachine.ChangeState(HitState);
+        }
     }
 
 
@@ -877,7 +880,7 @@ public class PlayerController : MonoBehaviour
     public void HandleActiveSkillInput()
     {
 
-        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState || StateMachine.CurrentState == DieState)
+        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState || StateMachine.CurrentState == DieState || StateMachine.CurrentState == HitState)
         {
             inputReader.HAttackPressed = false;
             return;
@@ -937,10 +940,11 @@ public class PlayerController : MonoBehaviour
     {
         if (!inputReader.ThrustAttackPressed) return;
 
-        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState || StateMachine.CurrentState == DieState
-            || StateMachine.CurrentState == ParryLightCounterState || StateMachine.CurrentState == ParryHeavyCounterState)
+        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState || 
+            StateMachine.CurrentState == DieState || StateMachine.CurrentState == ParryLightCounterState || 
+            StateMachine.CurrentState == ParryHeavyCounterState
+        || StateMachine.CurrentState == HitState)
         {
-
             inputReader.ThrustAttackPressed = false;
             return;
         }
