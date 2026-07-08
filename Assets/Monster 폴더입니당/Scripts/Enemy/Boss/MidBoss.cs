@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 // =====================================================
 // MidBoss.cs
+// (6번 버그 수정: 방향 전환 시 히트박스 위치도 같이 반전되도록 추가)
 // =====================================================
 public class MidBoss : EnemyFSM
 {
@@ -43,12 +44,13 @@ public class MidBoss : EnemyFSM
 
     [Header("방향 전환 및 오프셋 설정")]
     [SerializeField] private float flipHeightThreshold = 1f;
-    // [추가] 1. 추적 정지 거리: 이 거리 안으로는 무지성으로 다가가지 않고 멈춰 섬 (예: 5f)
     [SerializeField] private float chaseOffset = 5f;
-    // [추가] 2. 파고들기 감지 거리: 이 거리 안으로 들어오면 클리어링 패턴 강제 시전 (예: 2f)
     [SerializeField] private float overlapDistance = 2f;
 
     private bool isDeadProcessed = false;
+
+    // [추가됨] 각 히트박스가 "오른쪽을 보고 있을 때" 원래 세팅된 로컬 X좌표(절댓값)를 저장
+    private Dictionary<GameObject, float> hitboxBaseX = new Dictionary<GameObject, float>();
 
     protected override void Awake()
     {
@@ -87,6 +89,33 @@ public class MidBoss : EnemyFSM
         if (spriteRenderer != null) originalMaterial = spriteRenderer.material;
         groggy = GetComponent<EnemyGroggy>();
         AnimEvent_DisableAllHitBox();
+
+        // [추가됨] 히트박스들의 원래 위치 캐싱
+        CacheHitboxPositions();
+    }
+
+    // [추가됨] 히트박스들이 "오른쪽을 보고 있을 때" 세팅된 원래 X좌표(절댓값)를 저장해둠
+    private void CacheHitboxPositions()
+    {
+        GameObject[] hitboxes = { hitBox_Stamp, hitBox_Landing, hitBox_Clearing, hitBox_Slash, hitBox_BackKick };
+        foreach (var hb in hitboxes)
+        {
+            if (hb != null)
+                hitboxBaseX[hb] = Mathf.Abs(hb.transform.localPosition.x);
+        }
+    }
+
+    // [추가됨] 방향이 바뀔 때마다 히트박스들의 X좌표 부호를 뒤집어줌
+    protected override void OnFacingChanged(bool facingLeft)
+    {
+        foreach (var kvp in hitboxBaseX)
+        {
+            GameObject hb = kvp.Key;
+            float baseX = kvp.Value;
+            Vector3 pos = hb.transform.localPosition;
+            pos.x = facingLeft ? -baseX : baseX;
+            hb.transform.localPosition = pos;
+        }
     }
 
     // [수정됨] 부모랑 똑같이 인수 2개로 맞춤
@@ -98,10 +127,8 @@ public class MidBoss : EnemyFSM
 
         float finalDamage = (groggy != null) ? amount * groggy.GetDamageMultiplier() : amount;
 
-        // 부모(Base)한테 체력 데미지랑 그로기 데미지 둘 다 넘겨줌
         base.TakeDamage(finalDamage, groggyDamage);
 
-        // 그로기 게이지는 새로 추가된 groggyDamage 값으로 채움
         if (groggy != null) groggy.AddGauge(groggyDamage);
 
         if (spriteRenderer != null && flashMaterial != null)
@@ -189,7 +216,6 @@ public class MidBoss : EnemyFSM
 
         if (animator != null) animator.SetBool("isMoving", true);
 
-        // [수정] 1. 파고들기 감지: 거미 배 밑(overlapDistance)으로 들어오면 즉시 공격 상태로 넘어가서 클리어링 유도
         if (GetDistanceToPlayer() <= overlapDistance && clearingPattern != null && clearingPattern.IsUsable())
         {
             ChangeState(EnemyState.Attack);
@@ -217,7 +243,6 @@ public class MidBoss : EnemyFSM
 
         if (player != null)
         {
-            // [수정] 2. 오프셋 적용: 플레이어와 거리가 chaseOffset보다 멀 때만 다가감
             if (GetDistanceToPlayer() > chaseOffset)
             {
                 float moveDirX = Mathf.Sign(player.position.x - transform.position.x);
@@ -225,7 +250,6 @@ public class MidBoss : EnemyFSM
             }
             else
             {
-                // 오프셋 거리 안쪽이면 무지성 돌진을 멈추고 제자리에 섬 (겹침 방지)
                 rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
             }
         }
@@ -237,7 +261,6 @@ public class MidBoss : EnemyFSM
 
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
 
-        // [수정] 3. 클리어링 시전: 무조건 쓰는 게 아니라, 플레이어가 overlapDistance 안으로 들어왔을 때만 밀어내기 용도로 시전
         if (clearingPattern != null && clearingPattern.IsUsable() && GetDistanceToPlayer() <= overlapDistance)
         {
             if (animator != null) { animator.SetBool("isMoving", false); animator.SetBool("isAttacking", true); }

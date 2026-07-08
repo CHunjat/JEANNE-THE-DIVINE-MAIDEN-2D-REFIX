@@ -2,8 +2,8 @@ using UnityEngine;
 using System.Collections;
 // =====================================================
 // MidBossPattern6.cs
-// 강화 앞발 찍기 - 중거리, 쿨타임 0초, 우선순위 5
-// (isExecuting 영구 고착 방지 안전장치 추가본)
+// 강화 앞발 찍기 2연찍기 + 뒷발 찌르기 (무조건 3연타)
+// 조건부 폐기 - Triple Attack은 항상 3타 전부 나감
 // =====================================================
 public class MidBossPattern6 : BossPatternBase
 {
@@ -13,11 +13,10 @@ public class MidBossPattern6 : BossPatternBase
 
     [Header("강화 찍기 타격 판정 시간 (기획자 조절)")]
     [SerializeField] private float stampHitboxDuration = 0.2f;
-    [SerializeField] private float backKickRange = 3f;
     [SerializeField] private float backKickHitboxDuration = 0.3f;
 
     [Header("안전장치 - 애니메이션 이벤트 누락 시 강제 리셋 (기획자 조절)")]
-    [Tooltip("이 시간이 지나도 패턴이 끝나지 않으면 강제로 isExecuting을 false로 되돌림. 애니메이션 이벤트 연결 누락 시 보스가 영구히 멈추는 것을 방지함.")]
+    [Tooltip("이 시간이 지나도 패턴이 끝나지 않으면 강제로 isExecuting을 false로 되돌림.")]
     [SerializeField] private float maxExecutionTime = 5f;
 
     private GameObject stampHitbox;
@@ -52,7 +51,9 @@ public class MidBossPattern6 : BossPatternBase
         if (isExecuting) return;
         isExecuting = true;
 
-        if (visualAnimator != null) visualAnimator.SetTrigger("doDouble");
+        // 애니메이터에 실제로 존재하는 파라미터 이름(doTriple)로 트리거
+        // 조건부 없이 항상 3연타(앞발 2번 + 뒷발 찌르기) 전체가 재생됨
+        if (visualAnimator != null) visualAnimator.SetTrigger("doTriple");
         StartCoroutine(MoveRoutine());
 
         // 안전장치 시작: maxExecutionTime 안에 정상 종료 안 되면 강제 리셋
@@ -78,6 +79,7 @@ public class MidBossPattern6 : BossPatternBase
         }
     }
 
+    // 애니메이션 이벤트: 앞발 찍기 (클립에 이미 2번 찍혀있음, 그대로 사용)
     public void AnimEvent_DoubleStamp()
     {
         if (stampHitbox != null)
@@ -87,19 +89,7 @@ public class MidBossPattern6 : BossPatternBase
         }
     }
 
-    public void AnimEvent_CheckBackKick()
-    {
-        GameObject playerObj = GameObject.FindWithTag("Player");
-        if (playerObj != null && Vector2.Distance(transform.position, playerObj.transform.position) <= backKickRange)
-        {
-            if (visualAnimator != null) visualAnimator.SetTrigger("doConditionBackKick");
-        }
-        else
-        {
-            EndExecution();
-        }
-    }
-
+    // 애니메이션 이벤트: 뒷발 찌르기 (조건 없이 무조건 실행 + 패턴 종료 처리)
     public void AnimEvent_BackKickHit()
     {
         if (backKickHitbox != null)
@@ -107,10 +97,11 @@ public class MidBossPattern6 : BossPatternBase
             backKickHitbox.SetActive(true);
             Invoke(nameof(DeactivateBackKick), backKickHitboxDuration);
         }
+
+        // 뒷발 찌르기가 패턴의 마지막 동작이므로 여기서 바로 종료 처리
         EndExecution();
     }
 
-    // 패턴 정상 종료 처리 (isExecuting 리셋 + 안전장치 코루틴 정리)를 한 곳으로 모음
     private void EndExecution()
     {
         isExecuting = false;
@@ -125,14 +116,11 @@ public class MidBossPattern6 : BossPatternBase
     {
         yield return new WaitForSeconds(maxExecutionTime);
 
-        // 여기까지 왔다는 건 애니메이션 이벤트(AnimEvent_BackKickHit 등)가
-        // 정상적으로 호출되지 않았다는 뜻. 강제로 리셋해서 보스가 영구히 멈추지 않게 함.
         if (isExecuting)
         {
             Debug.LogWarning($"[{gameObject.name}] MidBossPattern6 안전장치 발동! " +
-                              $"{maxExecutionTime}초 안에 정상 종료되지 않아 강제 리셋함. " +
-                              "Animator의 doConditionBackKick 클립에 AnimEvent_BackKickHit 이벤트가 " +
-                              "제대로 연결되어 있는지 확인 필요.");
+                              $"{maxExecutionTime}초 안에 AnimEvent_BackKickHit이 호출되지 않음. " +
+                              "Animator 클립에 해당 이벤트가 제대로 연결되어 있는지 확인 필요.");
             isExecuting = false;
         }
         failsafeCoroutine = null;
