@@ -13,7 +13,16 @@ MonoBehaviour:
   m_Name: AirHeavyAtk
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   attackName: AirHeavyAtk
+  attackCategory: 0
   size: {x: 1.46, y: 0.63}
   offset: {x: 0.58, y: -0.39}
-  damage: 15
+  damageMultiplier: 1
   hitStopDuration: 0.05
+  lightAttackGroggyRatio: 1
+  heavyAttackGroggyRatio: 1.5
+  heavyChargeGroggyRatio: 2
+  jumpLightGroggyRatio: 1.2
+  jumpHeavyGroggyRatio: 1.8
+  parryCounterSpeedRatio: 1.2
+  parryCounterLightGroggyRatio: 2.5
+  parryCounterHeavyGroggyRatio: 3.5

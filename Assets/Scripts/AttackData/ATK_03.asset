@@ -13,9 +13,16 @@ MonoBehaviour:
   m_Name: ATK_03
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   attackName: ATK3
+  attackCategory: 0
   size: {x: 1.85, y: 0.84}
   offset: {x: 0.52, y: 0.04}
-  damage: 3
+  damageMultiplier: 1
   hitStopDuration: 0.04
-  canCharge: 0
-  chargeMultiplier: 0
+  lightAttackGroggyRatio: 1
+  heavyAttackGroggyRatio: 0
+  heavyChargeGroggyRatio: 0
+  jumpLightGroggyRatio: 0
+  jumpHeavyGroggyRatio: 0
+  parryCounterSpeedRatio: 0
+  parryCounterLightGroggyRatio: 0
+  parryCounterHeavyGroggyRatio: 0

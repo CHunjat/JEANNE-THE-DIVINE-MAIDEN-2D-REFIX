@@ -13,12 +13,16 @@ MonoBehaviour:
   m_Name: HolySlash
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   attackName: ChargingAtk
+  attackCategory: 1
   size: {x: 3.76, y: 2.59}
   offset: {x: 1, y: 0.8}
-  damage: 8
-  knockbackForce: 0
+  damageMultiplier: 1
   hitStopDuration: 0
-  cameraShakeIntensity: 0
-  attackEffectPrefab: {fileID: 0}
-  attackSFX: {fileID: 0}
-  sfxVolume: 1
+  lightAttackGroggyRatio: 0
+  heavyAttackGroggyRatio: 0
+  heavyChargeGroggyRatio: 1.5
+  jumpLightGroggyRatio: 0
+  jumpHeavyGroggyRatio: 0
+  parryCounterSpeedRatio: 0
+  parryCounterLightGroggyRatio: 0
+  parryCounterHeavyGroggyRatio: 0

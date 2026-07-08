@@ -13,7 +13,16 @@ MonoBehaviour:
   m_Name: ATK_02
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   attackName: ATK2
+  attackCategory: 0
   size: {x: 1.52, y: 1.73}
   offset: {x: -0.42, y: 0.03}
-  damage: 2
+  damageMultiplier: 1
   hitStopDuration: 0.05
+  lightAttackGroggyRatio: 1
+  heavyAttackGroggyRatio: 0
+  heavyChargeGroggyRatio: 0
+  jumpLightGroggyRatio: 0
+  jumpHeavyGroggyRatio: 0
+  parryCounterSpeedRatio: 0
+  parryCounterLightGroggyRatio: 0
+  parryCounterHeavyGroggyRatio: 0

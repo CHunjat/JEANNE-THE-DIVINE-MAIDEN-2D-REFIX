@@ -37,7 +37,7 @@ public class EnemyHitbox : MonoBehaviour
         // 메인 프로젝트와 병합 후 주석 해제할 것들
         // 파트너의 메인 프로젝트와 합쳤을 때는 아래 주석을 풀어서 
         // 가드/패링 판정용 EvaluateAttack으로 배달하게 함.
-        /*
+       
         PlayerController playerCtrl = other.GetComponentInParent<PlayerController>();
         if (playerCtrl != null)
         {
@@ -49,7 +49,7 @@ public class EnemyHitbox : MonoBehaviour
             if (destroyOnHit) Destroy(gameObject);
             return;
         }
-        */
+       
 
         // 현재 로컬 테스트용 백업 파트
         // 파트너 코드가 합쳐지기 전까지는 현재 씬의 PlayerHealth를 찾아 때림.
