@@ -3088,7 +3088,7 @@ MonoBehaviour:
   statSpirit: 1
   statFaith: 1
   statEndurance: 1
-  baseMaxHp: 100
+  baseMaxHp: 1000
   currentHp: 0
   baseMaxMp: 100
   currentMp: 0

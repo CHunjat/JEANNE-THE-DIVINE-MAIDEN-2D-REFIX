@@ -10,7 +10,6 @@ public class PlayerParryLightCounterState : PlayerState
         base.Enter();
         player.rb.linearVelocity = Vector2.zero;
 
-        // 카운터 중 무적!
 
         // 애니메이션 강제 덮어쓰기 (0프레임부터 시작)
         player.animator.Play(animHash, 0, 0f);
@@ -38,6 +37,5 @@ public class PlayerParryLightCounterState : PlayerState
     {
         base.Exit();
         // 스테이트를 빠져나갈 때 무적 해제
-        player.playerStats.isInvincible = false;
     }
 }
