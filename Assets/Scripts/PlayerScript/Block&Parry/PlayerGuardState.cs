@@ -37,7 +37,20 @@ public class PlayerGuardState : PlayerState
     public void TriggerParryAnimation()
     {
         isParrying = true;
-        player.animator.Play(player.anim_GuardParry, 0, 0f);
+
+        // 1. 패리 상태 탈출을 위한 타이머 강제 리셋
+        parryStartTime = Time.time;
+
+        // 2. [진짜 핵심] 1타 패링 성공 시, 패링 유효 시간을 갱신해 줍니다!
+        // 이걸 해줘야 2타, 3타가 연속으로 들어와도 쿨하게 연속 패링(챙- 챙- 챙-)이 터집니다.
+        player.guardStartTime = Time.time;
+
+        // 3. 애니메이션 강제 재시작 (같은 상태라도 무조건 0프레임부터)
+        // -1을 넣으면 현재 레이어 전체를 덮어씌우고 0프레임부터 강제로 틀어버립니다.
+        player.animator.Play(player.anim_GuardParry, -1, 0f);
+
+        // 4. 다음 프레임까지 안 기다리고 지금 당장! 즉시 갱신
+        player.animator.Update(0f);
     }
 
     public override void LogicUpdate()
