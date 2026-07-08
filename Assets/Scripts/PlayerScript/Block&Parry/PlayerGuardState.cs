@@ -5,6 +5,10 @@ public class PlayerGuardState : PlayerState
     public bool isParrying = false;
     private float knockbackTimer = 0f; // 넉백 보호 타이머
     private float parryStartTime = 0f;
+
+    private float originalGravity;
+    private RigidbodyConstraints2D originalConstraints; // [추가] 원래 제약조건 백업용
+
     public PlayerGuardState(PlayerController player, PlayerStateMachine stateMachine, string animName)
         : base(player, stateMachine, animName) { }
 
@@ -12,6 +16,9 @@ public class PlayerGuardState : PlayerState
     {
         base.Enter();
         player.rb.linearVelocity = new Vector2(0f, player.rb.linearVelocity.y);
+        originalGravity = player.rb.gravityScale; //원ㄹㅐ 중력값 담아두기
+
+        originalConstraints = player.rb.constraints; // [추가] 기본 제약조건(회전방지 등) 담아두기
 
         // 가드 진입 시 강제 초기화
         player.animator.CrossFade(player.anim_GuardNormal, 0f, 0);
@@ -100,11 +107,34 @@ public class PlayerGuardState : PlayerState
         if (knockbackTimer > 0)
         {
             knockbackTimer -= Time.fixedDeltaTime;
+            player.rb.constraints = originalConstraints; // [추가] 넉백될 땐 락 풀기
             return;
         }
 
-        // 넉백 타이머가 끝났을 때만 스르륵 멈추는 로직 적용
-        float slideDecay = Mathf.Lerp(player.rb.linearVelocity.x, 0f, Time.fixedDeltaTime * 10f);
-        player.SetVelocity(slideDecay, player.rb.linearVelocity.y);
+        if (player.OnSlope())
+        {
+            // [비탈길] 속도 0 + 중력 0 = 본드 칠한 듯이 절대 안 미끄러짐!
+            player.SetVelocity(0f, 0f);
+            player.rb.gravityScale = 0f;
+            // [추가] 물리엔진 멱살 잡고 위치 락 걸어버리기
+            player.rb.constraints = originalConstraints | RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezePositionY;
+        }
+        else
+        {
+            // [평지] 중력 복구시키고 부드럽게 감속
+            player.rb.gravityScale = originalGravity;
+            player.rb.constraints = originalConstraints; // [추가] 평지면 락 풀기
+
+            float slideDecay = Mathf.Lerp(player.rb.linearVelocity.x, 0f, Time.fixedDeltaTime * 10f);
+            player.SetVelocity(slideDecay, player.rb.linearVelocity.y);
+        }
+    }
+
+    public override void Exit()
+    {
+        base.Exit();
+        // [중요!] 가드를 풀고 나갈 때는 무조건 중력을 원래대로 돌려놔야 공중에 안 뜹니다!
+        player.rb.gravityScale = originalGravity;
+        player.rb.constraints = originalConstraints; // [추가] 나갈 때 락 풀기
     }
 }
