@@ -72,7 +72,7 @@ public class PlayerLightningAttackState : PlayerAttackState
     public override void PhysicsUpdate()
     {
         base.PhysicsUpdate();
-        // [요구사항 4] 적 감지 로직 (물리 적용 전 즉시 확인)
+        //// [요구사항 4] 적 감지 로직 (물리 적용 전 즉시 확인)
         //if (facingDir != 0) // 움직일 때만 감지
         //{
         //    Vector2 boxPos = (Vector2)player.transform.position + new Vector2(facingDir * hitRange, 0);

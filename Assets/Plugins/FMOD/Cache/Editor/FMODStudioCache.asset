@@ -1,0 +1,1084 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8589154509672233122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/Boss_Attack_Normal_Slash
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/Boss_Attack_Normal_Slash
+  Guid:
+    Data1: -1469220758
+    Data2: 1259778942
+    Data3: 1318527111
+    Data4: -319072604
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 600
+--- !u!114 &-8348901989192997594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Skill_Heal
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Skill_Heal
+  Guid:
+    Data1: -890047378
+    Data2: 1182919253
+    Data3: 1934797717
+    Data4: -911982079
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 2580
+--- !u!114 &-8261448792167160172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Skill_Attack_Charging_Slash
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Skill_Attack_Charging_Slash
+  Guid:
+    Data1: 1695382461
+    Data2: 1101336747
+    Data3: 139764884
+    Data4: 508962219
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 950
+--- !u!114 &-8124024757644268347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/Master.strings.bank
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorBankRef
+  Path: Assets/StreamingAssets/Master.strings.bank
+  Name: Master.strings
+  StudioPath: bank:/Master.strings
+  lastModified: 639192125118704358
+  FileSizes:
+  - Name: 
+    Value: 2478
+  Exists: 1
+--- !u!114 &-7941335690144576329
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Interaction/Player_Shield_Guard
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Interaction/Player_Shield_Guard
+  Guid:
+    Data1: 79967654
+    Data2: 1095157193
+    Data3: -1835738751
+    Data4: -2015327560
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 495
+--- !u!114 &-7416544577720656592
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Normal_Attack_Swing_Slash
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Normal_Attack_Swing_Slash
+  Guid:
+    Data1: 618611156
+    Data2: 1157709656
+    Data3: 608157329
+    Data4: 1899446830
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 0
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-6760687477007759808
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/Boss_Attack_Normal_Pierce
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/Boss_Attack_Normal_Pierce
+  Guid:
+    Data1: 286538841
+    Data2: 1305581447
+    Data3: -666541695
+    Data4: 1730613468
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 740
+--- !u!114 &-6572758951698462234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Interaction/Player_Shield_Parry_Counter
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Interaction/Player_Shield_Parry_Counter
+  Guid:
+    Data1: -359251208
+    Data2: 1172277117
+    Data3: -959212609
+    Data4: -1588721442
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1065
+--- !u!114 &-4763259929732182848
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/Boss_Death
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/Boss_Death
+  Guid:
+    Data1: 1642235552
+    Data2: 1152662244
+    Data3: -1372508010
+    Data4: -1758493037
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 3350
+--- !u!114 &-4755469746843708223
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/Boss_Attack_Landing
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/Boss_Attack_Landing
+  Guid:
+    Data1: 475756221
+    Data2: 1332623303
+    Data3: -164073307
+    Data4: 1961685321
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 3274
+--- !u!114 &-3946913715150589712
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/Boss_Movement_Foot_Step_Edit
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/Boss_Movement_Foot_Step_Edit
+  Guid:
+    Data1: -1446276826
+    Data2: 1293579570
+    Data3: 1147894940
+    Data4: -1290127432
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 850
+--- !u!114 &-3729500494524145053
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Movement_Walling
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Movement_Walling
+  Guid:
+    Data1: -479185170
+    Data2: 1270815224
+    Data3: -1042997842
+    Data4: 1970360336
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1150
+--- !u!114 &-3521864245558044316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Normal_Attack_Swing_Pierce
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Normal_Attack_Swing_Pierce
+  Guid:
+    Data1: -1843469273
+    Data2: 1289005872
+    Data3: 259145363
+    Data4: -726466147
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-2939517173043478460
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Foot_Step_Run
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Foot_Step_Run
+  Guid:
+    Data1: -994073584
+    Data2: 1130434071
+    Data3: 993647508
+    Data4: 64661722
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-1317400637887467077
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/Boss_Attack_Jump
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/Boss_Attack_Jump
+  Guid:
+    Data1: 804116706
+    Data2: 1209731616
+    Data3: -1558612295
+    Data4: 1797455673
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 5774
+--- !u!114 &-1186223177692977431
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Skill_Attack_Charging_Complete
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Skill_Attack_Charging_Complete
+  Guid:
+    Data1: -1204506191
+    Data2: 1325259393
+    Data3: -858253426
+    Data4: -2081351875
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-932193798939326947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/Interaction/Final_Boss_Attack_Hit
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/Interaction/Final_Boss_Attack_Hit
+  Guid:
+    Data1: -978657774
+    Data2: 1162281977
+    Data3: 2320783
+    Data4: -25088388
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 800
+--- !u!114 &-493035528662845270
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/Boss_Attack_Spit
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/Boss_Attack_Spit
+  Guid:
+    Data1: 551381533
+    Data2: 1272215178
+    Data3: 694397089
+    Data4: 691619679
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 433
+--- !u!114 &-154399780820808726
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Shield_Ready
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Shield_Ready
+  Guid:
+    Data1: -49568432
+    Data2: 1251513850
+    Data3: 773169540
+    Data4: -710529526
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 540
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d32cf7c32a3ed8347bac48ef5ed56d82, type: 3}
+  m_Name: FMODStudioCache
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EventCache
+  EditorBanks:
+  - {fileID: -8124024757644268347}
+  - {fileID: 858878391108560638}
+  EditorEvents:
+  - {fileID: 3662623911672475340}
+  - {fileID: -2939517173043478460}
+  - {fileID: -932193798939326947}
+  - {fileID: 8989257464386312873}
+  - {fileID: -493035528662845270}
+  - {fileID: -3946913715150589712}
+  - {fileID: -3521864245558044316}
+  - {fileID: 6905973074772153885}
+  - {fileID: 5487921862929290957}
+  - {fileID: -154399780820808726}
+  - {fileID: -6760687477007759808}
+  - {fileID: 8235396215773152304}
+  - {fileID: -8589154509672233122}
+  - {fileID: -8348901989192997594}
+  - {fileID: 2980233417756432782}
+  - {fileID: 538423973531881020}
+  - {fileID: -4763259929732182848}
+  - {fileID: -7941335690144576329}
+  - {fileID: 1694854564234410638}
+  - {fileID: -1186223177692977431}
+  - {fileID: 5560184847272357413}
+  - {fileID: -4755469746843708223}
+  - {fileID: -8261448792167160172}
+  - {fileID: 2796953547795470394}
+  - {fileID: 8454090903439758873}
+  - {fileID: -7416544577720656592}
+  - {fileID: 3509516183021838859}
+  - {fileID: 4602700890927834151}
+  - {fileID: -1317400637887467077}
+  - {fileID: 7235546124526541545}
+  - {fileID: -6572758951698462234}
+  - {fileID: 7722643736475689656}
+  - {fileID: -3729500494524145053}
+  - {fileID: 6213048353427349253}
+  EditorParameters: []
+  MasterBanks:
+  - {fileID: 858878391108560638}
+  StringsBanks:
+  - {fileID: -8124024757644268347}
+  cacheVersion: 131860
+  cacheTime: 639192125118704358
+  SerializableEventsDict:
+  - key: event:/Player/Player_Foot_Step_Sprint
+    index: 0
+  - key: event:/Player/Player_Foot_Step_Run
+    index: 1
+  - key: event:/FinalBoss/Interaction/Final_Boss_Attack_Hit
+    index: 2
+  - key: event:/Player/Player_Movement_Dash
+    index: 3
+  - key: event:/FinalBoss/Boss_Attack_Spit
+    index: 4
+  - key: event:/FinalBoss/Boss_Movement_Foot_Step_Edit
+    index: 5
+  - key: event:/Player/Player_Normal_Attack_Swing_Pierce
+    index: 6
+  - key: event:/FinalBoss/Boss_Attack_Stomp
+    index: 7
+  - key: event:/FinalBoss/Boss_Attack_Hard_Slash
+    index: 8
+  - key: event:/Player/Player_Shield_Ready
+    index: 9
+  - key: event:/FinalBoss/Boss_Attack_Normal_Pierce
+    index: 10
+  - key: event:/Player/Interaction/Player_Skill_Grapling
+    index: 11
+  - key: event:/FinalBoss/Boss_Attack_Normal_Slash
+    index: 12
+  - key: event:/Player/Player_Skill_Heal
+    index: 13
+  - key: event:/Player/Interaction/Player_Attack_Hit
+    index: 14
+  - key: event:/Player/Player_Foot_Step_Jump _Land
+    index: 15
+  - key: event:/FinalBoss/Boss_Death
+    index: 16
+  - key: event:/Player/Interaction/Player_Shield_Guard
+    index: 17
+  - key: event:/Player/Interaction/Player_Damaged_Hurt_Voice
+    index: 18
+  - key: event:/Player/Player_Skill_Attack_Charging_Complete
+    index: 19
+  - key: event:/Player/Player_Skill_Attack_Lightning_Cut_Slash
+    index: 20
+  - key: event:/FinalBoss/Boss_Attack_Landing
+    index: 21
+  - key: event:/Player/Player_Skill_Attack_Charging_Slash
+    index: 22
+  - key: event:/Player/Player_Skill_Attack_Charging
+    index: 23
+  - key: event:/FinalBoss/Boss_Attack_Clearing
+    index: 24
+  - key: event:/Player/Player_Normal_Attack_Swing_Slash
+    index: 25
+  - key: event:/Player/Interaction/Player_Shield_Parry
+    index: 26
+  - key: event:/Player/Player_Foot_Step_Jump
+    index: 27
+  - key: event:/FinalBoss/Boss_Attack_Jump
+    index: 28
+  - key: event:/Player/Player_Air_Attack_Hard_Attack
+    index: 29
+  - key: event:/Player/Interaction/Player_Shield_Parry_Counter
+    index: 30
+  - key: event:/Player/Player_Skill_Attack_Lightning_Cut_Ready
+    index: 31
+  - key: event:/Player/Player_Movement_Walling
+    index: 32
+  - key: event:/Player/Player_Normal_Attack_Charging
+    index: 33
+--- !u!114 &538423973531881020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Foot_Step_Jump _Land
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Foot_Step_Jump _Land
+  Guid:
+    Data1: -1931636065
+    Data2: 1103373364
+    Data3: 1849328273
+    Data4: -1481777082
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 200
+--- !u!114 &858878391108560638
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/Master.bank
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorBankRef
+  Path: Assets/StreamingAssets/Master.bank
+  Name: Master
+  StudioPath: bank:/Master
+  lastModified: 639192125118704358
+  FileSizes: []
+  Exists: 1
+--- !u!114 &1694854564234410638
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Interaction/Player_Damaged_Hurt_Voice
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Interaction/Player_Damaged_Hurt_Voice
+  Guid:
+    Data1: -2095731028
+    Data2: 1205540748
+    Data3: -637538668
+    Data4: -864968903
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &2796953547795470394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Skill_Attack_Charging
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Skill_Attack_Charging
+  Guid:
+    Data1: -243786806
+    Data2: 1075326602
+    Data3: -254801275
+    Data4: -940161260
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 8800
+--- !u!114 &2980233417756432782
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Interaction/Player_Attack_Hit
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Interaction/Player_Attack_Hit
+  Guid:
+    Data1: 1444215185
+    Data2: 1299237125
+    Data3: -1165725787
+    Data4: 982081521
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 550
+--- !u!114 &3509516183021838859
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Interaction/Player_Shield_Parry
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Interaction/Player_Shield_Parry
+  Guid:
+    Data1: -2033538856
+    Data2: 1206350988
+    Data3: -1458756222
+    Data4: 1880236013
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 690
+--- !u!114 &3662623911672475340
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Foot_Step_Sprint
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Foot_Step_Sprint
+  Guid:
+    Data1: 334606862
+    Data2: 1143805516
+    Data3: -1263586887
+    Data4: -1119738408
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &4602700890927834151
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Foot_Step_Jump
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Foot_Step_Jump
+  Guid:
+    Data1: -370212388
+    Data2: 1281984273
+    Data3: 211761087
+    Data4: -1505085656
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 250
+--- !u!114 &5487921862929290957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/Boss_Attack_Hard_Slash
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/Boss_Attack_Hard_Slash
+  Guid:
+    Data1: 262473028
+    Data2: 1165130175
+    Data3: 1250168486
+    Data4: 396553145
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1441
+--- !u!114 &5560184847272357413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Skill_Attack_Lightning_Cut_Slash
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Skill_Attack_Lightning_Cut_Slash
+  Guid:
+    Data1: -1708498505
+    Data2: 1328105128
+    Data3: 41716619
+    Data4: 1366830727
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 2191
+--- !u!114 &6213048353427349253
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Normal_Attack_Charging
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Normal_Attack_Charging
+  Guid:
+    Data1: -1109235363
+    Data2: 1307468358
+    Data3: 472557736
+    Data4: -2080012932
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 580
+--- !u!114 &6905973074772153885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/Boss_Attack_Stomp
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/Boss_Attack_Stomp
+  Guid:
+    Data1: 4901683
+    Data2: 1293284391
+    Data3: 2070394295
+    Data4: -1104755641
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1102
+--- !u!114 &7235546124526541545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Air_Attack_Hard_Attack
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Air_Attack_Hard_Attack
+  Guid:
+    Data1: 1385641968
+    Data2: 1241266014
+    Data3: 166875835
+    Data4: -492162376
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 780
+--- !u!114 &7722643736475689656
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Skill_Attack_Lightning_Cut_Ready
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Skill_Attack_Lightning_Cut_Ready
+  Guid:
+    Data1: 892902654
+    Data2: 1153368865
+    Data3: -2119235412
+    Data4: 1424787743
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 3900
+--- !u!114 &8235396215773152304
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Interaction/Player_Skill_Grapling
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Interaction/Player_Skill_Grapling
+  Guid:
+    Data1: -1012767394
+    Data2: 1302831510
+    Data3: 793848223
+    Data4: -91535311
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 550
+--- !u!114 &8454090903439758873
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/Boss_Attack_Clearing
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/Boss_Attack_Clearing
+  Guid:
+    Data1: -1810321716
+    Data2: 1175289975
+    Data3: 714228669
+    Data4: -1277834095
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 2000
+--- !u!114 &8989257464386312873
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Movement_Dash
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Movement_Dash
+  Guid:
+    Data1: -1615845866
+    Data2: 1182023453
+    Data3: 372747152
+    Data4: -1544547301
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 680
