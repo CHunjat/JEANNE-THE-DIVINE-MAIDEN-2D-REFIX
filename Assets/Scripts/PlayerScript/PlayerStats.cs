@@ -48,14 +48,11 @@ public class PlayerStats : MonoBehaviour
     // 1. 최종 공격력 = 기본공격력 + 기량(70%) + 근력(30%)
     public float GetTotalAttackPower()
     {
-        // 100% 기준치를 먼저 가져옵니다. (예: 15)
         float atk100 = statBalance.baseAttackPerStat;
 
-        // 기량은 100% 수치의 70% 반영 (15 * 0.7 = 10.5)
-        float dexBonus = statDex * (atk100 * 0.7f);
-
-        // 근력은 100% 수치의 30% 반영 (15 * 0.3 = 4.5)
-        float strBonus = statStr * (atk100 * 0.3f);
+        // [수정] 스탯 레벨에서 1을 뺀 값으로 계산 (최소 0 보장)
+        float dexBonus = Mathf.Max(0, statDex - 1) * (atk100 * 0.7f);
+        float strBonus = Mathf.Max(0, statStr - 1) * (atk100 * 0.3f);
 
         return baseAttackPower + dexBonus + strBonus;
     }
@@ -65,8 +62,9 @@ public class PlayerStats : MonoBehaviour
     {
         float def100 = statBalance.baseDefensePerStat;
 
-        float hpBonus = statHp * (def100 * 0.3f);
-        float strBonus = statStr * (def100 * 0.7f);
+        // [수정] 스탯 레벨에서 1을 뺀 값으로 계산
+        float hpBonus = Mathf.Max(0, statHp - 1) * (def100 * 0.3f);
+        float strBonus = Mathf.Max(0, statStr - 1) * (def100 * 0.7f);
 
         return baseDefense + hpBonus + strBonus;
     }
@@ -75,7 +73,9 @@ public class PlayerStats : MonoBehaviour
     public float GetMaxHp()
     {
         float hp100 = statBalance.baseHpPerStat;
-        float hpBonus = statHp * (hp100 * 1.0f); // 100% 다 들어감
+
+        // [수정] 스탯 레벨에서 1을 뺀 값으로 계산
+        float hpBonus = Mathf.Max(0, statHp - 1) * (hp100 * 1.0f);
 
         return baseMaxHp + hpBonus;
     }
@@ -84,7 +84,9 @@ public class PlayerStats : MonoBehaviour
     public float GetMaxMp()
     {
         float mp100 = statBalance.baseMpPerStat;
-        float mpBonus = statSpirit * (mp100 * 1.0f);
+
+        // [수정] 스탯 레벨에서 1을 뺀 값으로 계산
+        float mpBonus = Mathf.Max(0, statSpirit - 1) * (mp100 * 1.0f);
 
         return baseMaxMp + mpBonus;
     }
@@ -127,13 +129,12 @@ public class PlayerStats : MonoBehaviour
 
         // [수정됨] 방어력 계산 시 기존 defense 대신 GetTotalDefense() 사용
         float finalDamage = Mathf.Max(amount - GetTotalDefense(), 1f);
-        currentHp -= finalDamage;
+        currentHp = Mathf.Max(0, currentHp - finalDamage);
 
         Debug.Log($"플레이어 피격! 받은 데미지: {finalDamage} / 남은 체력: {currentHp}");
 
-        if (currentHp <= 0)
+        if (currentHp == 0)
         {
-            currentHp = 0;
             if (playerController.StateMachine.CurrentState != playerController.DieState)
             {
                 playerController.StateMachine.ChangeState(playerController.DieState);
