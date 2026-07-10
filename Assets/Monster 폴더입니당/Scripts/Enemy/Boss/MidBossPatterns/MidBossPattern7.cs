@@ -2,26 +2,26 @@ using UnityEngine;
 using System.Collections;
 // =====================================================
 // MidBossPattern7.cs
-// 강화 앞다리 휘두르기 - 중거리, 쿨타임 7초, 우선순위 4
-// (isExecuting 재진입 방지 + 안전장치 추가본)
+// 강화 슬래시 (Slash Triple Attack - 통짜 3연타 버전)
+// (그로기로 인한 정상 중단 시 안전장치 경고 스킵하도록 수정)
 // =====================================================
 public class MidBossPattern7 : BossPatternBase
 {
-    [Header("2연 휘두르기 설정 (기획자 조절)")]
+    [Header("3연 휘두르기 설정 (기획자 조절)")]
     [SerializeField] private float slashHitboxDuration = 0.25f;
     [SerializeField] private float returnHitboxDuration = 0.25f;
-    [SerializeField] private float conditionStampRange = 2f;
+    [SerializeField] private float stampHitboxDuration = 0.2f;
 
     [Header("특수 히트박스 연결 (얘만 슬롯 유지함)")]
     [SerializeField] private GameObject returnHitbox;
 
-    [Header("안전장치 - 애니메이션 이벤트 누락 시 강제 리셋 (기획자 조절)")]
-    [Tooltip("이 시간이 지나도 패턴이 끝나지 않으면 강제로 isExecuting을 false로 되돌림.")]
+    [Header("안전장치 - 애니메이션 이벤트 누락 시 강제 리셋")]
     [SerializeField] private float maxExecutionTime = 5f;
 
     private GameObject slashHitbox;
     private GameObject stampHitbox;
     private Animator visualAnimator;
+    private EnemyGroggy groggy; // [추가됨] 그로기 상태 확인용
     private bool isExecuting = false;
     private Coroutine failsafeCoroutine;
 
@@ -35,11 +35,12 @@ public class MidBossPattern7 : BossPatternBase
             stampHitbox = parent.hitBox_Stamp;
         }
 
+        groggy = GetComponent<EnemyGroggy>(); // [추가됨]
+
         if (slashHitbox != null) slashHitbox.SetActive(false);
         if (returnHitbox != null) returnHitbox.SetActive(false);
         if (stampHitbox != null) stampHitbox.SetActive(false);
 
-        // 기획서 반영
         cooldown = 7f;
         priority = 4;
         distanceType = DistanceType.Mid;
@@ -50,9 +51,9 @@ public class MidBossPattern7 : BossPatternBase
         if (isExecuting) return;
         isExecuting = true;
 
-        if (visualAnimator != null) visualAnimator.SetTrigger("doSlashDouble");
+        // [핵심] doSlashDouble 버리고, 무조건 3연타 'doSlashTriple' 한방에 발동!
+        if (visualAnimator != null) visualAnimator.SetTrigger("doSlashTriple");
 
-        // 안전장치 시작: maxExecutionTime 안에 정상 종료 안 되면 강제 리셋
         if (failsafeCoroutine != null) StopCoroutine(failsafeCoroutine);
         failsafeCoroutine = StartCoroutine(FailsafeRoutine());
     }
@@ -61,6 +62,7 @@ public class MidBossPattern7 : BossPatternBase
     {
         if (slashHitbox != null)
         {
+            slashHitbox.SetActive(false);
             slashHitbox.SetActive(true);
             Invoke(nameof(DeactivateSlash), slashHitboxDuration);
         }
@@ -70,34 +72,26 @@ public class MidBossPattern7 : BossPatternBase
     {
         if (returnHitbox != null)
         {
+            returnHitbox.SetActive(false);
             returnHitbox.SetActive(true);
             Invoke(nameof(DeactivateReturn), returnHitboxDuration);
         }
     }
 
+    // [핵심] 통짜 애니메이션이므로 중간에 거리 잴 필요 없음. 에러 방지용 빈 껍데기!
     public void AnimEvent_CheckConditionStamp()
     {
-        GameObject playerObj = GameObject.FindWithTag("Player");
-        if (playerObj != null && Vector2.Distance(transform.position, playerObj.transform.position) <= conditionStampRange)
-        {
-            if (visualAnimator != null) visualAnimator.SetTrigger("doSlashTriple");
-            // isExecuting은 아직 안 끝남. AnimEvent_ConditionStampHit에서 최종 종료 처리.
-        }
-        else
-        {
-            // 조건 불충족 시 여기서 패턴 종료 (앞다리 휘두르기만 하고 끝)
-            EndExecution();
-        }
     }
 
     public void AnimEvent_ConditionStampHit()
     {
         if (stampHitbox != null)
         {
+            stampHitbox.SetActive(false);
             stampHitbox.SetActive(true);
-            Invoke(nameof(DeactivateStamp), 0.2f);
+            Invoke(nameof(DeactivateStamp), stampHitboxDuration);
         }
-
+        // 마지막 3타 찍었으니 여기서 패턴 깔끔하게 종료!
         EndExecution();
     }
 
@@ -111,15 +105,20 @@ public class MidBossPattern7 : BossPatternBase
         }
     }
 
+    // [수정됨] 그로기로 인한 정상적인 중단이면 경고 없이 조용히 리셋
     private IEnumerator FailsafeRoutine()
     {
         yield return new WaitForSeconds(maxExecutionTime);
 
         if (isExecuting)
         {
-            Debug.LogWarning($"[{gameObject.name}] MidBossPattern7 안전장치 발동! " +
-                              $"{maxExecutionTime}초 안에 정상 종료되지 않아 강제 리셋함. " +
-                              "Animator의 doSlashTriple 관련 상태/전환이 제대로 연결되어 있는지 확인 필요.");
+            bool wasInterruptedByGroggy = (groggy != null && groggy.IsGroggy);
+
+            if (!wasInterruptedByGroggy)
+            {
+                Debug.LogWarning($"[{gameObject.name}] 패턴7 안전장치 발동! 5초 초과 리셋. " +
+                                  "Animator 클립에 해당 이벤트가 제대로 연결되어 있는지 확인 필요.");
+            }
             isExecuting = false;
         }
         failsafeCoroutine = null;
