@@ -4,7 +4,8 @@ using System.Collections.Generic;
 
 // =====================================================
 // MidBoss.cs
-// (6번 버그 수정: 방향 전환 시 히트박스 위치도 같이 반전되도록 추가)
+// (attackCooldown이 패턴 재생시간보다 짧아서, 다른 패턴이 실행 중인데도
+//  새 패턴이 끼어들어 애니메이션을 끊는 문제 수정)
 // =====================================================
 public class MidBoss : EnemyFSM
 {
@@ -49,7 +50,6 @@ public class MidBoss : EnemyFSM
 
     private bool isDeadProcessed = false;
 
-    // [추가됨] 각 히트박스가 "오른쪽을 보고 있을 때" 원래 세팅된 로컬 X좌표(절댓값)를 저장
     private Dictionary<GameObject, float> hitboxBaseX = new Dictionary<GameObject, float>();
 
     protected override void Awake()
@@ -90,11 +90,9 @@ public class MidBoss : EnemyFSM
         groggy = GetComponent<EnemyGroggy>();
         AnimEvent_DisableAllHitBox();
 
-        // [추가됨] 히트박스들의 원래 위치 캐싱
         CacheHitboxPositions();
     }
 
-    // [추가됨] 히트박스들이 "오른쪽을 보고 있을 때" 세팅된 원래 X좌표(절댓값)를 저장해둠
     private void CacheHitboxPositions()
     {
         GameObject[] hitboxes = { hitBox_Stamp, hitBox_Landing, hitBox_Clearing, hitBox_Slash, hitBox_BackKick };
@@ -105,7 +103,6 @@ public class MidBoss : EnemyFSM
         }
     }
 
-    // [추가됨] 방향이 바뀔 때마다 히트박스들의 X좌표 부호를 뒤집어줌
     protected override void OnFacingChanged(bool facingLeft)
     {
         foreach (var kvp in hitboxBaseX)
@@ -118,7 +115,16 @@ public class MidBoss : EnemyFSM
         }
     }
 
-    // [수정됨] 부모랑 똑같이 인수 2개로 맞춤
+    private bool IsAnyPatternBusy()
+    {
+        List<BossPatternBase> currentList = (currentPhase == 1) ? phase1Patterns : phase2Patterns;
+        foreach (var p in currentList)
+        {
+            if (p.IsBusy) return true;
+        }
+        return false;
+    }
+
     public override void TakeDamage(float amount, float groggyDamage = 0f)
     {
         Debug.Log($"<color=red>[거미 피격]</color> 데미지: {amount} / 현재 체력: {currentHp}");
@@ -216,7 +222,7 @@ public class MidBoss : EnemyFSM
 
         if (animator != null) animator.SetBool("isMoving", true);
 
-        if (GetDistanceToPlayer() <= overlapDistance && clearingPattern != null && clearingPattern.IsUsable())
+        if (!IsAnyPatternBusy() && GetDistanceToPlayer() <= overlapDistance && clearingPattern != null && clearingPattern.IsUsable())
         {
             ChangeState(EnemyState.Attack);
             return;
@@ -261,11 +267,18 @@ public class MidBoss : EnemyFSM
 
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
 
-        if (clearingPattern != null && clearingPattern.IsUsable() && GetDistanceToPlayer() <= overlapDistance)
+        if (!IsAnyPatternBusy() && clearingPattern != null && clearingPattern.IsUsable() && GetDistanceToPlayer() <= overlapDistance)
         {
             if (animator != null) { animator.SetBool("isMoving", false); animator.SetBool("isAttacking", true); }
             clearingPattern.Execute();
             nextAttackTime = Time.time + attackCooldown;
+            return;
+        }
+
+        // [★핵심 추가★] 다른 패턴(6, 7, 8 등)이 아직 실행 중(IsBusy)이면
+        // attackCooldown이 지났어도 절대 새 패턴을 고르지 않고 대기함.
+        if (IsAnyPatternBusy())
+        {
             return;
         }
 

@@ -2,7 +2,7 @@
 using System.Collections;
 
 // =====================================================
-// MidBossPattern8.cs (거미줄 스폰 위치 수정본)
+// MidBossPattern8.cs (거미줄 중복 발사 방지 추가)
 // =====================================================
 public class MidBossPattern8 : BossPatternBase
 {
@@ -26,6 +26,9 @@ public class MidBossPattern8 : BossPatternBase
     private GameObject landingHitbox;
     private Animator visualAnimator;
     private bool isExecuting = false;
+    private bool hasFiredWeb = false; // [추가됨] 한 사이클에 거미줄이 한 번만 나가도록 잠금
+
+    public override bool IsBusy => isExecuting;
 
     private void Awake()
     {
@@ -50,6 +53,7 @@ public class MidBossPattern8 : BossPatternBase
     {
         if (isExecuting) return;
         isExecuting = true;
+        hasFiredWeb = false; // [추가됨] 새 사이클 시작 시 잠금 초기화
         if (visualAnimator != null) visualAnimator.SetTrigger("doSpit");
     }
 
@@ -65,13 +69,21 @@ public class MidBossPattern8 : BossPatternBase
 
     public void AnimEvent_UltWeb()
     {
+        // [추가됨] 이미 이번 사이클에 거미줄을 쐈다면 중복 발사 방지
+        if (hasFiredWeb)
+        {
+            // 거미줄은 다시 안 쏘지만, doJump 트리거는 이미 이전 호출에서 쐈을 것이므로
+            // 여기서는 아무것도 하지 않고 조용히 무시
+            return;
+        }
+        hasFiredWeb = true;
+
         if (webPrefab != null)
         {
             SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
             bool isFacingLeft = (sr != null && sr.flipX);
             GameObject playerObj = GameObject.FindWithTag("Player");
 
-            // 스폰 위치: 입 위치(mouthSpawnPoint)가 연결되어 있으면 그걸 쓰고, 없으면 기존처럼 보스 루트 위치 사용
             Vector3 spawnPos = mouthSpawnPoint != null ? mouthSpawnPoint.position : transform.position;
 
             Vector2 dir = playerObj != null
@@ -90,15 +102,12 @@ public class MidBossPattern8 : BossPatternBase
     {
         if (!isExecuting) return;
 
-        // Visual 끄기
         Transform visual = transform.Find("Visual");
         if (visual != null) visual.gameObject.SetActive(false);
 
-        // Hurtbox_Body 끄기
         Transform hurtbox = transform.Find("Hurtbox_Body");
         if (hurtbox != null) hurtbox.gameObject.SetActive(false);
 
-        // 본체 콜라이더 끄기
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 
@@ -112,15 +121,12 @@ public class MidBossPattern8 : BossPatternBase
         GameObject playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null) transform.position = playerObj.transform.position;
 
-        // Visual 켜기
         Transform visual = transform.Find("Visual");
         if (visual != null) visual.gameObject.SetActive(true);
 
-        // Hurtbox_Body 켜기
         Transform hurtbox = transform.Find("Hurtbox_Body");
         if (hurtbox != null) hurtbox.gameObject.SetActive(true);
 
-        // 본체 콜라이더 켜기
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = true;
 

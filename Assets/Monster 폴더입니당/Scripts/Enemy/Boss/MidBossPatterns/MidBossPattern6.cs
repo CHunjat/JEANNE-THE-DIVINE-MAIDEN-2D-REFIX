@@ -3,7 +3,7 @@ using System.Collections;
 // =====================================================
 // MidBossPattern6.cs
 // 강화 앞발 찍기 2연찍기 + 뒷발 찌르기 (무조건 3연타)
-// (그로기로 인한 정상 중단 시 안전장치 경고 스킵하도록 수정)
+// (그로기 판정 타이밍 경합 제거: Update로 실시간 감시)
 // =====================================================
 public class MidBossPattern6 : BossPatternBase
 {
@@ -22,9 +22,12 @@ public class MidBossPattern6 : BossPatternBase
     private GameObject backKickHitbox;
     private Rigidbody2D rb;
     private Animator visualAnimator;
-    private EnemyGroggy groggy; // [추가됨] 그로기 상태 확인용
+    private EnemyGroggy groggy;
     private bool isExecuting = false;
+    private bool wasInterruptedByGroggy = false; // [추가됨] 실행 도중 그로기 발생 여부를 실시간 기록
     private Coroutine failsafeCoroutine;
+
+    public override bool IsBusy => isExecuting;
 
     private void Awake()
     {
@@ -37,7 +40,7 @@ public class MidBossPattern6 : BossPatternBase
             backKickHitbox = parent.hitBox_BackKick;
         }
 
-        groggy = GetComponent<EnemyGroggy>(); // [추가됨]
+        groggy = GetComponent<EnemyGroggy>();
 
         if (stampHitbox != null) stampHitbox.SetActive(false);
         if (backKickHitbox != null) backKickHitbox.SetActive(false);
@@ -47,10 +50,20 @@ public class MidBossPattern6 : BossPatternBase
         distanceType = DistanceType.Mid;
     }
 
+    // [추가됨] 실행 중일 때만 매 프레임 그로기 진입 여부를 감시 (타이밍 경합 방지)
+    private void Update()
+    {
+        if (isExecuting && groggy != null && groggy.IsGroggy)
+        {
+            wasInterruptedByGroggy = true;
+        }
+    }
+
     protected override void OnExecute()
     {
         if (isExecuting) return;
         isExecuting = true;
+        wasInterruptedByGroggy = false; // [추가됨] 새 사이클 시작 시 초기화
 
         if (visualAnimator != null) visualAnimator.SetTrigger("doTriple");
         StartCoroutine(MoveRoutine());
@@ -109,15 +122,13 @@ public class MidBossPattern6 : BossPatternBase
         }
     }
 
-    // [수정됨] 그로기로 인한 정상적인 중단이면 경고 없이 조용히 리셋
+    // [수정됨] 5초 "후"에 그로기 여부를 확인하는 대신, Update에서 실시간 기록해둔 값을 사용
     private IEnumerator FailsafeRoutine()
     {
         yield return new WaitForSeconds(maxExecutionTime);
 
         if (isExecuting)
         {
-            bool wasInterruptedByGroggy = (groggy != null && groggy.IsGroggy);
-
             if (!wasInterruptedByGroggy)
             {
                 Debug.LogWarning($"[{gameObject.name}] MidBossPattern6 안전장치 발동! " +

@@ -3,7 +3,7 @@ using System.Collections;
 // =====================================================
 // MidBossPattern7.cs
 // 강화 슬래시 (Slash Triple Attack - 통짜 3연타 버전)
-// (그로기로 인한 정상 중단 시 안전장치 경고 스킵하도록 수정)
+// (그로기 판정 타이밍 경합 제거: Update로 실시간 감시)
 // =====================================================
 public class MidBossPattern7 : BossPatternBase
 {
@@ -21,9 +21,12 @@ public class MidBossPattern7 : BossPatternBase
     private GameObject slashHitbox;
     private GameObject stampHitbox;
     private Animator visualAnimator;
-    private EnemyGroggy groggy; // [추가됨] 그로기 상태 확인용
+    private EnemyGroggy groggy;
     private bool isExecuting = false;
+    private bool wasInterruptedByGroggy = false; // [추가됨]
     private Coroutine failsafeCoroutine;
+
+    public override bool IsBusy => isExecuting;
 
     private void Awake()
     {
@@ -35,7 +38,7 @@ public class MidBossPattern7 : BossPatternBase
             stampHitbox = parent.hitBox_Stamp;
         }
 
-        groggy = GetComponent<EnemyGroggy>(); // [추가됨]
+        groggy = GetComponent<EnemyGroggy>();
 
         if (slashHitbox != null) slashHitbox.SetActive(false);
         if (returnHitbox != null) returnHitbox.SetActive(false);
@@ -46,10 +49,20 @@ public class MidBossPattern7 : BossPatternBase
         distanceType = DistanceType.Mid;
     }
 
+    // [추가됨]
+    private void Update()
+    {
+        if (isExecuting && groggy != null && groggy.IsGroggy)
+        {
+            wasInterruptedByGroggy = true;
+        }
+    }
+
     protected override void OnExecute()
     {
         if (isExecuting) return;
         isExecuting = true;
+        wasInterruptedByGroggy = false; // [추가됨]
 
         // [핵심] doSlashDouble 버리고, 무조건 3연타 'doSlashTriple' 한방에 발동!
         if (visualAnimator != null) visualAnimator.SetTrigger("doSlashTriple");
@@ -91,7 +104,6 @@ public class MidBossPattern7 : BossPatternBase
             stampHitbox.SetActive(true);
             Invoke(nameof(DeactivateStamp), stampHitboxDuration);
         }
-        // 마지막 3타 찍었으니 여기서 패턴 깔끔하게 종료!
         EndExecution();
     }
 
@@ -105,15 +117,13 @@ public class MidBossPattern7 : BossPatternBase
         }
     }
 
-    // [수정됨] 그로기로 인한 정상적인 중단이면 경고 없이 조용히 리셋
+    // [수정됨] 타이밍 경합 제거
     private IEnumerator FailsafeRoutine()
     {
         yield return new WaitForSeconds(maxExecutionTime);
 
         if (isExecuting)
         {
-            bool wasInterruptedByGroggy = (groggy != null && groggy.IsGroggy);
-
             if (!wasInterruptedByGroggy)
             {
                 Debug.LogWarning($"[{gameObject.name}] 패턴7 안전장치 발동! 5초 초과 리셋. " +
