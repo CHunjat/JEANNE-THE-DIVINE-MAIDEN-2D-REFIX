@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // =====================================================
-// MidBossPattern3.cs
+// MidBossPattern3.cs 거미줄 뱉기 (발사 높이 강제 조절 기능 추가)
 // =====================================================
 public class MidBossPattern3 : BossPatternBase
 {
@@ -13,10 +13,13 @@ public class MidBossPattern3 : BossPatternBase
     [SerializeField] private GameObject webPrefab;
     [SerializeField] private Transform webSpawnPoint;
 
+    [Header("발사 위치 높이 강제 조절 (이미지 쳐짐 해결용)")]
+    [SerializeField] private float manualYOffset = 0f; // ★ 인스펙터에서 이 값을 올려서 입까지 맞추면 됨!
+
     private Transform owner;
     private Animator visualAnimator;
     private bool isSpitting = false;
-    private bool hasFiredThisTurn = false; // 2연발 발사 절대 차단용 
+    private bool hasFiredThisTurn = false;
 
     private void Awake()
     {
@@ -32,7 +35,7 @@ public class MidBossPattern3 : BossPatternBase
     {
         if (isSpitting) return;
         isSpitting = true;
-        hasFiredThisTurn = false; // 턴 시작 시 자물쇠 초기화
+        hasFiredThisTurn = false;
         if (visualAnimator != null) visualAnimator.SetTrigger("doSpit");
         Invoke(nameof(UnlockSpitting), 2.0f);
     }
@@ -41,8 +44,7 @@ public class MidBossPattern3 : BossPatternBase
 
     public void AnimEvent_SpitWeb()
     {
-        // 애니메이션 프레임 이벤트가 2번 들어와도 1발만 쏘고 칼같이 컷!
-        if (hasFiredThisTurn) return;
+        if (!isSpitting || hasFiredThisTurn) return;
         hasFiredThisTurn = true;
 
         if (webPrefab == null) return;
@@ -51,12 +53,18 @@ public class MidBossPattern3 : BossPatternBase
         bool isFacingLeft = (sr != null && sr.flipX);
 
         Vector3 spawnPos = owner.position;
+
         if (webSpawnPoint != null)
         {
-            Vector3 localOffset = webSpawnPoint.localPosition;
-            if (isFacingLeft) localOffset.x = -Mathf.Abs(localOffset.x);
-            else localOffset.x = Mathf.Abs(localOffset.x);
-            spawnPos = owner.position + localOffset;
+            float offsetX = Mathf.Abs(webSpawnPoint.localPosition.x);
+
+            // X축: 보스가 왼쪽 보면 왼쪽에서, 오른쪽 보면 오른쪽에서 오차 없이 발사
+            float finalX = isFacingLeft ? (owner.position.x - offsetX) : (owner.position.x + offsetX);
+
+            // Y축: 입 위치(World Y) + 수동으로 끌어올린 높이
+            float finalY = webSpawnPoint.position.y + manualYOffset;
+
+            spawnPos = new Vector3(finalX, finalY, owner.position.z);
         }
 
         GameObject playerObj = GameObject.FindWithTag("Player");
@@ -66,12 +74,16 @@ public class MidBossPattern3 : BossPatternBase
             Vector3 targetPos = playerObj.transform.position + new Vector3(0, playerYOffset, 0);
             dir = ((Vector2)(targetPos - spawnPos)).normalized;
         }
-        else dir = new Vector2(isFacingLeft ? -1f : 1f, 0f);
+        else
+        {
+            dir = new Vector2(isFacingLeft ? -1f : 1f, 0f);
+        }
 
         GameObject web = Instantiate(webPrefab, spawnPos, Quaternion.identity);
         MidBossWebProjectile webScript = web.GetComponent<MidBossWebProjectile>();
-        if (webScript != null) webScript.Initialize(dir, webSpeed, webRange, bindDuration);
-
-        Debug.Log($"<color=cyan>[MidBossPattern3] 거미줄 발사 완료!</color>");
+        if (webScript != null)
+        {
+            webScript.Initialize(dir, webSpeed, webRange, bindDuration);
+        }
     }
 }

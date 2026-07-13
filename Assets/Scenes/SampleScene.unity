@@ -2129,7 +2129,6 @@ MonoBehaviour:
   ownerDamage: 20
   damageRatio: 1
   destroyOnHit: 0
-  hitCooldown: 0.5
 --- !u!1 &942376641
 GameObject:
   m_ObjectHideFlags: 0
@@ -2285,6 +2284,11 @@ MonoBehaviour:
   recoverDelayAfterHit: 2
   damageMultiplier: 2.5
   groggyTriggerName: doKnockDown
+--- !u!4 &1059021591 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4040915573474769236, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+  m_PrefabInstance: {fileID: 1754357195}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1064294652
 GameObject:
   m_ObjectHideFlags: 0
@@ -3102,6 +3106,37 @@ MonoBehaviour:
   baseGroggyPower: 10
   isInvincible: 0
   invincibilityDuration: 0.4
+--- !u!1 &1249579815
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1249579816}
+  m_Layer: 0
+  m_Name: MouthSpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1249579816
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1249579815}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.62, y: 2.58, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1059021591}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1252207913
 GameObject:
   m_ObjectHideFlags: 0
@@ -4332,6 +4367,10 @@ PrefabInstance:
       propertyPath: webPrefab
       value: 
       objectReference: {fileID: 9111198009131002786, guid: ff6af48596149654eb174a6e77f1d03e, type: 3}
+    - target: {fileID: 8657742522092995938, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: webSpawnPoint
+      value: 
+      objectReference: {fileID: 1249579816}
     - target: {fileID: 8682717951201376092, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_Layer
       value: 17
@@ -4346,7 +4385,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 4040915573474769236, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1249579816}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 5145147845001952587, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       insertIndex: -1

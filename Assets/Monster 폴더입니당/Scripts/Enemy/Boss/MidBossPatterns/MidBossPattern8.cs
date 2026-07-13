@@ -2,7 +2,7 @@
 using System.Collections;
 
 // =====================================================
-// MidBossPattern8.cs (거미줄 중복 발사 방지 추가)
+// MidBossPattern8.cs
 // =====================================================
 public class MidBossPattern8 : BossPatternBase
 {
@@ -15,18 +15,21 @@ public class MidBossPattern8 : BossPatternBase
     [SerializeField] private float bindDuration = 3f;
     [SerializeField] private float airTime = 1.8f;
     [SerializeField] private float landingHitboxDuration = 0.4f;
-    [SerializeField] private float boundDamageMultiplier = 2f;
 
     [SerializeField] private GameObject webPrefab;
 
-    [Header("거미줄 발사 위치 (입 위치에 빈 오브젝트를 만들어 연결할 것)")]
+    [Header("거미줄 발사 위치")]
     [SerializeField] private Transform mouthSpawnPoint;
+
+    [Header("안전장치")]
+    [SerializeField] private float maxExecutionTime = 8f;
 
     private GameObject clearingHitbox;
     private GameObject landingHitbox;
     private Animator visualAnimator;
     private bool isExecuting = false;
-    private bool hasFiredWeb = false; // [추가됨] 한 사이클에 거미줄이 한 번만 나가도록 잠금
+    private bool hasFiredWeb = false;
+    private Coroutine failsafeCoroutine;
 
     public override bool IsBusy => isExecuting;
 
@@ -53,8 +56,12 @@ public class MidBossPattern8 : BossPatternBase
     {
         if (isExecuting) return;
         isExecuting = true;
-        hasFiredWeb = false; // [추가됨] 새 사이클 시작 시 잠금 초기화
+        hasFiredWeb = false;
+
         if (visualAnimator != null) visualAnimator.SetTrigger("doSpit");
+
+        if (failsafeCoroutine != null) StopCoroutine(failsafeCoroutine);
+        failsafeCoroutine = StartCoroutine(FailsafeRoutine());
     }
 
     public void AnimEvent_UltClearing()
@@ -62,20 +69,15 @@ public class MidBossPattern8 : BossPatternBase
         ApplyClearing();
         if (clearingHitbox != null)
         {
-            clearingHitbox.SetActive(true);
-            Invoke(nameof(DeactivateClearing), clearingDuration);
+            StartCoroutine(ReactivateHitboxRoutine(clearingHitbox, clearingDuration));
         }
     }
 
-    public void AnimEvent_UltWeb()
+    public void AnimEvent_SpitWeb()
     {
-        // [추가됨] 이미 이번 사이클에 거미줄을 쐈다면 중복 발사 방지
-        if (hasFiredWeb)
-        {
-            // 거미줄은 다시 안 쏘지만, doJump 트리거는 이미 이전 호출에서 쐈을 것이므로
-            // 여기서는 아무것도 하지 않고 조용히 무시
-            return;
-        }
+        if (!isExecuting) return;
+
+        if (hasFiredWeb) return;
         hasFiredWeb = true;
 
         if (webPrefab != null)
@@ -131,16 +133,50 @@ public class MidBossPattern8 : BossPatternBase
         if (col != null) col.enabled = true;
 
         if (visualAnimator != null) visualAnimator.SetTrigger("doLand");
+
+        // [핵심] 유니티가 0.00초 핀을 씹어먹을 것에 대비해 강제 종료 예약 (착지 + 후딜레이 포함 1.5초 뒤)
+        Invoke(nameof(EndExecution), landingHitboxDuration + 1.0f);
     }
 
-    public void AnimEvent_UltLandImpact()
+    public void AnimEvent_LandImpact()
     {
+        if (!isExecuting) return;
+
         if (landingHitbox != null)
         {
-            landingHitbox.SetActive(true);
-            Invoke(nameof(DeactivateLanding), landingHitboxDuration);
+            StartCoroutine(ReactivateHitboxRoutine(landingHitbox, landingHitboxDuration));
         }
+    }
+
+    // 물리엔진 판정 리셋을 위한 1프레임 대기 처리 (무적시간 씹힘 방지)
+    private IEnumerator ReactivateHitboxRoutine(GameObject hitbox, float duration)
+    {
+        hitbox.SetActive(false);
+        yield return null;
+        hitbox.SetActive(true);
+
+        yield return new WaitForSeconds(duration);
+        hitbox.SetActive(false);
+    }
+
+    private void EndExecution()
+    {
         isExecuting = false;
+        if (failsafeCoroutine != null)
+        {
+            StopCoroutine(failsafeCoroutine);
+            failsafeCoroutine = null;
+        }
+    }
+
+    private IEnumerator FailsafeRoutine()
+    {
+        yield return new WaitForSeconds(maxExecutionTime);
+        if (isExecuting)
+        {
+            isExecuting = false;
+        }
+        failsafeCoroutine = null;
     }
 
     private void ApplyClearing()
@@ -154,7 +190,4 @@ public class MidBossPattern8 : BossPatternBase
             if (playerRb != null) playerRb.linearVelocity = knockbackDir * (knockbackDistance / 0.3f);
         }
     }
-
-    private void DeactivateClearing() { if (clearingHitbox != null) clearingHitbox.SetActive(false); }
-    private void DeactivateLanding() { if (landingHitbox != null) landingHitbox.SetActive(false); }
 }

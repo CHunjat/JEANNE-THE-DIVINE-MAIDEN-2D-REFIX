@@ -27,8 +27,8 @@ Transform:
   m_GameObject: {fileID: 2740603414056736553}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -15, z: 0}
-  m_LocalScale: {x: 15, y: 15, z: 15}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 20, y: 20, z: 20}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 4678291244019334904}
@@ -184,8 +184,8 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.11, y: -0.23}
-  m_Radius: 0.7
+  m_Offset: {x: -0.04, y: -0.23}
+  m_Radius: 8.42
 --- !u!50 &5238144244487006207
 Rigidbody2D:
   serializedVersion: 5
@@ -242,4 +242,3 @@ MonoBehaviour:
   ownerDamage: 20
   damageRatio: 1
   destroyOnHit: 1
-  hitCooldown: 0.5

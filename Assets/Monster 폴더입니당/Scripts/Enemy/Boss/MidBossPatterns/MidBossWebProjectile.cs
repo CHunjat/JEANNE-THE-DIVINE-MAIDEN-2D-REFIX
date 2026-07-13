@@ -1,6 +1,6 @@
 using UnityEngine;
 // =====================================================
-// MidBossWebProjectile.cs
+// MidBossWebProjectile.cs 거미줄(발사체) 관리
 // =====================================================
 public class MidBossWebProjectile : MonoBehaviour
 {
@@ -24,11 +24,9 @@ public class MidBossWebProjectile : MonoBehaviour
         startPos = transform.position;
         currentDir = dir.normalized;
 
-        // Visual 트랜스폼 캐싱
         SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
         if (sr != null) visual = sr.transform;
 
-        // 방향에 따라 Scale X 반전 (Flip X 대신)
         FlipVisual(dir.x < 0f);
 
         GameObject playerObj = GameObject.FindWithTag("Player");
@@ -43,7 +41,6 @@ public class MidBossWebProjectile : MonoBehaviour
             Vector2 dirToTarget = (targetPos - (Vector2)transform.position).normalized;
             currentDir = Vector2.Lerp(currentDir, dirToTarget, homingSensitivity * Time.deltaTime).normalized;
 
-            // 방향 바뀌면 Flip도 업데이트
             FlipVisual(currentDir.x < 0f);
         }
 
@@ -65,11 +62,15 @@ public class MidBossWebProjectile : MonoBehaviour
     {
         if (other.gameObject.layer != LayerMask.NameToLayer("Player")) return;
 
-        PlayerStats playerStats = other.GetComponent<PlayerStats>();
-        if (playerStats != null)
+        PlayerStats playerStats = other.GetComponentInParent<PlayerStats>();
+        PlayerController playerCtrl = other.GetComponentInParent<PlayerController>();
+
+        if (playerStats != null && playerCtrl != null)
         {
-            // playerStats.ApplyBind(bindDuration); // ← 병합 후 주석 해제
-            Debug.Log($"<color=cyan>[MidBossWebProjectile] 플레이어 타격! 구속 {bindDuration}초</color>");
+            // ★ [TODO] 플레이어 파트에서 ApplyBind 함수 구현이 완료되면 아래 줄의 주석(//)을 해제해 주세요!
+            // playerCtrl.ApplyBind(bindDuration); 
+
+            Debug.Log($"<color=cyan>[MidBossWebProjectile] 플레이어 타격! 구속 {bindDuration}초 (현재는 주석 처리됨)</color>");
         }
 
         Destroy(gameObject);

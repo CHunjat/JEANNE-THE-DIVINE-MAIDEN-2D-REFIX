@@ -4,8 +4,7 @@ using System.Collections.Generic;
 
 // =====================================================
 // MidBoss.cs
-// (attackCooldown이 패턴 재생시간보다 짧아서, 다른 패턴이 실행 중인데도
-//  새 패턴이 끼어들어 애니메이션을 끊는 문제 수정)
+// 보스 메인 상태 및 패턴 제어 (정통 액션 헛스윙 유지 로직 적용)
 // =====================================================
 public class MidBoss : EnemyFSM
 {
@@ -14,9 +13,11 @@ public class MidBoss : EnemyFSM
     [SerializeField] private float phase2Threshold = 0.5f;
     private bool isPhaseChanging = false;
 
-    [Header("공격 쿨타임")]
+    [Header("공격 쿨타임 및 헛스윙 설정")]
     [SerializeField] private float attackCooldown = 2.5f;
+    [SerializeField] private float basicAttackLockDuration = 0.8f; // 기획자가 모션 길이에 맞춰 조절
     private float nextAttackTime = 0f;
+    private float attackAnimationLockTime = 0f;
 
     [Header("거리 범위 설정")]
     [SerializeField] private float closeRangeMax = 5f;
@@ -26,6 +27,7 @@ public class MidBoss : EnemyFSM
     [Header("피격 피드백")]
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private Material flashMaterial;
+    [SerializeField] private float flashDuration = 0.05f;
     private Material originalMaterial;
     private Coroutine flashCoroutine;
 
@@ -49,13 +51,11 @@ public class MidBoss : EnemyFSM
     [SerializeField] private float overlapDistance = 2f;
 
     private bool isDeadProcessed = false;
-
     private Dictionary<GameObject, float> hitboxBaseX = new Dictionary<GameObject, float>();
 
     protected override void Awake()
     {
         base.Awake();
-
         Collider2D myCollider = GetComponent<Collider2D>();
         GameObject playerObj = GameObject.FindWithTag("Player");
 
@@ -89,7 +89,6 @@ public class MidBoss : EnemyFSM
         if (spriteRenderer != null) originalMaterial = spriteRenderer.material;
         groggy = GetComponent<EnemyGroggy>();
         AnimEvent_DisableAllHitBox();
-
         CacheHitboxPositions();
     }
 
@@ -127,12 +126,9 @@ public class MidBoss : EnemyFSM
 
     public override void TakeDamage(float amount, float groggyDamage = 0f)
     {
-        Debug.Log($"<color=red>[거미 피격]</color> 데미지: {amount} / 현재 체력: {currentHp}");
-
         if (isPhaseChanging || GetCurrentState() == EnemyState.Dead) return;
 
         float finalDamage = (groggy != null) ? amount * groggy.GetDamageMultiplier() : amount;
-
         base.TakeDamage(finalDamage, groggyDamage);
 
         if (groggy != null) groggy.AddGauge(groggyDamage);
@@ -151,7 +147,7 @@ public class MidBoss : EnemyFSM
     private IEnumerator FlashRoutine()
     {
         spriteRenderer.material = flashMaterial;
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(flashDuration);
         spriteRenderer.material = originalMaterial;
     }
 
@@ -172,9 +168,6 @@ public class MidBoss : EnemyFSM
     {
         currentPhase = 2;
         isPhaseChanging = true;
-
-        Debug.Log("<color=magenta><b>[MidBoss] 체력 50% 이하! 2페이즈 전환 (잠시 대기 후 패턴 변경)</b></color>");
-
         Invoke(nameof(EndPhaseTransition), 2f);
     }
 
@@ -217,18 +210,16 @@ public class MidBoss : EnemyFSM
     protected override void OnChase()
     {
         if (isPhaseChanging) return;
-
         FlipIfGroundLevel();
-
         if (animator != null) animator.SetBool("isMoving", true);
 
-        if (!IsAnyPatternBusy() && GetDistanceToPlayer() <= overlapDistance && clearingPattern != null && clearingPattern.IsUsable())
+        if (!IsAnyPatternBusy() && Time.time >= attackAnimationLockTime && GetDistanceToPlayer() <= overlapDistance && clearingPattern != null && clearingPattern.IsUsable())
         {
             ChangeState(EnemyState.Attack);
             return;
         }
 
-        if (Time.time >= nextAttackTime)
+        if (Time.time >= nextAttackTime && Time.time >= attackAnimationLockTime)
         {
             List<BossPatternBase> currentList = (currentPhase == 1) ? phase1Patterns : phase2Patterns;
             foreach (var p in currentList)
@@ -241,7 +232,7 @@ public class MidBoss : EnemyFSM
             }
         }
 
-        if (GetDistanceToPlayer() <= attackRange)
+        if (GetDistanceToPlayer() <= attackRange && Time.time >= attackAnimationLockTime)
         {
             ChangeState(EnemyState.Attack);
             return;
@@ -265,29 +256,33 @@ public class MidBoss : EnemyFSM
     {
         if (isPhaseChanging || (groggy != null && groggy.IsGroggy)) return;
 
+        // 1. 공격 중에는 무조건 발바닥에 본드 칠하기 (스케이트 방지)
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
 
-        if (!IsAnyPatternBusy() && clearingPattern != null && clearingPattern.IsUsable() && GetDistanceToPlayer() <= overlapDistance)
-        {
-            if (animator != null) { animator.SetBool("isMoving", false); animator.SetBool("isAttacking", true); }
-            clearingPattern.Execute();
-            nextAttackTime = Time.time + attackCooldown;
-            return;
-        }
-
-        // [★핵심 추가★] 다른 패턴(6, 7, 8 등)이 아직 실행 중(IsBusy)이면
-        // attackCooldown이 지났어도 절대 새 패턴을 고르지 않고 대기함.
-        if (IsAnyPatternBusy())
+        // 2. 대형 패턴(6, 7, 8번 등) 진행 중이거나, 기본 공격의 헛스윙 모션이 안 끝났다면 무조건 헛스윙하며 제자리 대기!
+        if (IsAnyPatternBusy() || Time.time < attackAnimationLockTime)
         {
             return;
         }
 
+        // 3. 헛스윙 모션이 완전히 끝났고 쿨타임이 도는 중이면, 거리를 재고 그제서야 추격!
         if (Time.time < nextAttackTime)
         {
             if (GetDistanceToPlayer() > attackRange)
             {
                 ChangeState(EnemyState.Chase);
             }
+            return;
+        }
+
+        // 4. 클리어링 패턴 실행
+        if (clearingPattern != null && clearingPattern.IsUsable() && GetDistanceToPlayer() <= overlapDistance)
+        {
+            if (animator != null) { animator.SetBool("isMoving", false); animator.SetBool("isAttacking", true); }
+            clearingPattern.Execute();
+
+            attackAnimationLockTime = Time.time + basicAttackLockDuration;
+            nextAttackTime = Time.time + attackCooldown;
             return;
         }
 
@@ -298,7 +293,6 @@ public class MidBoss : EnemyFSM
         foreach (var p in currentPatterns)
         {
             if (!p.IsUsable()) continue;
-
             bool distanceOk = false;
             switch (p.distanceType)
             {
@@ -307,7 +301,6 @@ public class MidBoss : EnemyFSM
                 case BossPatternBase.DistanceType.Mid: distanceOk = (currentDist == BossPatternBase.DistanceType.Close || currentDist == BossPatternBase.DistanceType.Mid); break;
                 case BossPatternBase.DistanceType.Far: distanceOk = (currentDist == BossPatternBase.DistanceType.Far); break;
             }
-
             if (distanceOk) candidates.Add(p);
         }
 
@@ -318,7 +311,6 @@ public class MidBoss : EnemyFSM
         }
 
         candidates.Sort((a, b) => a.priority.CompareTo(b.priority));
-
         int highestPriority = candidates[0].priority;
         List<BossPatternBase> topCandidates = new List<BossPatternBase>();
         foreach (var p in candidates)
@@ -330,24 +322,28 @@ public class MidBoss : EnemyFSM
         int randomIdx = Random.Range(0, topCandidates.Count);
         BossPatternBase selectedPattern = topCandidates[randomIdx];
 
-        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        // 5. 일반 패턴 실행
         if (animator != null) { animator.SetBool("isMoving", false); animator.SetBool("isAttacking", true); }
 
-        Debug.Log($"<color=cyan>[MidBoss] 패턴 발동: {selectedPattern.GetType().Name}</color>");
         selectedPattern.Execute();
+
+        // 패턴이 실행되는 순간, 정해진 시간(basicAttackLockDuration) 동안 절대 못 움직이게 락을 건다!
+        attackAnimationLockTime = Time.time + basicAttackLockDuration;
         nextAttackTime = Time.time + attackCooldown;
     }
 
     protected override void OnHit() { }
-    protected override void OnGroggy() { rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y); }
+
+    protected override void OnGroggy()
+    {
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        SendMessage("EndExecution", SendMessageOptions.DontRequireReceiver);
+    }
 
     protected override void OnDead()
     {
         if (isDeadProcessed) return;
         isDeadProcessed = true;
-
-        Debug.Log("<color=red><size=15><b>[MidBoss_Spider] 거미 사망!!! (HP 0)</b></size></color>");
-
         rb.linearVelocity = Vector2.zero;
         rb.gravityScale = 0f;
         Collider2D coll = GetComponent<Collider2D>();
@@ -355,12 +351,6 @@ public class MidBoss : EnemyFSM
         if (animator != null) animator.SetBool("isDead", true);
     }
 
-    public void AnimEvent_Slash1() { if (hitBox_Slash) { hitBox_Slash.SetActive(true); Invoke(nameof(DeactivateSlash), 0.2f); } }
-    private void DeactivateSlash() { if (hitBox_Slash) hitBox_Slash.SetActive(false); }
-    public void AnimEvent_Stamp() { if (hitBox_Stamp) { hitBox_Stamp.SetActive(true); Invoke(nameof(DeactivateStamp), 0.2f); } }
-    private void DeactivateStamp() { if (hitBox_Stamp) hitBox_Stamp.SetActive(false); }
-    public void AnimEvent_BackKickHit() { if (hitBox_BackKick) { hitBox_BackKick.SetActive(true); Invoke(nameof(DeactivateBackKick), 0.2f); } }
-    private void DeactivateBackKick() { if (hitBox_BackKick) hitBox_BackKick.SetActive(false); }
     public void AnimEvent_DisableAllHitBox()
     {
         if (hitBox_Stamp) hitBox_Stamp.SetActive(false);
