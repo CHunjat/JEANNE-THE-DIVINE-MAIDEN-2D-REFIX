@@ -133,6 +133,8 @@ public class PlayerController : MonoBehaviour
 
     [Header("히트 역경직 수치(기획자가 만지기)")]
     public float hitStopDuration = 0.1f;
+    public float guardHitStopDuration = 0.05f;
+    public float parryHitStopDuration = 0.15f;
 
     public void TriggerHitStop(float hitStopDuration = 0.05f)
     {
@@ -189,6 +191,7 @@ public class PlayerController : MonoBehaviour
                 // 상태 전환 없이 GuardState 내부에서 애니메이션만 재생
                 ((PlayerGuardState)GuardState).SetKnockbackLock(0.2f);
                 ((PlayerGuardState)GuardState).TriggerParryAnimation();
+                TriggerHitStop(parryHitStopDuration);
                 return;
             }
             else
@@ -206,6 +209,7 @@ public class PlayerController : MonoBehaviour
                 // 넉백 보호 Lock 적용
                 ((PlayerGuardState)GuardState).SetKnockbackLock(0.2f);
                 animator.Play(anim_BlockHit, 0, 0f);
+                TriggerHitStop(guardHitStopDuration);
                 return;
             }
         }

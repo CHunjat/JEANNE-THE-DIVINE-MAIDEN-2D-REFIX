@@ -2883,6 +2883,8 @@ MonoBehaviour:
   healMpCost: 30
   anim_Hit: Hit
   hitStopDuration: 0.15
+  guardHitStopDuration: 0.15
+  parryHitStopDuration: 0.15
   anim_GuardNormal: BlockNormal
   anim_GuardOff: Blockoff
   anim_BlockHit: BlockNormalHit
