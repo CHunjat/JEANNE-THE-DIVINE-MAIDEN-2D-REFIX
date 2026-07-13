@@ -124,10 +124,11 @@ public class PlayerController : MonoBehaviour
 
   
 
-    [Header("힐 스킬(Heal) 데이터")]
+    [Header("스킬 데이터")]
     public float healAmount = 50f;  // 체력 회복량
     public float healMpCost = 30f;  // 마나 소모량
-
+    public float HolySlashmp = 30;
+    public float lightningMpCost = 30;
     [Header("히트 애니메이션 변수값")]
     public string anim_Hit = "Hit";
 
@@ -634,16 +635,7 @@ public class PlayerController : MonoBehaviour
             ResetAirActions(); // 바닥에 닿으면 공중 공격 횟수 초기화
         }
 
-        // [추가 테스트용] 키보드 Tab 키를 누르면 스킬 슬롯이 실시간으로 교체됨                    
-        if (Input.GetKeyDown(KeyCode.Tab))
-        {
-            if (currentSkillSlot == SkillSlot.HeavyAttack) currentSkillSlot = SkillSlot.LightningCut;
-            else if (currentSkillSlot == SkillSlot.LightningCut) currentSkillSlot = SkillSlot.Heal;
-            else currentSkillSlot = SkillSlot.HeavyAttack;
-
-            Debug.Log($"스킬 슬롯 전환됨: {currentSkillSlot}");
-        }
-
+     
         if (gizmoDisplayTimer > 0)
         {
             gizmoDisplayTimer -= Time.deltaTime;
@@ -927,27 +919,40 @@ public class PlayerController : MonoBehaviour
             StateMachine.CurrentState != LightningReadyState && StateMachine.CurrentState != LightningChargeState && StateMachine.CurrentState != LightningAttackState &&
             StateMachine.CurrentState != HealState)
         {
+            bool isSuccess = false;
+
             // 현재 활성화된 슬롯에 따라 전이할 상태 결정
-            if (currentSkillSlot == SkillSlot.HeavyAttack)
+            switch (currentSkillSlot)
             {
-                StateMachine.ChangeState(HeavyReadyState);
+                case SkillSlot.HeavyAttack:
+                    if (playerStats.TryConsumeMp(HolySlashmp))
+                    {
+                        StateMachine.ChangeState(HeavyReadyState);
+                        isSuccess = true;
+                    }
+                    break;
+
+                case SkillSlot.LightningCut:
+                    if (playerStats.TryConsumeMp(lightningMpCost))
+                    {
+                        StateMachine.ChangeState(LightningReadyState);
+                        isSuccess = true;
+                    }
+                    break;
+
+                case SkillSlot.Heal:
+                    if (playerStats.TryConsumeMp(healMpCost))
+                    {
+                        StateMachine.ChangeState(HealState);
+                        isSuccess = true;
+                    }
+                    break;
             }
-            else if (currentSkillSlot == SkillSlot.LightningCut)
+
+            // 4. 결제 실패(마나 부족) 시 입력 강제 초기화
+            if (!isSuccess)
             {
-                StateMachine.ChangeState(LightningReadyState);
-            }
-            else if (currentSkillSlot == SkillSlot.Heal)
-            {
-                if (playerStats.currentMp >= healMpCost)
-                {
-                    StateMachine.ChangeState(HealState);
-                }
-                else
-                {
-                    // 마나가 부족하면 상태를 넘기지 않고 입력을 무시합니다. (애니메이션 절대 안 나감)
-                    Debug.Log("마나가 부족하여 힐 스킬을 사용할 수 없습니다!");
-                    inputReader.HAttackPressed = false;
-                }
+                inputReader.HAttackPressed = false;
             }
         }
     }
