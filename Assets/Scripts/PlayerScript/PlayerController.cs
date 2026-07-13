@@ -652,6 +652,7 @@ public class PlayerController : MonoBehaviour
         //딱 idle, move에서만 가능
         //키보드 버튼은 하나인데, 땅이냐 공중이냐에 따라 다른 스킬을 나가게 해주는 분배기" 역할이 필요
         //평타는 콤보가 꼬이면 안 되니까 State 안에서만 부르고, 저건 언제든 튀어나가야 하는 스킬이니까 밖으로 뺌
+        HandleGuardInput(); //가드입력을 최상단 감시하여 모든 공격상태를 캔슬
         HandleThrustAttackInput(); //강공찌르기 판독기 추가
         HandleActiveSkillInput();  // [수정] E키(OnSkill) 하나로 슬롯에 따라 스킬을 분배하는 통합 판독기
 
@@ -1029,6 +1030,38 @@ public class PlayerController : MonoBehaviour
 
     public void HandleGuardInput()
     {
+        if (StateMachine.CurrentState == GuardState ||
+            StateMachine.CurrentState == DieState ||
+            StateMachine.CurrentState == HitState ||
+            StateMachine.CurrentState == JumpState ||
+            StateMachine.CurrentState == AirState ||
+            StateMachine.CurrentState == DropState ||
+            StateMachine.CurrentState == DiveDropState ||
+            StateMachine.CurrentState == DiveLandState ||
+            StateMachine.CurrentState == DashState || // 대시 중 가드 불가
+            StateMachine.CurrentState == HealState || // 힐 중 가드 불가
+            StateMachine.CurrentState == HeavyReadyState || StateMachine.CurrentState == HeavyChargeState || StateMachine.CurrentState == HeavyAttackState || // 해비 스킬 불가
+            StateMachine.CurrentState == LightningReadyState || StateMachine.CurrentState == LightningChargeState || StateMachine.CurrentState == LightningAttackState) // 라이트닝 스킬 불가
+        {
+            return;
+        }
+
+        // 패리 카운터 상태일 때 즉시 씹힘 방지 쉴드 로직 헤비랑 라이트 둘이 나눠서 관리
+        // =========================================================
+        if (StateMachine.CurrentState == ParryLightCounterState)
+        {
+            float nTime = animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+            // LIGHT 카운터: 모션의 50%(0.5)가 지날 때까지 가드 캔슬 차단 (확정 타격 보장)
+            if (nTime < 0.5f) return;
+        }
+        else if (StateMachine.CurrentState == ParryHeavyCounterState)
+        {
+            float nTime = animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+            // HEAVY 카운터: 모션의 30%(0.3)가 지날 때까지 가드 캔슬 차단 (빠른 캔슬 허용)
+            if (nTime < 0.3f) return;
+        }
+
+
         // 방어 키(S)가 눌려있으면
         if (inputReader.GuardHeld && IsGrounded())
         {
@@ -1325,6 +1358,24 @@ public class PlayerController : MonoBehaviour
             }
         }
 
+
+
+    }
+
+    public bool IsGroundAttacking()
+    {
+        if (StateMachine == null || StateMachine.CurrentState == null) return false;
+
+        var currentState = StateMachine.CurrentState;
+
+        // 순수 평타, 대시/스프린트 공격, 강공 찌르기까지만 가드 캔슬 허용!
+        return currentState == Attack1State ||
+               currentState == Attack2State ||
+               currentState == Attack3State ||
+               currentState == DashAndSprintATK ||
+               currentState == ThrustReadyState ||
+               currentState == ParryLightCounterState||
+               currentState == ParryHeavyCounterState;
 
 
     }
