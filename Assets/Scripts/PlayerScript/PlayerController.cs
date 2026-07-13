@@ -131,6 +131,16 @@ public class PlayerController : MonoBehaviour
     [Header("히트 애니메이션 변수값")]
     public string anim_Hit = "Hit";
 
+    [Header("히트 역경직 수치(기획자가 만지기)")]
+    public float hitStopDuration = 0.1f;
+
+    public void TriggerHitStop(float hitStopDuration = 0.05f)
+    {
+        StartCoroutine(HitStopRoutine(hitStopDuration));
+    }
+
+
+
 
     [Header("방어 및 패리 애니메이션 관리")]
     public string anim_GuardNormal = "BlockNormal";
@@ -213,6 +223,8 @@ public class PlayerController : MonoBehaviour
         if (playerStats.currentHp > 0)
         {
             StateMachine.ChangeState(HitState);
+
+            TriggerHitStop(hitStopDuration); //히트스톱 트리거
         }
     }
 
