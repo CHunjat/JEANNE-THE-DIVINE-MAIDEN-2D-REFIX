@@ -8,7 +8,7 @@ public class SkillRotationManager : MonoBehaviour
     public SkillData[] skills = new SkillData[3];
 
     [Header("Skill Parent Objects (UI)")]
-    [Tooltip("Skill_1, Skill_2, Skill_3 같은 최상위 부모 RectTransform을 연결해 주세요.")]
+    [Tooltip("Skill_1, Skill_2, Skill_3 같은 최상위 부모 RectTransform을 순서대로 연결해 주세요.")]
     public RectTransform[] skillSlots = new RectTransform[3];
 
     [Header("Connection")]
@@ -21,113 +21,150 @@ public class SkillRotationManager : MonoBehaviour
     [Header("Fixed UI")]
     public TextMeshProUGUI fixedNeedCountText;
 
-    private Vector2[] targetAnchorPositions = new Vector2[3];
-    private Vector3[] targetScales = new Vector3[3];
+    // 원본 레이아웃의 고정 위치 및 크기를 기억할 배열 (배열을 절대 셔플하지 않고 보존합니다)
+    private Vector2[] baseAnchorPositions = new Vector2[3];
+    private Vector3[] baseScales = new Vector3[3];
     private SkillSlot[] skillSlotScripts = new SkillSlot[3];
-    private bool isRotating = false;
 
     private PlayerController.SkillSlot lastKnownSkillSlot;
+    private object lastPlayerState = null;
 
     private void Start()
     {
+        // 1. 초기 인스펙터에 배치된 순서대로 위치와 크기, 스크립트 원본 고정 캐싱
         for (int i = 0; i < skillSlots.Length; i++)
         {
             if (skillSlots[i] != null)
             {
-                targetAnchorPositions[i] = skillSlots[i].anchoredPosition;
-                targetScales[i] = skillSlots[i].localScale;
+                baseAnchorPositions[i] = skillSlots[i].anchoredPosition;
+                baseScales[i] = skillSlots[i].localScale;
                 skillSlotScripts[i] = skillSlots[i].GetComponentInChildren<SkillSlot>();
             }
         }
 
+        if (playerController != null)
+        {
+            lastKnownSkillSlot = playerController.currentSkillSlot;
+            if (playerController.StateMachine != null)
+            {
+                lastPlayerState = playerController.StateMachine.CurrentState;
+            }
+        }
+
         UpdateAllSlotsUI();
+        AnimateSlotsToCurrentSlot(true); // 시작할 때 현재 슬롯 위치 정렬
+        UpdateCostText();
     }
 
     private void Update()
     {
         if (playerController == null) return;
 
-        PlayerController.SkillSlot currentSlot = playerController.currentSkillSlot;
-        if (currentSlot != lastKnownSkillSlot && !isRotating)
+        // 2. 플레이어의 슬롯이 변경된 것이 확인되면 UI 카루셀 회전 애니메이션 실행
+        if (playerController.currentSkillSlot != lastKnownSkillSlot)
         {
-            isRotating = true;
-            ShiftSlotsRight();
-            lastKnownSkillSlot = currentSlot;
+            AnimateSlotsToCurrentSlot(false);
+            lastKnownSkillSlot = playerController.currentSkillSlot;
+            UpdateCostText();
         }
     }
 
-    // 💡 [추가 기능] UI 스킬 슬롯의 변경사항을 실시간으로 동기화받는 함수
+    // 스킬 관련 상태 클래스인지 이름을 통해 판별하는 방어 코드
+    private bool IsSkillState(object state)
+    {
+        if (state == null) return false;
+        string stateName = state.GetType().Name.ToLower();
+        // 플레이어 상태창의 클래스명에 아래 키워드가 들어가면 스킬 시전 중으로 판단
+        return stateName.Contains("heavy") || stateName.Contains("lightning") || stateName.Contains("heal") || stateName.Contains("skill");
+    }
+
+    // 플레이어의 실제 타겟 스킬 슬롯을 다음 칸으로 교체하는 함수
+    private void RotatePlayerSkillSlot()
+    {
+        int currentSlotInt = (int)playerController.currentSkillSlot;
+        int nextSlotInt = (currentSlotInt + 1) % 3; // 3개 슬롯 순환 공식을 적용합니다.
+        playerController.currentSkillSlot = (PlayerController.SkillSlot)nextSlotInt;
+    }
+
+    // 💡 UI 스킬 장착창과 실시간 동기화 데이터 연동
     public void SyncSkills(SkillData[] newSkills)
     {
-        for (int i = 0; i < skills.Length; i++)
+        int count = Mathf.Min(skills.Length, newSkills.Length);
+        for (int i = 0; i < count; i++)
         {
-            if (i < newSkills.Length)
-            {
-                skills[i] = newSkills[i]; // UI 슬롯에 등록된 스킬(혹은 null)을 그대로 복사
-            }
+            skills[i] = newSkills[i];
         }
-        UpdateAllSlotsUI(); // 데이터가 바뀌었으므로 즉시 인게임 회전 UI 갱신!
+        UpdateAllSlotsUI();
+        UpdateCostText();
     }
 
-    private void ShiftSlotsRight()
+    /// <summary>
+    /// 수학적 공식에 의거하여 각 UI 슬롯들을 현재 활성화된 슬롯 기준으로 재정렬 및 회전 연출합니다.
+    /// </summary>
+    private void AnimateSlotsToCurrentSlot(bool isInstant)
     {
-        float duration = 0.35f;
+        float duration = isInstant ? 0f : 0.35f;
+        int currentSlotIndex = (int)playerController.currentSkillSlot;
 
-        // 위치 및 크기 배열 백업
-        Vector2 lastPos = targetAnchorPositions[targetAnchorPositions.Length - 1];
-        Vector3 lastScale = targetScales[targetScales.Length - 1];
-
-        for (int i = targetAnchorPositions.Length - 1; i > 0; i--)
-        {
-            targetAnchorPositions[i] = targetAnchorPositions[i - 1];
-            targetScales[i] = targetScales[i - 1];
-        }
-        targetAnchorPositions[0] = lastPos;
-        targetScales[0] = lastScale;
-
-        // 스크립트 배열 백업 및 회전
-        SkillSlot lastScript = skillSlotScripts[skillSlotScripts.Length - 1];
-        for (int i = skillSlotScripts.Length - 1; i > 0; i--)
-        {
-            skillSlotScripts[i] = skillSlotScripts[i - 1];
-        }
-        skillSlotScripts[0] = lastScript;
-
-        // DOTween 애니메이션 연출
         for (int i = 0; i < skillSlots.Length; i++)
         {
             if (skillSlots[i] == null) continue;
 
+            // ⭐ 고정 맵핑 공식: (내 인덱스 - 현재 활성화된 슬롯 인덱스 + 3) % 3
+            // 이 공식을 사용하면 배열을 뒤섞지 않고도 활성화된 UI가 항상 중앙(0번 자리)으로 오게 됩니다.
+            int targetPosIndex = (i - currentSlotIndex + 3) % 3;
+
+            Vector2 endPos = baseAnchorPositions[targetPosIndex];
+            Vector3 endScale = baseScales[targetPosIndex];
+
             RectTransform rect = skillSlots[i];
             rect.DOKill();
 
-            Vector2 startPos = rect.anchoredPosition;
-            Vector2 endPos = targetAnchorPositions[i];
+            if (isInstant)
+            {
+                rect.anchoredPosition = endPos;
+                rect.localScale = endScale;
+            }
+            else
+            {
+                Vector2 startPos = rect.anchoredPosition;
 
-            DOTween.To(() => 0f, t => {
-                Vector2 currentLinearPos = Vector2.Lerp(startPos, endPos, t);
-                float sinOffset = Mathf.Sin(t * Mathf.PI) * curveOffset;
-                rect.anchoredPosition = new Vector2(currentLinearPos.x - sinOffset, currentLinearPos.y);
-            }, 1f, duration).SetEase(Ease.OutQuad);
+                // 유저님의 원본 아름다운 포물선(Sin) 곡선 연출 적용
+                DOTween.To(() => 0f, t => {
+                    Vector2 currentLinearPos = Vector2.Lerp(startPos, endPos, t);
+                    float sinOffset = Mathf.Sin(t * Mathf.PI) * curveOffset;
+                    rect.anchoredPosition = new Vector2(currentLinearPos.x - sinOffset, currentLinearPos.y);
+                }, 1f, duration).SetEase(Ease.OutQuad);
 
-            rect.DOScale(targetScales[i], duration).SetEase(Ease.OutQuad);
+                rect.DOScale(endScale, duration).SetEase(Ease.OutQuad);
+            }
         }
-
-        DOVirtual.DelayedCall(duration, () => {
-            UpdateAllSlotsUI();
-            isRotating = false;
-        });
     }
 
-    private void UpdateAllSlotsUI()
+    public void UpdateAllSlotsUI()
     {
-        for (int i = 0; i < skillSlots.Length; i++)
+        int count = Mathf.Min(skillSlots.Length, skills.Length, skillSlotScripts.Length);
+        for (int i = 0; i < count; i++)
         {
             if (skillSlotScripts[i] != null)
             {
-                // 캐싱된 스크립트를 통해 스킬 데이터 주입
                 skillSlotScripts[i].UpdateSlot(skills[i]);
             }
+        }
+    }
+
+    private void UpdateCostText()
+    {
+        if (fixedNeedCountText == null) return;
+
+        int idx = (int)playerController.currentSkillSlot;
+        if (idx >= 0 && idx < skills.Length && skills[idx] != null)
+        {
+            fixedNeedCountText.text = skills[idx].cost;
+        }
+        else
+        {
+            fixedNeedCountText.text = "-";
         }
     }
 }

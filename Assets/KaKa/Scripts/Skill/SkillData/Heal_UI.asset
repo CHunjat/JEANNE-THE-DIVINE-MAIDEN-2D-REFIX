@@ -16,5 +16,8 @@ MonoBehaviour:
   skillIcon: {fileID: -347017092, guid: ab374ee4919c7d148b0655e519000160, type: 3}
   cost: 2
   usedslot: 1
-  skilltype: "\uC561\uD2F0\uBE0C"
+  skilltype: 2
   description: 
+  attackData: {fileID: 0}
+  attackDataCharged: {fileID: 0}
+  healData: {fileID: 11400000, guid: 2d53206b3beb95a45b0be9871afd6db2, type: 2}

@@ -1,13 +1,22 @@
 using UnityEngine;
 
+public enum SkillType { Heavy, Lightning, Heal }
+
 [CreateAssetMenu(fileName = "SkillData", menuName = "Scriptable Objects/SkillData")]
 public class SkillData : ScriptableObject
 {
-    public string skillName;     // 스킬 이름
-    public Sprite skillIcon;     // 분홍 원에 들어갈 스킬 이미지
-    public string cost;             // 빨간 사각형에 들어갈 코스트 비용
+    public string skillName;
+    public Sprite skillIcon;
+    public string cost;
     public string usedslot;
-    public string skilltype;
+
+    public SkillType skilltype;
+
     [TextArea]
     public string description;
+
+    [Header("실제 발동 데이터")]
+    public AttackDataSO attackData;         // Heavy 1단계 / Lightning 용
+    public AttackDataSO attackDataCharged;  // Heavy 풀차지(2단계) 전용 - 없으면 attackData로 대체
+    public HealDataSO healData;             // Heal 전용
 }

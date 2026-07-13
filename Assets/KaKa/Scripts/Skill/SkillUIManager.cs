@@ -34,7 +34,7 @@ public class SkillUIManager : MonoBehaviour
     [Header("Confirm Button Actions")]
     public GameObject inGameUIPanel;    // 활성화할 인게임 화면 UI 오브젝트
     public GameObject skillUIPanel;     // 비활성화할 스킬 화면 UI 오브젝트
-    public Checkpoint checkpointSystem; // 씬에 배치된 체크포인트 스크립트 연동
+    public CheckpointSkillHandler checkpointSkillHandler;   // ★ 추가
 
     private int currentSelectedIndex = -1;
 
@@ -221,24 +221,34 @@ public class SkillUIManager : MonoBehaviour
         }
     }
 
-    // 💡 [추가] UI의 '확인' 버튼에 연결할 함수
+    // 💡 UI의 '확인' 버튼에 연결할 함수
     public void OnConfirmButtonClick()
     {
         // 1. 인게임 화면 켜고, 스킬 화면 끄기
         if (inGameUIPanel != null) inGameUIPanel.SetActive(true);
         if (skillUIPanel != null) skillUIPanel.SetActive(false);
 
-        // 2. 인게임 스킬 슬롯들의 아이콘 및 투명도(0 또는 255) 즉시 새로고침
-        if (skillRotationManager != null)
+        if (checkpointSkillHandler != null)
         {
-            // 데이터는 실시간 동기화 중이므로 시각적 UI만 즉시 새로고침 명령을 내립니다.
-            skillRotationManager.UpdateAllSlotsUI();
+            checkpointSkillHandler.ConfirmAndExit();   // ★ 추가 — RestState 탈출 + 내부 플래그 정리
         }
 
-        // 3. 체크포인트 암전 연출 해제 및 플레이어 복귀
-        if (checkpointSystem != null)
+        // 2. ⭐ [핵심 추가] 스킬창 슬롯의 데이터를 인게임 회전 UI로 전달 및 아이콘 새로고침
+        if (skillRotationManager != null && skillSlots != null)
         {
-            checkpointSystem.ExitCheckpoint();
+            // 인게임 회전 슬롯 개수(3개)만큼 반복문 실행
+            for (int i = 0; i < skillRotationManager.skills.Length; i++)
+            {
+                // 스킬 장착창 슬롯에 데이터가 존재한다면
+                if (i < skillSlots.Length && skillSlots[i] != null)
+                {
+                    // 장착창의 스킬 데이터를 인게임 스킬 데이터로 복사합니다.
+                    skillRotationManager.skills[i] = skillSlots[i].skillData;
+                }
+            }
+
+            // 복사된 최신 데이터를 기준으로 인게임 스킬 아이콘들을 즉시 새로고침합니다.
+            skillRotationManager.UpdateAllSlotsUI();
         }
     }
 }
