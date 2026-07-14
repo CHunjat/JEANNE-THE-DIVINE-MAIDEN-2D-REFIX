@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using UnityEngine.SceneManagement; // ★ 씬 관리를 위해 필수 추가
 
 public class GameOverManager : MonoBehaviour
 {
@@ -8,13 +9,18 @@ public class GameOverManager : MonoBehaviour
     public SpriteRenderer dimmerSprite;   // 암전용 Dimmer_Sprite
     public GameObject gameOverScreen;     // Canvas의 GameOverScreen 오브젝트
     public GameObject inGameScreen;       // Canvas의 InGameScreen 오브젝트
-    public Transform respawnPoint;        // ★ 추가: 플레이어가 부활할 위치 (보이지 않는 큐브 등)
+    public Transform respawnPoint;        // 플레이어가 부활할 위치 (보이지 않는 큐브 등)
 
     [Header("연출 설정")]
     public float fadeDuration = 2.0f;     // 화면이 완전히 어두워지는 데 걸리는 시간
     [Range(0f, 1f)]
     public float uiTriggerAlpha = 0.7f;   // UI가 켜질 어두움 정도 (70% = 0.7)
-    public float respawnDelay = 3.0f;     // ★ 추가: 게임오버 화면이 뜨고 부활까지 대기할 시간 (3초)
+    public float respawnDelay = 3.0f;     // 게임오버 화면이 뜨고 부활까지 대기할 시간 (3초)
+
+    // ★ [정적 변수] 씬이 재로드되어도 파괴되지 않고 유지되는 메모리 영역입니다.
+    public static Vector3? lastRespawnPosition = null;
+    public static bool skipMainMenu = false;
+    public static bool shouldFadeIn = false;
 
     private bool isGameOverTriggered = false;
 
@@ -22,6 +28,22 @@ public class GameOverManager : MonoBehaviour
     {
         if (gameOverScreen != null)
             gameOverScreen.SetActive(false);
+
+        // ========================================================
+        // ★ [씬 재로드 시 처리]
+        // ========================================================
+        // 1. 만약 이전에 저장해둔 부활 포인트 좌표가 있다면, 플레이어를 그리로 순간이동시킵니다.
+        if (lastRespawnPosition.HasValue && playerStats != null)
+        {
+            playerStats.transform.position = lastRespawnPosition.Value;
+        }
+
+        // 2. 부활 또는 새 게임 버튼으로 진입한 경우, 부드럽게 화면을 밝혀줍니다.
+        if (shouldFadeIn && dimmerSprite != null)
+        {
+            shouldFadeIn = false; // 플래그 원상 복구
+            StartCoroutine(FadeInEffectRoutine());
+        }
     }
 
     private void Update()
@@ -45,7 +67,7 @@ public class GameOverManager : MonoBehaviour
 
         if (dimmerSprite == null) yield break;
 
-        // 보스방 등 체크포인트와 멀어진 곳에서도 암전이 보이도록 위치 이동
+        // 카메라 위치 추적 암전 (보스방 위치 고려)
         Camera mainCamera = Camera.main;
         if (mainCamera != null)
         {
@@ -53,7 +75,6 @@ public class GameOverManager : MonoBehaviour
             dimmerSprite.transform.position = new Vector3(camPos.x, camPos.y, dimmerSprite.transform.position.z);
         }
 
-        // Dimmer 활성화 및 레이어 순위 격상
         dimmerSprite.gameObject.SetActive(true);
         dimmerSprite.sortingOrder = 10;
 
@@ -90,40 +111,35 @@ public class GameOverManager : MonoBehaviour
             gameOverScreen.SetActive(true);
 
         // ========================================================
-        // ★ [새로 추가된 부활 로직] 게임오버 후 3초 대기 및 재생성
+        // ★ [씬 초기화 및 부활 로직] 3초 대기 후 씬 재로드
         // ========================================================
 
         // 1. 지정된 시간(3초) 동안 암전 상태로 대기
         yield return new WaitForSeconds(respawnDelay);
 
-        // 2. 플레이어의 위치를 부활 포인트(큐브) 위치로 순간이동
-        if (respawnPoint != null && playerStats != null)
+        // 2. 부활할 위치를 저장하고 씬 전환 시 메인메뉴 스킵 플래그를 켭니다.
+        if (respawnPoint != null)
         {
-            playerStats.transform.position = respawnPoint.position;
+            lastRespawnPosition = respawnPoint.position;
         }
+        skipMainMenu = true;
+        shouldFadeIn = true; // 재로드 후 어두운 화면에서 밝아지는 연출 작동용
 
-        // 3. 플레이어 상태 및 스탯 초기화
-        if (playerStats != null)
-        {
-            // 체력과 마나를 최대치로 회복
-            playerStats.currentHp = playerStats.baseMaxHp;
-            playerStats.currentMp = playerStats.baseMaxMp;
+        // 3. 현재 활성화된 씬을 통째로 재로드하여 보스와 맵 전체를 '순정 상태'로 리셋합니다.
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
 
-            // PlayerStats 스크립트 내부에서 설정된 playerController를 가져옴
-            PlayerController playerController = playerStats.GetComponent<PlayerController>();
-            if (playerController != null && playerController.StateMachine != null)
-            {
-                // 사망 상태(DieState)에서 움직일 수 있는 기본 상태(IdleState)로 전환
-                playerController.StateMachine.ChangeState(playerController.IdleState);
-            }
-        }
+    // 완전히 어두운 상태에서 원래 밝기로 부드럽게 되돌리는 연출용 코루틴
+    private IEnumerator FadeInEffectRoutine()
+    {
+        dimmerSprite.gameObject.SetActive(true);
+        dimmerSprite.sortingOrder = 10;
 
-        // 4. 게임오버 UI를 끄고, 인게임 UI(체력바 등)를 다시 활성화
-        if (gameOverScreen != null) gameOverScreen.SetActive(false);
-        if (inGameScreen != null) inGameScreen.SetActive(true);
+        Color c = dimmerSprite.color;
+        c.a = 1f;
+        dimmerSprite.color = c;
 
-        // 5. 부활했으므로 화면을 다시 부드럽게 밝게 만듬 (Fade Out)
-        elapsed = 0f;
+        float elapsed = 0f;
         while (elapsed < fadeDuration)
         {
             elapsed += Time.deltaTime;
@@ -135,8 +151,5 @@ public class GameOverManager : MonoBehaviour
         c.a = 0f;
         dimmerSprite.color = c;
         dimmerSprite.gameObject.SetActive(false);
-
-        // 6. 부활 완료 후, 다음 번에 다시 죽었을 때 작동하도록 플래그 리셋
-        isGameOverTriggered = false;
     }
 }
