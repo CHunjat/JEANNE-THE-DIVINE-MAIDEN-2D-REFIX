@@ -2,41 +2,54 @@ using UnityEngine;
 using FMODUnity;
 using FMOD.Studio;
 using System.Collections;
+using System.Collections.Generic;
 
 public class PlayerSFXController : MonoBehaviour
 {
     private bool sprintJumpSoundPlayed = false;
+
+    private List<EventInstance> activeInstances = new();
 
     private EventInstance lightningCutReadyInstance;
     private EventInstance chargingInstance;
     private EventInstance WallingInstance;
     private Coroutine chargingCompleteCoroutine;
 
+    // ── 내부 재생 ────────────────────────────
+    private EventInstance Play(string path)
+    {
+        var instance = RuntimeManager.CreateInstance(path);
+        instance.set3DAttributes(RuntimeUtils.To3DAttributes(transform.position));
+        instance.start();
+        instance.release();
+        activeInstances.Add(instance);
+        return instance;
+    }
+    // ── 사망 ────────────────────────────────
+    public void OnPlayerDead() => Play("event:/Player/Player_Dead");
+
     // ── 이동 ────────────────────────────────
-    public void OnFootStepRun() => RuntimeManager.PlayOneShot("event:/Player/Player_Foot_Step_Run", transform.position);
-    public void OnFootStepSprint() => RuntimeManager.PlayOneShot("event:/Player/Player_Foot_Step_Sprint", transform.position);
-    public void OnFootStepJump() => RuntimeManager.PlayOneShot("event:/Player/Player_Foot_Step_Jump", transform.position);
+    public void OnFootStepRun() => Play("event:/Player/Player_Foot_Step_Run");
+    public void OnFootStepSprint() => Play("event:/Player/Player_Foot_Step_Sprint");
+    public void OnFootStepJump() => Play("event:/Player/Player_Foot_Step_Jump");
 
     public void OnSprintJump()
     {
         if (sprintJumpSoundPlayed) return;
         sprintJumpSoundPlayed = true;
-        RuntimeManager.PlayOneShot("event:/Player/Player_Foot_Step_Jump", transform.position);
+        Play("event:/Player/Player_Foot_Step_Jump");
     }
 
     public void OnSprintJump_Landing()
     {
         sprintJumpSoundPlayed = false;
     }
-    public void OnFootStepJumpLand() => RuntimeManager.PlayOneShot("event:/Player/Player_Foot_Step_Jump _Land", transform.position);
-    public void OnMovementDash() => RuntimeManager.PlayOneShot("event:/Player/Player_Movement_Dash", transform.position);
-
+    public void OnFootStepJumpLand() => Play("event:/Player/Player_Foot_Step_Jump _Land");
+    public void OnMovementDash() => Play("event:/Player/Player_Movement_Dash");
 
     public void OnMovementWallingStartSFX()
     {
-        WallingInstance = RuntimeManager.CreateInstance("event:/Player/Player_Movement_Walling");
-        WallingInstance.set3DAttributes(RuntimeUtils.To3DAttributes(transform.position));
-        WallingInstance.start();
+        WallingInstance = Play("event:/Player/Player_Movement_Walling");
     }
 
     public void OnMovementWallingStopSFX()
@@ -45,26 +58,20 @@ public class PlayerSFXController : MonoBehaviour
         {
             WallingInstance.stop(FMOD.Studio.STOP_MODE.ALLOWFADEOUT);
             WallingInstance.release();
+            activeInstances.Remove(WallingInstance);
         }
     }
 
-
-
-
-
     // ── 공격 ────────────────────────────────
-    public void OnNormalAttackPierce() => RuntimeManager.PlayOneShot("event:/Player/Player_Normal_Attack_Swing_Pierce", transform.position);
-    public void OnNormalAttackSlash() => RuntimeManager.PlayOneShot("event:/Player/Player_Normal_Attack_Swing_Slash", transform.position);
-    public void OnAirAttackHardAttack() => RuntimeManager.PlayOneShot("event:/Player/Player_Air_Attack_Hard_Attack", transform.position);
-
-    public void OnNormalAttackChrarge() => RuntimeManager.PlayOneShot("event:/Player/Player_Normal_Attack_Charging", transform.position);
+    public void OnNormalAttackPierce() => Play("event:/Player/Player_Normal_Attack_Swing_Pierce");
+    public void OnNormalAttackSlash() => Play("event:/Player/Player_Normal_Attack_Swing_Slash");
+    public void OnAirAttackHardAttack() => Play("event:/Player/Player_Air_Attack_Hard_Attack");
+    public void OnNormalAttackChrarge() => Play("event:/Player/Player_Normal_Attack_Charging");
 
     // ── 스킬 차징 (시작/종료 분리) ────────────────────────────────
     public void OnSkillChargingStartSFX()
     {
-        chargingInstance = RuntimeManager.CreateInstance("event:/Player/Player_Skill_Attack_Charging");
-        chargingInstance.set3DAttributes(RuntimeUtils.To3DAttributes(transform.position));
-        chargingInstance.start();
+        chargingInstance = Play("event:/Player/Player_Skill_Attack_Charging");
         chargingCompleteCoroutine = StartCoroutine(ChargingCompleteAfterDelay(2f));
     }
 
@@ -79,12 +86,13 @@ public class PlayerSFXController : MonoBehaviour
         {
             chargingInstance.stop(FMOD.Studio.STOP_MODE.ALLOWFADEOUT);
             chargingInstance.release();
+            activeInstances.Remove(chargingInstance);
         }
     }
 
     public void OnSkillChargingComplete()
     {
-        RuntimeManager.PlayOneShot("event:/Player/Player_Skill_Attack_Charging_Complete", transform.position);
+        Play("event:/Player/Player_Skill_Attack_Charging_Complete");
     }
 
     private IEnumerator ChargingCompleteAfterDelay(float delay)
@@ -93,14 +101,12 @@ public class PlayerSFXController : MonoBehaviour
         OnSkillChargingComplete();
         chargingCompleteCoroutine = null;
     }
-    public void OnSkillChargingSlash() => RuntimeManager.PlayOneShot("event:/Player/Player_Skill_Attack_Charging_Slash", transform.position);
+    public void OnSkillChargingSlash() => Play("event:/Player/Player_Skill_Attack_Charging_Slash");
 
     // ── 스킬 라이트닝컷 레디 (시작/종료 분리) ────────────────────────────────
     public void OnSkillLightningCutReadyStartSFX()
     {
-        lightningCutReadyInstance = RuntimeManager.CreateInstance("event:/Player/Player_Skill_Attack_Lightning_Cut_Ready");
-        lightningCutReadyInstance.set3DAttributes(RuntimeUtils.To3DAttributes(transform.position));
-        lightningCutReadyInstance.start();
+        lightningCutReadyInstance = Play("event:/Player/Player_Skill_Attack_Lightning_Cut_Ready");
     }
 
     public void OnSkillLightningCutReadyStopSFX()
@@ -109,39 +115,65 @@ public class PlayerSFXController : MonoBehaviour
         {
             lightningCutReadyInstance.stop(FMOD.Studio.STOP_MODE.ALLOWFADEOUT);
             lightningCutReadyInstance.release();
+            activeInstances.Remove(lightningCutReadyInstance);
         }
     }
 
-    public void OnSkillLightningCutSlash() => RuntimeManager.PlayOneShot("event:/Player/Player_Skill_Attack_Lightning_Cut_Slash", transform.position);
+    public void OnSkillLightningCutSlash() => Play("event:/Player/Player_Skill_Attack_Lightning_Cut_Slash");
 
     // ── 스킬 그래플링 ────────────────────────────────
-    public void OnSkillGrapling() => RuntimeManager.PlayOneShot("event:/Player/Interaction/Player_Skill_Grapling", transform.position);
+    public void OnSkillGrapling() => Play("event:/Player/Interaction/Player_Skill_Grapling");
 
     // ── 방어 ────────────────────────────────
-    public void OnShieldReady() => RuntimeManager.PlayOneShot("event:/Player/Player_Shield_Ready", transform.position);
+    public void OnShieldReady() => Play("event:/Player/Player_Shield_Ready");
 
     // ── 상호작용 ────────────────────────────────
-    public void OnShieldParry() => RuntimeManager.PlayOneShot("event:/Player/Interaction/Player_Shield_Parry", transform.position);
-    public void OnShieldParryCounter() => RuntimeManager.PlayOneShot("event:/Player/Interaction/Player_Shield_Parry_Counter", transform.position);
-    public void OnShieldGuard() => RuntimeManager.PlayOneShot("event:/Player/Interaction/Player_Shield_Guard", transform.position);
-    public void OnPlayerAttackHit() => RuntimeManager.PlayOneShot("event:/Player/Interaction/Player_Attack_Hit", transform.position);
-    public void OnPlayerDamagedHurtVoice() => RuntimeManager.PlayOneShot("event:/Player/Interaction/Player_Damaged_Hurt_Voice", transform.position);
-    public void OnFinalBossAttackHit() => RuntimeManager.PlayOneShot("event:/FinalBoss/Interaction/Final_Boss_Attack_Hit", transform.position);
+    public void OnShieldParry() => Play("event:/Player/Interaction/Player_Shield_Parry");
+    public void OnShieldParryCounter() => Play("event:/Player/Interaction/Player_Shield_Parry_Counter");
+    public void OnShieldGuard() => Play("event:/Player/Interaction/Player_Shield_Guard");
+    public void OnPlayerAttackHit() => Play("event:/Player/Interaction/Player_Attack_Hit");
+    public void OnPlayerDamagedHurtVoice() => Play("event:/Player/Interaction/Player_Damaged_Hurt_Voice");
+    public void OnFinalBossAttackHit() => Play("event:/FinalBoss/Interaction/Final_Boss_Attack_Hit");
 
     // ── 회복 ────────────────────────────────
-    public void OnHeal() => RuntimeManager.PlayOneShot("event:/Player/Player_Skill_Heal", transform.position);
+    public void OnHeal() => Play("event:/Player/Player_Skill_Heal");
+
+    // ── 피격 (전체 정지) ───────────────────
+    public void OnPlayerHit()
+    {
+        if (chargingCompleteCoroutine != null)
+        {
+            StopCoroutine(chargingCompleteCoroutine);
+            chargingCompleteCoroutine = null;
+        }
+
+        foreach (var instance in activeInstances)
+        {
+            if (instance.isValid())
+            {
+                instance.stop(FMOD.Studio.STOP_MODE.ALLOWFADEOUT);
+                instance.release();
+            }
+        }
+        activeInstances.Clear();
+    }
 
     private void OnDestroy()
     {
-        if (chargingInstance.isValid())
+        foreach (var instance in activeInstances)
         {
-            chargingInstance.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
-            chargingInstance.release();
+            if (instance.isValid())
+            {
+                instance.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
+                instance.release();
+            }
         }
-        if (lightningCutReadyInstance.isValid())
-        {
-            lightningCutReadyInstance.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
-            lightningCutReadyInstance.release();
-        }
+        activeInstances.Clear();
+    }
+
+    // ── 유휴 인스턴스 정리 ────────────────────
+    public void PruneInactiveInstances()
+    {
+        activeInstances.RemoveAll(instance => !instance.isValid());
     }
 }
