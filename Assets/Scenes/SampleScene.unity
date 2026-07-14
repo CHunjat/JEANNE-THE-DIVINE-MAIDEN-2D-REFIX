@@ -3531,7 +3531,7 @@ MonoBehaviour:
   dashcooltime: 0.7
   playerModelForTrail: {fileID: 1199457208}
   trailOffset: {x: 0, y: -0.25}
-  landDashDelay: 0.7
+  landDashDelay: 0.3
   isFacingRight: 1
   jumpForce: 8
   airDeceleration: 1
@@ -3627,6 +3627,8 @@ MonoBehaviour:
   hasUsedAirUp: 0
   healAmount: 50
   healMpCost: 30
+  HolySlashmp: 30
+  lightningMpCost: 30
   anim_Hit: Hit
   hitStopDuration: 0.15
   guardHitStopDuration: 0.15
@@ -3679,6 +3681,7 @@ MonoBehaviour:
   thrustChargeFxSpawnPoint: {fileID: 1064294653}
   hasUsedAirDash: 0
   isThrustCharged: 0
+  isDashGracePeriod: 0
   diveDropData: {fileID: 11400000, guid: 5ed5b6189047afb48a1272bad16bc44d, type: 2}
   currentSkillSlot: 0
   anim_ToRest: ToRest
@@ -6706,15 +6709,15 @@ CompositeCollider2D:
       - X: -340000000
         Y: 170000000
       - X: -340000000
-        Y: 167500000
+        Y: 168750000
       - X: 130000000
-        Y: 167500000
+        Y: 168750000
   m_CompositePaths:
     m_Paths:
-    - - {x: 12.99997, y: 16.75}
+    - - {x: 12.99997, y: 16.875}
       - {x: 12.99997, y: 17}
       - {x: -34, y: 16.999971}
-      - {x: -33.999973, y: 16.75}
+      - {x: -33.999973, y: 16.875}
   m_VertexDistance: 0.0005
   m_OffsetDistance: 0.00005
   m_UseDelaunayMesh: 0
