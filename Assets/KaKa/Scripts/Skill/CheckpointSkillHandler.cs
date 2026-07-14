@@ -76,7 +76,7 @@ public class CheckpointSkillHandler : MonoBehaviour
         }
     }
 
-    private void CloseSkillMenu()
+    public void CloseSkillMenu()
     {
         if (skillMenuUI != null)
         {

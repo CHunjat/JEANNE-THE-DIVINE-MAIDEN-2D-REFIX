@@ -230,7 +230,7 @@ public class SkillUIManager : MonoBehaviour
 
         if (checkpointSkillHandler != null)
         {
-            checkpointSkillHandler.ConfirmAndExit();   // ★ 추가 — RestState 탈출 + 내부 플래그 정리
+            checkpointSkillHandler.CloseSkillMenu();   // ★ ConfirmAndExit() → CloseSkillMenu()로 변경
         }
 
         // 2. ⭐ [핵심 추가] 스킬창 슬롯의 데이터를 인게임 회전 UI로 전달 및 아이콘 새로고침
