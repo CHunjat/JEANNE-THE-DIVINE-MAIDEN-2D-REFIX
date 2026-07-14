@@ -124,12 +124,25 @@ public class PlayerController : MonoBehaviour
 
   
 
-    [Header("힐 스킬(Heal) 데이터")]
+    [Header("스킬 데이터")]
     public float healAmount = 50f;  // 체력 회복량
     public float healMpCost = 30f;  // 마나 소모량
-
+    public float HolySlashmp = 30;
+    public float lightningMpCost = 30;
     [Header("히트 애니메이션 변수값")]
     public string anim_Hit = "Hit";
+
+    [Header("히트 역경직 수치(기획자가 만지기)")]
+    public float hitStopDuration = 0.1f;
+    public float guardHitStopDuration = 0.05f;
+    public float parryHitStopDuration = 0.15f;
+
+    public void TriggerHitStop(float hitStopDuration = 0.05f)
+    {
+        StartCoroutine(HitStopRoutine(hitStopDuration));
+    }
+
+
 
 
     [Header("방어 및 패리 애니메이션 관리")]
@@ -179,6 +192,7 @@ public class PlayerController : MonoBehaviour
                 // 상태 전환 없이 GuardState 내부에서 애니메이션만 재생
                 ((PlayerGuardState)GuardState).SetKnockbackLock(0.2f);
                 ((PlayerGuardState)GuardState).TriggerParryAnimation();
+                TriggerHitStop(parryHitStopDuration);
                 return;
             }
             else
@@ -196,6 +210,7 @@ public class PlayerController : MonoBehaviour
                 // 넉백 보호 Lock 적용
                 ((PlayerGuardState)GuardState).SetKnockbackLock(0.2f);
                 animator.Play(anim_BlockHit, 0, 0f);
+                TriggerHitStop(guardHitStopDuration);
                 return;
             }
         }
@@ -213,6 +228,8 @@ public class PlayerController : MonoBehaviour
         if (playerStats.currentHp > 0)
         {
             StateMachine.ChangeState(HitState);
+
+            TriggerHitStop(hitStopDuration); //히트스톱 트리거
         }
     }
 
@@ -617,6 +634,8 @@ public class PlayerController : MonoBehaviour
             RestJumpCount();
             ResetAirActions(); // 바닥에 닿으면 공중 공격 횟수 초기화
         }
+
+     
         if (gizmoDisplayTimer > 0)
         {
             gizmoDisplayTimer -= Time.deltaTime;
@@ -629,6 +648,7 @@ public class PlayerController : MonoBehaviour
         //딱 idle, move에서만 가능
         //키보드 버튼은 하나인데, 땅이냐 공중이냐에 따라 다른 스킬을 나가게 해주는 분배기" 역할이 필요
         //평타는 콤보가 꼬이면 안 되니까 State 안에서만 부르고, 저건 언제든 튀어나가야 하는 스킬이니까 밖으로 뺌
+        HandleGuardInput(); //가드입력을 최상단 감시하여 모든 공격상태를 캔슬
         HandleThrustAttackInput(); //강공찌르기 판독기 추가
         HandleActiveSkillInput();  // [수정] E키(OnSkill) 하나로 슬롯에 따라 스킬을 분배하는 통합 판독기
 
@@ -899,27 +919,40 @@ public class PlayerController : MonoBehaviour
             StateMachine.CurrentState != LightningReadyState && StateMachine.CurrentState != LightningChargeState && StateMachine.CurrentState != LightningAttackState &&
             StateMachine.CurrentState != HealState)
         {
+            bool isSuccess = false;
+
             // 현재 활성화된 슬롯에 따라 전이할 상태 결정
-            if (currentSkillSlot == SkillSlot.HeavyAttack)
+            switch (currentSkillSlot)
             {
-                StateMachine.ChangeState(HeavyReadyState);
+                case SkillSlot.HeavyAttack:
+                    if (playerStats.TryConsumeMp(HolySlashmp))
+                    {
+                        StateMachine.ChangeState(HeavyReadyState);
+                        isSuccess = true;
+                    }
+                    break;
+
+                case SkillSlot.LightningCut:
+                    if (playerStats.TryConsumeMp(lightningMpCost))
+                    {
+                        StateMachine.ChangeState(LightningReadyState);
+                        isSuccess = true;
+                    }
+                    break;
+
+                case SkillSlot.Heal:
+                    if (playerStats.TryConsumeMp(healMpCost))
+                    {
+                        StateMachine.ChangeState(HealState);
+                        isSuccess = true;
+                    }
+                    break;
             }
-            else if (currentSkillSlot == SkillSlot.LightningCut)
+
+            // 4. 결제 실패(마나 부족) 시 입력 강제 초기화
+            if (!isSuccess)
             {
-                StateMachine.ChangeState(LightningReadyState);
-            }
-            else if (currentSkillSlot == SkillSlot.Heal)
-            {
-                if (playerStats.currentMp >= healMpCost)
-                {
-                    StateMachine.ChangeState(HealState);
-                }
-                else
-                {
-                    // 마나가 부족하면 상태를 넘기지 않고 입력을 무시합니다. (애니메이션 절대 안 나감)
-                    Debug.Log("마나가 부족하여 힐 스킬을 사용할 수 없습니다!");
-                    inputReader.HAttackPressed = false;
-                }
+                inputReader.HAttackPressed = false;
             }
         }
     }
@@ -1006,6 +1039,38 @@ public class PlayerController : MonoBehaviour
 
     public void HandleGuardInput()
     {
+        if (StateMachine.CurrentState == GuardState ||
+            StateMachine.CurrentState == DieState ||
+            StateMachine.CurrentState == HitState ||
+            StateMachine.CurrentState == JumpState ||
+            StateMachine.CurrentState == AirState ||
+            StateMachine.CurrentState == DropState ||
+            StateMachine.CurrentState == DiveDropState ||
+            StateMachine.CurrentState == DiveLandState ||
+            StateMachine.CurrentState == DashState || // 대시 중 가드 불가
+            StateMachine.CurrentState == HealState || // 힐 중 가드 불가
+            StateMachine.CurrentState == HeavyReadyState || StateMachine.CurrentState == HeavyChargeState || StateMachine.CurrentState == HeavyAttackState || // 해비 스킬 불가
+            StateMachine.CurrentState == LightningReadyState || StateMachine.CurrentState == LightningChargeState || StateMachine.CurrentState == LightningAttackState) // 라이트닝 스킬 불가
+        {
+            return;
+        }
+
+        // 패리 카운터 상태일 때 즉시 씹힘 방지 쉴드 로직 헤비랑 라이트 둘이 나눠서 관리
+        // =========================================================
+        if (StateMachine.CurrentState == ParryLightCounterState)
+        {
+            float nTime = animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+            // LIGHT 카운터: 모션의 50%(0.5)가 지날 때까지 가드 캔슬 차단 (확정 타격 보장)
+            if (nTime < 0.5f) return;
+        }
+        else if (StateMachine.CurrentState == ParryHeavyCounterState)
+        {
+            float nTime = animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+            // HEAVY 카운터: 모션의 30%(0.3)가 지날 때까지 가드 캔슬 차단 (빠른 캔슬 허용)
+            if (nTime < 0.3f) return;
+        }
+
+
         // 방어 키(S)가 눌려있으면
         if (inputReader.GuardHeld && IsGrounded())
         {
@@ -1306,6 +1371,24 @@ public class PlayerController : MonoBehaviour
 
     }
 
+    public bool IsGroundAttacking()
+    {
+        if (StateMachine == null || StateMachine.CurrentState == null) return false;
+
+        var currentState = StateMachine.CurrentState;
+
+        // 순수 평타, 대시/스프린트 공격, 강공 찌르기까지만 가드 캔슬 허용!
+        return currentState == Attack1State ||
+               currentState == Attack2State ||
+               currentState == Attack3State ||
+               currentState == DashAndSprintATK ||
+               currentState == ThrustReadyState ||
+               currentState == ParryLightCounterState||
+               currentState == ParryHeavyCounterState;
+
+
+    }
+
     public bool CheckLandingSurface(out Collider2D hitCollider)
     {
         hitCollider = null;
@@ -1368,6 +1451,4 @@ public class PlayerController : MonoBehaviour
         }
         return false;
     }
-
-
 }
