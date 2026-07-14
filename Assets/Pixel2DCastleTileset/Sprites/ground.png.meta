@@ -493,8 +493,8 @@ TextureImporter:
       physicsShape:
       - - {x: 8, y: 8}
         - {x: -8, y: 8}
-        - {x: -8, y: 4}
-        - {x: 8, y: 4}
+        - {x: -8, y: 6}
+        - {x: 8, y: 6}
       tessellationDetail: 0
       bones: []
       spriteID: 26a7dd14eb69baa4688f4a0547301118

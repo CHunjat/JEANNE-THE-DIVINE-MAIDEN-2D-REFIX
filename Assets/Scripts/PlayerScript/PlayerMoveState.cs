@@ -163,6 +163,7 @@ public class PlayerMoveState : PlayerState
         }
 
         if (xInput != 0) player.FlipController(xInput);
+
         float currentSpeed;
         if (player.isSprinting)
         {
@@ -200,7 +201,7 @@ public class PlayerMoveState : PlayerState
                 Vector2 moveDir = new Vector2(xInput, 0f);
                 Vector2 slopeMoveDir = player.GetSlopeMoveDirection(moveDir);
 
-                // ★ [해결책] 모서리 직전 정점(Crest) 감지 및 Y축 벡터 강제 고정
+                // 모서리 직전 정점(Crest) 감지 및 Y축 벡터 강제 고정
                 // 비탈길 콜라이더의 상단 끝(bounds.max.y)까지의 거리를 계산
                 float slopeTopY = player.slopeHit.collider.bounds.max.y;
                 float playerBottomY = player.cd.bounds.min.y;
@@ -237,7 +238,7 @@ public class PlayerMoveState : PlayerState
             // [평지 모드]
             player.rb.gravityScale = 1f;
 
-            // ★ [안착감 보정] 비탈길 이탈 시점의 Y속도 보정
+            // 비탈길 이탈 시점의 Y속도 보정
             // 위로 튀려는 속도가 남아있다면 즉시 0으로 깎아서 툭 떨어지는 느낌 제거
             float velY = player.rb.linearVelocity.y;
             if (velY > 0.1f) velY = 0f;
