@@ -3131,7 +3131,7 @@ Transform:
   m_GameObject: {fileID: 1249579815}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.62, y: 2.58, z: 0}
+  m_LocalPosition: {x: 0.34, y: 2.58, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4247,6 +4247,10 @@ PrefabInstance:
       propertyPath: webPrefab
       value: 
       objectReference: {fileID: 9111198009131002786, guid: ff6af48596149654eb174a6e77f1d03e, type: 3}
+    - target: {fileID: 176479052352664105, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: mouthSpawnPoint
+      value: 
+      objectReference: {fileID: 1249579816}
     - target: {fileID: 415669578595818735, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -4367,6 +4371,14 @@ PrefabInstance:
       propertyPath: webPrefab
       value: 
       objectReference: {fileID: 9111198009131002786, guid: ff6af48596149654eb174a6e77f1d03e, type: 3}
+    - target: {fileID: 8657742522092995938, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: canUseInChase
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8657742522092995938, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: manualYOffset
+      value: -5
+      objectReference: {fileID: 0}
     - target: {fileID: 8657742522092995938, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: webSpawnPoint
       value: 

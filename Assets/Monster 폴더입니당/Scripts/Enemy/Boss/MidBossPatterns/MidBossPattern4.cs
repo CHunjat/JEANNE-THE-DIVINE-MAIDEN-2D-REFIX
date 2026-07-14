@@ -1,14 +1,14 @@
 using UnityEngine;
 using System.Collections;
 // =============================================================
-// MidBossPattern4.cs (공중 부양 버그 완벽 해결본)
+// MidBossPattern4.cs  기본 점프 공격
 // =============================================================
 public class MidBossPattern4 : BossPatternBase
 {
     [Header("점프 공격 설정")]
     [SerializeField] private float trackTime = 2.7f;
     [SerializeField] private float dropDelay = 0.3f;
-    [SerializeField] private float hitboxActiveDuration = 1.0f;
+
     private GameObject landingHitbox;
     private MidBoss owner;
 
@@ -68,9 +68,6 @@ public class MidBossPattern4 : BossPatternBase
 
         yield return new WaitForSeconds(dropDelay);
 
-        // 강제 텔레포트 하던 originalGroundY 로직 삭제. 
-        // 콜라이더와 중력이 켜지면 알아서 자연스럽게 바닥으로 떨어짐.
-
         Transform visual = transform.Find("Visual");
         if (visual != null) visual.gameObject.SetActive(true);
 
@@ -89,18 +86,35 @@ public class MidBossPattern4 : BossPatternBase
 
         if (landingHitbox != null)
         {
-            StartCoroutine(ReactivateHitboxRoutine(landingHitbox, hitboxActiveDuration));
+            StartCoroutine(ReactivateHitboxRoutine(landingHitbox));
         }
 
         isJumping = false;
     }
 
-    private IEnumerator ReactivateHitboxRoutine(GameObject hitbox, float duration)
+    private IEnumerator ReactivateHitboxRoutine(GameObject hitbox)
     {
         hitbox.SetActive(false);
         yield return null;
         hitbox.SetActive(true);
-        yield return new WaitForSeconds(duration);
+        yield return new WaitForSeconds(0.1f);
         hitbox.SetActive(false);
+    }
+
+    public void EndExecution()
+    {
+        isJumping = false;
+        StopAllCoroutines();
+
+        if (landingHitbox != null) landingHitbox.SetActive(false);
+
+        Transform visual = transform.Find("Visual");
+        if (visual != null) visual.gameObject.SetActive(true);
+
+        Transform hurtbox = transform.Find("Hurtbox_Body");
+        if (hurtbox != null) hurtbox.gameObject.SetActive(true);
+
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = true;
     }
 }

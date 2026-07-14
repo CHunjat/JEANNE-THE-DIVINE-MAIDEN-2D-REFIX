@@ -3,6 +3,7 @@ using System.Collections;
 
 // =====================================================
 // MidBossPattern8.cs
+// (거미줄 스폰 위치 인스펙터 미세조정 기능 추가)
 // =====================================================
 public class MidBossPattern8 : BossPatternBase
 {
@@ -20,6 +21,10 @@ public class MidBossPattern8 : BossPatternBase
 
     [Header("거미줄 발사 위치")]
     [SerializeField] private Transform mouthSpawnPoint;
+
+    [Header("발사 위치 미세 조정 (인스펙터에서 눈으로 맞추기)")]
+    [SerializeField] private float manualXOffset = 0f;
+    [SerializeField] private float manualYOffset = 0f;
 
     [Header("안전장치")]
     [SerializeField] private float maxExecutionTime = 8f;
@@ -86,7 +91,10 @@ public class MidBossPattern8 : BossPatternBase
             bool isFacingLeft = (sr != null && sr.flipX);
             GameObject playerObj = GameObject.FindWithTag("Player");
 
-            Vector3 spawnPos = mouthSpawnPoint != null ? mouthSpawnPoint.position : transform.position;
+            // [수정됨] mouthSpawnPoint 위치에 manualXOffset/manualYOffset을 더해서 미세 조정
+            Vector3 basePos = mouthSpawnPoint != null ? mouthSpawnPoint.position : transform.position;
+            float offsetX = isFacingLeft ? -manualXOffset : manualXOffset; // 방향에 따라 좌우 오프셋도 뒤집힘
+            Vector3 spawnPos = new Vector3(basePos.x + offsetX, basePos.y + manualYOffset, basePos.z);
 
             Vector2 dir = playerObj != null
                 ? ((Vector2)(playerObj.transform.position - spawnPos)).normalized
@@ -134,7 +142,6 @@ public class MidBossPattern8 : BossPatternBase
 
         if (visualAnimator != null) visualAnimator.SetTrigger("doLand");
 
-        // [핵심] 유니티가 0.00초 핀을 씹어먹을 것에 대비해 강제 종료 예약 (착지 + 후딜레이 포함 1.5초 뒤)
         Invoke(nameof(EndExecution), landingHitboxDuration + 1.0f);
     }
 
@@ -148,11 +155,10 @@ public class MidBossPattern8 : BossPatternBase
         }
     }
 
-    // 물리엔진 판정 리셋을 위한 1프레임 대기 처리 (무적시간 씹힘 방지)
     private IEnumerator ReactivateHitboxRoutine(GameObject hitbox, float duration)
     {
         hitbox.SetActive(false);
-        yield return null;
+        yield return new WaitForFixedUpdate();
         hitbox.SetActive(true);
 
         yield return new WaitForSeconds(duration);
