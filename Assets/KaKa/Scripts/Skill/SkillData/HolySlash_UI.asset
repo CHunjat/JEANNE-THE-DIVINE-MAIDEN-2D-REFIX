@@ -23,3 +23,5 @@ MonoBehaviour:
   attackData: {fileID: 11400000, guid: 3df95a0b01ad6314f9fb3ea101245123, type: 2}
   attackDataCharged: {fileID: 11400000, guid: 3d8a7663f5a8d1d45a45be8fb24969d5, type: 2}
   healData: {fileID: 0}
+  mpCost: 100
+  mpCostChargedExtra: 300

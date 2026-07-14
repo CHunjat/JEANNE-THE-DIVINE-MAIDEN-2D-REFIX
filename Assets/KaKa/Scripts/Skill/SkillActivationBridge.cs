@@ -31,12 +31,26 @@ public class SkillActivationBridge : MonoBehaviour
     [Tooltip("LightningAttackState 애니메이션 이벤트의 ExecuteAttack(index) 값과 동일하게")]
     public int lightningIndex = 2;
 
+    private SkillData activeHeavySkill;   // 지금 차징 중인 Heavy 스킬 (Tab으로 슬롯 바뀌어도 흔들리지 않게 캐싱)
+    private bool chargedExtraPaid = false;
+
+    private SkillData pendingHeavySkill;
+    private bool heavyMpConsumed;
+
+    private SkillData pendingLightningSkill;
+    private bool lightningMpConsumed;
+
+    private SkillData pendingHealSkill;
+    private bool healMpConsumed;
+
+    private object lastObservedState;   // 상태 진입 "순간"을 감지하기 위한 이전 프레임 상태 기록
     private void Update()
     {
         if (playerController == null || skillRotationManager == null) return;
 
         HandleSlotRotation();
         HandleSkillActivation();
+        HandleDeferredMpConsumption();
     }
 
     // Tab 키로 currentSkillSlot 순환 (UI 캐러셀은 SkillRotationManager.Update()의 폴링이 자동 반응)
@@ -51,7 +65,6 @@ public class SkillActivationBridge : MonoBehaviour
 
     private void HandleSkillActivation()
     {
-        // 원본 HandleActiveSkillInput()과 동일한 입력 플래그를 사용
         if (!playerController.inputReader.HAttackPressed) return;
 
         SkillData equipped = GetEquippedSkillData();
@@ -65,7 +78,6 @@ public class SkillActivationBridge : MonoBehaviour
             playerController.StateMachine.CurrentState == playerController.LightningAttackState ||
             playerController.StateMachine.CurrentState == playerController.HealState;
 
-        // 원본과 동일한 가드 조건 (땅에 있어야 함 / 스프린트 중 아님 / 이미 스킬 중 아님 / 장착된 스킬 있어야 함)
         if (equipped == null || playerController.isSprinting || !playerController.IsGrounded() || isBusyWithSkill)
         {
             playerController.inputReader.HAttackPressed = false;
@@ -76,6 +88,7 @@ public class SkillActivationBridge : MonoBehaviour
         {
             case SkillType.Heavy:
                 if (equipped.attackData != null &&
+                    playerController.playerStats.currentMp >= equipped.mpCost &&
                     playerController.attackLibrary != null &&
                     heavyBaseIndex + 1 < playerController.attackLibrary.Count)
                 {
@@ -83,42 +96,41 @@ public class SkillActivationBridge : MonoBehaviour
                     playerController.attackLibrary[heavyBaseIndex + 1] =
                         equipped.attackDataCharged != null ? equipped.attackDataCharged : equipped.attackData;
 
+                    pendingHeavySkill = equipped;
+                    heavyMpConsumed = false;
+
                     playerController.StateMachine.ChangeState(playerController.HeavyReadyState);
                 }
                 break;
 
             case SkillType.Lightning:
                 if (equipped.attackData != null &&
+                    playerController.playerStats.currentMp >= equipped.mpCost &&
                     playerController.attackLibrary != null &&
                     lightningIndex < playerController.attackLibrary.Count)
                 {
                     playerController.attackLibrary[lightningIndex] = equipped.attackData;
+
+                    pendingLightningSkill = equipped;
+                    lightningMpConsumed = false;
 
                     playerController.StateMachine.ChangeState(playerController.LightningReadyState);
                 }
                 break;
 
             case SkillType.Heal:
-                if (equipped.healData != null)
+                if (equipped.healData != null && playerController.playerStats.currentMp >= equipped.mpCost)
                 {
-                    if (playerController.playerStats.currentMp >= equipped.healData.healMpCost)
-                    {
-                        playerController.healAmount = equipped.healData.healAmount;
-                        playerController.healMpCost = equipped.healData.healMpCost;
+                    playerController.healAmount = equipped.healData.healAmount;
 
-                        playerController.StateMachine.ChangeState(playerController.HealState);
-                    }
-                    else
-                    {
-                        Debug.Log("마나가 부족하여 힐 스킬을 사용할 수 없습니다!");
-                    }
+                    pendingHealSkill = equipped;
+                    healMpConsumed = false;
+
+                    playerController.StateMachine.ChangeState(playerController.HealState);
                 }
                 break;
         }
 
-        // 핵심: 이 프레임에 PlayerController.HandleActiveSkillInput()이 같은 입력을
-        // 다시 읽고 중복 발동하지 않도록 여기서 입력을 소모합니다.
-        // (Script Execution Order에서 이 스크립트가 PlayerController보다 먼저 실행돼야 함)
         playerController.inputReader.HAttackPressed = false;
     }
 
@@ -127,5 +139,62 @@ public class SkillActivationBridge : MonoBehaviour
         int idx = (int)playerController.currentSkillSlot;
         if (idx < 0 || idx >= skillRotationManager.skills.Length) return null;
         return skillRotationManager.skills[idx];
+    }
+
+    private void HandleDeferredMpConsumption()
+    {
+        object current = playerController.StateMachine.CurrentState;
+
+        // Heavy: HeavyAttackState 진입 순간 결제 (기존과 동일)
+        if (current == playerController.HeavyAttackState && lastObservedState != playerController.HeavyAttackState)
+        {
+            if (pendingHeavySkill != null && !heavyMpConsumed)
+            {
+                heavyMpConsumed = true;
+                float finalCost = (playerController.currentChargeLevel == 2)
+                    ? pendingHeavySkill.mpCostChargedExtra
+                    : pendingHeavySkill.mpCost;
+
+                if (!playerController.playerStats.TryConsumeMp(finalCost))
+                {
+                    Debug.Log("MP 부족으로 데미지가 1단계 수준으로 하향 적용됩니다.");
+                    if (playerController.attackLibrary != null && heavyBaseIndex + 1 < playerController.attackLibrary.Count)
+                    {
+                        playerController.attackLibrary[heavyBaseIndex + 1] = pendingHeavySkill.attackData;
+                    }
+                }
+            }
+        }
+
+        // Lightning: LightningAttackState 진입 순간 결제 (기존과 동일)
+        if (current == playerController.LightningAttackState && lastObservedState != playerController.LightningAttackState)
+        {
+            if (pendingLightningSkill != null && !lightningMpConsumed)
+            {
+                lightningMpConsumed = true;
+                playerController.playerStats.TryConsumeMp(pendingLightningSkill.mpCost);
+            }
+        }
+
+        // ★ Heal: HealState 안에서, 실제 회복 애니메이션이 50% 지점을 지나는 순간 결제
+        if (current == playerController.HealState)
+        {
+            if (pendingHealSkill != null && !healMpConsumed)
+            {
+                AnimatorStateInfo info = playerController.animator.GetCurrentAnimatorStateInfo(0);
+                if (info.IsName(playerController.anim_Heal) && info.normalizedTime >= 0.5f)
+                {
+                    healMpConsumed = true;
+                    playerController.playerStats.TryConsumeMp(pendingHealSkill.mpCost);
+                }
+            }
+        }
+        else
+        {
+            // 힐 상태를 벗어났는데(피격 등으로 중간에 끊김) 아직 결제 전이었다면 그냥 보류 취소
+            pendingHealSkill = null;
+        }
+
+        lastObservedState = current;
     }
 }
