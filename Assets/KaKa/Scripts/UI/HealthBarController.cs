@@ -11,7 +11,7 @@ public class HealthBarController : MonoBehaviour
     [SerializeField] private Image healthBarRecover;
 
     [Header("내상 체력(Recover) 연출 설정")]
-    [SerializeField] private float recoverBarChaseSpeed = 4f; // 회색 바가 목표치를 따라가는 부드러운 속도
+    [SerializeField] private float recoverBarChaseSpeed = 0.5f; // 회색 바가 목표치를 따라가는 부드러운 속도
 
     void Start()
     {
