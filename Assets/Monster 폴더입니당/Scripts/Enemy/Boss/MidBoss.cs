@@ -5,6 +5,9 @@ using System.Collections.Generic;
 // =====================================================
 // MidBoss.cs
 // 보스 메인 상태 및 패턴 제어 (정통 액션 헛스윙 유지 로직 적용)
+// [수정] 와이퍼 현상(플립 발작) 방지를 높이 제한 대신 "플립 쿨타임 + 데드존" 방식으로 교체
+//        -> 기존 높이 제한(flipHeightThreshold)이 문워크 버그의 원인이었음
+// [추가] 플레이어가 뒤에 있을 때 클리어링 패턴 우선 발동 (IsPlayerBehind)
 // =====================================================
 public class MidBoss : EnemyFSM
 {
@@ -46,9 +49,19 @@ public class MidBoss : EnemyFSM
     public GameObject hitBox_BackKick;
 
     [Header("방향 전환 및 오프셋 설정")]
-    [SerializeField] private float flipHeightThreshold = 1f;
     [SerializeField] private float chaseOffset = 5f;
     [SerializeField] private float overlapDistance = 2f;
+
+    [Header("방향 전환 - 와이퍼 현상 방지 (쿨타임 방식)")]
+    [Tooltip("플립(방향전환)이 성공한 뒤, 다시 플립을 시도할 수 있을 때까지의 최소 시간. 플레이어가 머리 위로 빠르게 지나가도 좌우로 파르르 떠는 현상을 막아줌.")]
+    [SerializeField] private float minFlipInterval = 0.35f;
+    [Tooltip("플레이어와의 X축 거리가 이 값보다 작으면 플립을 시도하지 않음. 거의 정중앙(머리 위)에 있을 때 좌우 판정이 흔들리는 것을 막아줌.")]
+    [SerializeField] private float flipDeadzoneX = 0.3f;
+    private float nextFlipAllowedTime = 0f;
+
+    [Header("뒤쪽 클리어링 발동 설정")]
+    [Tooltip("플레이어가 등 뒤에 있을 때, 이 거리 이내라면 거리/우선순위 상관없이 클리어링을 우선 발동함")]
+    [SerializeField] private float behindClearingRange = 4f;
 
     private bool isDeadProcessed = false;
     private Dictionary<GameObject, float> hitboxBaseX = new Dictionary<GameObject, float>();
@@ -112,6 +125,11 @@ public class MidBoss : EnemyFSM
             pos.x = facingLeft ? -baseX : baseX;
             hb.transform.localPosition = pos;
         }
+
+        // 실제로 방향이 바뀐 순간에만 쿨타임을 다시 걸기
+        // (FlipTowardsPlayer는 방향이 실제로 바뀔 때만 이 훅을 호출하므로,
+        // 여기서 타이머를 세팅하면 "성공한 플립" 기준으로 정확히 쿨타임이 걸림)
+        nextFlipAllowedTime = Time.time + minFlipInterval;
     }
 
     private bool IsAnyPatternBusy()
@@ -188,11 +206,43 @@ public class MidBoss : EnemyFSM
         return BossPatternBase.DistanceType.Far;
     }
 
+    // 수정 사항 : 높이 제한 대신 쿨타임 + 데드존 방식으로 와이퍼 현상 방지
     private void FlipIfGroundLevel()
     {
         if (player == null) return;
-        if (player.position.y <= transform.position.y + flipHeightThreshold)
-            FlipTowardsPlayer();
+
+        // 아직 쿨타임 중이면 플립 시도 자체를 하지 않음 (와이퍼 방지 핵심)
+        if (Time.time < nextFlipAllowedTime) return;
+
+        // 플레이어가 거의 정중앙(머리 위)에 있으면 좌우 판정이 흔들리니 무시
+        float diffX = Mathf.Abs(player.position.x - transform.position.x);
+        if (diffX < flipDeadzoneX) return;
+
+        // 높이는 더 이상 체크하지 않음 -> 이동 방향과 얼굴 방향이 항상 일치하게 됨 (문워크 해결)
+        FlipTowardsPlayer();
+    }
+
+    // 추가 사항 : Attack 상태로 전환하는 모든 지점에서 이걸 호출하면,
+    // 다음 프레임 OnAttack()이 실행되길 기다리지 않고 그 즉시 속도를 0으로 고정함.
+    // -> Chase에서 Attack으로 넘어가는 그 순간 한 프레임 동안 관성으로 밀리던 현상 해결.
+    private void EnterAttackState()
+    {
+        if (rb != null) rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        ChangeState(EnemyState.Attack);
+    }
+
+    // 추가 사항 : 플레이어가 스파이더의 등 뒤에 있는지 판정
+    private bool IsPlayerBehind()
+    {
+        if (player == null || spriteRenderer == null) return false;
+
+        bool facingLeft = spriteRenderer.flipX;
+        float diffX = player.position.x - transform.position.x;
+
+        // facingLeft == true 이면 왼쪽을 보고 있는 것.
+        // 이때 플레이어가 오른쪽(diffX > 0)에 있으면 등 뒤에 있는 것.
+        // facingLeft == false(오른쪽을 보고 있음)이면 플레이어가 왼쪽(diffX < 0)에 있을 때 등 뒤.
+        return facingLeft ? (diffX > 0f) : (diffX < 0f);
     }
 
     protected override void OnIdle()
@@ -213,9 +263,18 @@ public class MidBoss : EnemyFSM
         FlipIfGroundLevel();
         if (animator != null) animator.SetBool("isMoving", true);
 
+        // 추가 사항 : 플레이어가 등 뒤에 있고, 클리어링 사용 가능하면 거리 / 쿨타임 상관없이 최우선 발동
+        if (!IsAnyPatternBusy() && Time.time >= attackAnimationLockTime
+            && IsPlayerBehind() && GetDistanceToPlayer() <= behindClearingRange
+            && clearingPattern != null && clearingPattern.IsUsable())
+        {
+            EnterAttackState();
+            return;
+        }
+
         if (!IsAnyPatternBusy() && Time.time >= attackAnimationLockTime && GetDistanceToPlayer() <= overlapDistance && clearingPattern != null && clearingPattern.IsUsable())
         {
-            ChangeState(EnemyState.Attack);
+            EnterAttackState();
             return;
         }
 
@@ -226,7 +285,7 @@ public class MidBoss : EnemyFSM
             {
                 if (p.canUseInChase && p.IsUsable())
                 {
-                    ChangeState(EnemyState.Attack);
+                    EnterAttackState();
                     return;
                 }
             }
@@ -234,7 +293,7 @@ public class MidBoss : EnemyFSM
 
         if (GetDistanceToPlayer() <= attackRange && Time.time >= attackAnimationLockTime)
         {
-            ChangeState(EnemyState.Attack);
+            EnterAttackState();
             return;
         }
 
@@ -275,8 +334,10 @@ public class MidBoss : EnemyFSM
             return;
         }
 
-        // 4. 클리어링 패턴 실행
-        if (clearingPattern != null && clearingPattern.IsUsable() && GetDistanceToPlayer() <= overlapDistance)
+        // 4. 클리어링 패턴 실행 (등 뒤에 있을 때도 사용 가능하도록 조건 확장)
+        bool overlapClose = GetDistanceToPlayer() <= overlapDistance;
+        bool behindClose = IsPlayerBehind() && GetDistanceToPlayer() <= behindClearingRange;
+        if (clearingPattern != null && clearingPattern.IsUsable() && (overlapClose || behindClose))
         {
             if (animator != null) { animator.SetBool("isMoving", false); animator.SetBool("isAttacking", true); }
             clearingPattern.Execute();

@@ -4347,6 +4347,10 @@ PrefabInstance:
       propertyPath: attackRange
       value: 5.2
       objectReference: {fileID: 0}
+    - target: {fileID: 5656119948597351064, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: attackCooldown
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 5765147012955405796, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_Size.y
       value: 1.74
@@ -4377,7 +4381,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8657742522092995938, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: webSpeed
-      value: 3
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 8657742522092995938, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: webPrefab
