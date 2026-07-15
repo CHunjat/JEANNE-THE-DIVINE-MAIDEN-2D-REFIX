@@ -187,7 +187,7 @@ public class Checkpoint : MonoBehaviour
 
     private void ExecuteSkillMenu()
     {
-        Debug.Log("<color=cyan>스킬창 기능은 아직 구현되지 않았습니다.</color>");
+        return;
     }
 
     private IEnumerator OpenMenuRoutine()
