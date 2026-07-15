@@ -65,10 +65,10 @@ public class PlayerIdleState : PlayerState
         if (xInput != 0)
         {
             stateMachine.ChangeState(player.MoveState);
-            return; // ★ MoveState로 넘어가면 여기서 즉시 끊어줘야 안전합니다!
+            return; // MoveState로 넘어가면 여기서 즉시 끊어줘야 안전합니다!
         }
 
-        // ★ [점프 로직 완벽 통합] (과거 점프 코드 삭제됨)
+        // [점프 로직 완벽 통합] (과거 점프 코드 삭제됨)
         bool isJumpBtnPressed = player.inputReader.JumpPressed;
 
         if (isJumpBtnPressed && player.IsGrounded())
@@ -97,7 +97,7 @@ public class PlayerIdleState : PlayerState
     {
         base.PhysicsUpdate();
         bool isHovering = player.slopeHit.collider != null && player.slopeHit.distance > 0.05f;
-        // 🔥 비탈길 미끄러짐 방지 로직
+        // 비탈길 미끄러짐 방지 로직
         if (player.OnSlope() || player.IsOnStairs() && isHovering)
         {
             player.rb.gravityScale = 0f; // 2D gravityScale 차단
@@ -109,7 +109,7 @@ public class PlayerIdleState : PlayerState
         }
     }
 
-    // 🔥 나갈 때 중력 원복!
+    // 나갈 때 중력 원복!
     public override void Exit()
     {
         base.Exit();

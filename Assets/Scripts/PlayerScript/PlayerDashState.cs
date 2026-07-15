@@ -45,6 +45,30 @@ public class PlayerDashState : PlayerState
     {
         base.PhysicsUpdate();
 
+         //=====================================================================
+         //🔥 [추가된 핵심 방어막] 에어 대쉬 중 모서리에 박히는 현상(Clipping) 방지
+         //물리 엔진이 멘붕해서 바닥을 통과시키기 전에, 강제로 바닥 위로 끄집어 올립니다!
+         //=====================================================================
+        //if (player.IsGrounded())
+        //{
+        //    //발밑을 향해 레이를 쏴서 현재 파고든 바닥의 높이를 찾습니다.
+        //   RaycastHit2D snapHit = Physics2D.BoxCast(player.cd.bounds.center, player.cd.bounds.size * 0.9f, 0f, Vector2.down, 0.5f, player.GetCurrentGroundMask());
+
+        //    if (snapHit.collider != null && snapHit.collider != player.ignoredDropCollider)
+        //    {
+        //        float surfaceY = snapHit.point.y;
+        //        float footY = player.cd.bounds.min.y;
+
+        //        // 캐릭터의 발(footY)이 실제 바닥 표면(surfaceY)보다 아래에 있다면? = 파고들었다!
+        //        if (footY < surfaceY && (surfaceY - footY) < 0.5f)
+        //        {
+        //            //파고든 만큼(surfaceY -footY) 더하기 약간의 여유(0.05f)를 줘서 위로 텔포시킵니다.
+        //            player.transform.position += new Vector3(0f, (surfaceY - footY) + 0.05f, 0f);
+        //        }
+        //    }
+        //}
+
+
         Vector2 dashVec = new Vector2(dashDirection, 0f);
         float finalDashSpeed = player.dashSpeed;
 
@@ -65,17 +89,12 @@ public class PlayerDashState : PlayerState
             }
         }
 
-        // 2. 비탈길 로직 처리
+        // 2. 비탈길 로직 처리 (기존 코드 완벽하게 유지)
         if (player.OnSlope(isDashing: true))
         {
-            //  비탈길을 탔을 때, 내가 갈 방향(내리막인지 오르막인지)
             Vector2 slopeDir = player.GetSlopeMoveDirection(dashVec);
-
-            // slopeDir.y가 0보다 작으면 아래로 향하는 '내리막길 대쉬'라는 뜻!
             bool isDownhill = slopeDir.y < -0.01f;
 
-            // [핵심 2] 윗평지와 비탈길이 동시 감지되었을 때의 처리
-            // 오르막 대쉬 중(!isDownhill)에 평지를 만났을 때만 평지 모드로 부드럽게 전환!
             if (detectedFlatGround && !isDownhill)
             {
                 dashVec.y = -0.1f;
@@ -83,24 +102,20 @@ public class PlayerDashState : PlayerState
             }
             else
             {
-                // 내리막 대쉬이거나 (평지가 뒤에 감지되든 말든 무시하고 비탈길 탑승!), 순수 비탈길일 때
                 dashVec = slopeDir;
 
                 if (dashVec.y > 0.05f)
                 {
-                    // 오르막 댐핑
                     finalDashSpeed *= 0.9f;
                 }
                 else
                 {
-                    // 내리막 쾌속 슬라이딩
                     finalDashSpeed = player.dashSpeed;
                 }
             }
         }
         else if (detectedFlatGround)
         {
-            // 순수 평지 대시일 때도 바닥에 미세하게 눌러줘서 턱에서 안 뜨게 만듦
             dashVec.y = -0.05f;
         }
 
@@ -146,10 +161,12 @@ public class PlayerDashState : PlayerState
         }
     }
 
-    // 🔥 대쉬 종료 로직 공통화
+    
     private void FinishDash()
     {
         player.ResetDashCooldown();
+
+        player.StartCoroutine(DashGraceCoroutine());
         if (player.OnSlope())
         {
             player.rb.linearVelocity = new Vector2(player.rb.linearVelocity.x, 0f);
@@ -174,6 +191,13 @@ public class PlayerDashState : PlayerState
             player.SetVelocity(0f, player.rb.linearVelocity.y);
             stateMachine.ChangeState(player.AirState);
         }
+    }
+
+    private System.Collections.IEnumerator DashGraceCoroutine()
+    {
+        player.isDashGracePeriod = true;
+        yield return new WaitForSeconds(0.1f);
+        player.isDashGracePeriod = false;
     }
 
     public override void Exit()

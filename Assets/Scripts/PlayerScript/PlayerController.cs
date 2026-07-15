@@ -438,7 +438,7 @@ public class PlayerController : MonoBehaviour
     public bool IsActionLocked => StateMachine.CurrentState == HealState;
     [HideInInspector]
     public bool isThrustCharged = false;
-
+    public bool isDashGracePeriod = false; // 대쉬 후 물리 튐 방지 유예 시간
     [Header("스킬 데이터 (SO)")]
     public AttackDataSO diveDropData; // 유니티 에디터에서 방금 만든 SO를 할당할 곳 오직 공중 강공격을 위한 선언;;
 
@@ -652,6 +652,9 @@ public class PlayerController : MonoBehaviour
         HandleThrustAttackInput(); //강공찌르기 판독기 추가
         HandleActiveSkillInput();  // [수정] E키(OnSkill) 하나로 슬롯에 따라 스킬을 분배하는 통합 판독기
 
+
+
+
         StateMachine.CurrentState.HandleInput();
         StateMachine.CurrentState.LogicUpdate();
 
@@ -737,7 +740,8 @@ public class PlayerController : MonoBehaviour
             bool isBodyInside = Physics2D.OverlapBox(cd.bounds.center, cd.bounds.size * 0.9f, 0f, stairsLayer) != null;
 
             // 2. 발밑에 계단이 있는지 확인 (안착할 땅이 있는가?)
-            bool isStairUnder = Physics2D.BoxCast(new Vector2(cd.bounds.center.x, cd.bounds.min.y), new Vector2(cd.bounds.size.x * 0.7f, 0.1f), 0f, Vector2.down, 3.0f, stairsLayer).collider != null;
+            bool isStairUnder = Physics2D.BoxCast(new Vector2(cd.bounds.center.x, cd.bounds.min.y), 
+                new Vector2(cd.bounds.size.x * 0.7f, 0.1f), 0f, Vector2.down, 3.0f, stairsLayer).collider != null;
 
             // [순위 1] 대시 중일 때 -> 무조건 통과 (대시가 최우선)
             if (StateMachine.CurrentState == DashState)

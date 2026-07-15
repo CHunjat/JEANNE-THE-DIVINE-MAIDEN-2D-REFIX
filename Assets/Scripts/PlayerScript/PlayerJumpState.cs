@@ -14,13 +14,29 @@ public class PlayerJumpState : PlayerState
         {
             if (!player.CanSprintJump)
             {
-                player.inputReader.JumpPressed = false;
-                player.SetVelocity(player.rb.linearVelocity.x, 0f);
-                player.isJumpCut = true;
-                stateMachine.ChangeState(player.MoveState);
-                return;
+                // 🔥 [2단 점프 절대 우선권 부여]
+                // 비탈길 모서리에서 뚱뚱한 콜라이더 때문에 억울하게 땅 판정을 받아 쿨타임에 걸렸더라도,
+                // 점프가 가능한 상태(CanJump)라면 절대 캔슬하지 않고 점프를 실행합니다!
+                if (player.CanJump)
+                {
+                    // 쿨타임을 무시하고 2단 점프로 취급합니다.
+                    // isFirstSprintJump를 false로 만들어서 아래에서 자연스러운 공중 점프 애니메이션이 나오게 유도합니다.
+                    isFirstSprintJump = false;
+                }
+                else
+                {
+                    // 진짜 점프 횟수도 없고 쿨타임도 걸린 찐 버니합일 때만 캔슬
+                    player.inputReader.JumpPressed = false;
+                    player.SetVelocity(player.rb.linearVelocity.x, 0f);
+                    player.isJumpCut = true;
+                    stateMachine.ChangeState(player.MoveState);
+                    return;
+                }
             }
-            player.ResetSprintJumpCooldown();
+            else
+            {
+                player.ResetSprintJumpCooldown();
+            }
         }
 
         stateTimer = 0f;
@@ -34,7 +50,6 @@ public class PlayerJumpState : PlayerState
             player.rb.linearVelocity = new Vector2(player.rb.linearVelocity.x, 0f);
 
             //  방향키를 떼고 있을 때(xInput == 0)는 비탈길 추가 부스트(3.5f) X
-            // 이 조건문 하나로 중립 점프 시 하늘로 치솟는 폭주 버그가 완벽히 차단됩니다.
             if (Mathf.Abs(xInput) > 0.1f)
             {
                 float moveDirX = Mathf.Sign(xInput);
@@ -44,12 +59,10 @@ public class PlayerJumpState : PlayerState
                 {
                     if (isFirstSprintJump)
                     {
-                        
-                        finalJumpForce *= 1.1f; // (취향에 따라 0.7f ~ 0.9f 사이로 조절)
+                        finalJumpForce *= 1.1f;
                     }
                     else
                     {
-                        
                         finalJumpForce += 1.1f;
                     }
                 }
@@ -73,12 +86,10 @@ public class PlayerJumpState : PlayerState
         // 관성 점프
         if (Mathf.Abs(xInput) > 0.1f)
         {
-            // 방향키를 누르고 있다면: 현재 x속도(대시 관성 포함)를 그대로 유지하며 점프!
             player.rb.linearVelocity = new Vector2(player.rb.linearVelocity.x * 0.5f, finalJumpForce);
         }
         else
         {
-            // 방향키를 떼고 있다면: 관성을 끊고 제자리 수직 점프로 전환!
             player.rb.linearVelocity = new Vector2(0f, finalJumpForce);
         }
     }
