@@ -665,7 +665,6 @@ public class PlayerController : MonoBehaviour
     {
         StateMachine.CurrentState.PhysicsUpdate();
 
-
         #region 중력 안받는 스테이트들
         // 그래플훅일땐 제외 / 미들찌르기/스킬제외 /공중공격제외
         if (StateMachine.CurrentState == GrappleState) return;
@@ -686,14 +685,14 @@ public class PlayerController : MonoBehaviour
                         StateMachine.CurrentState == DropState ||
                         StateMachine.CurrentState == DashState;
         #endregion
+
         bool isAttacking = StateMachine.CurrentState is PlayerAttackState;
         bool isSprintLanding = StateMachine.CurrentState == LandState && isSprinting;
 
         if (!isAttacking)
         {
-            if (Mathf.Abs(inputReader.MoveValue.x) < 0.1f && IsGrounded() && !isMidAir && !isSprintLanding 
+            if (Mathf.Abs(inputReader.MoveValue.x) < 0.1f && IsGrounded() && !isMidAir && !isSprintLanding
                 && StateMachine.CurrentState != HitState && StateMachine.CurrentState != GuardState)
-
             {
                 if (OnSlope())
                 {
@@ -712,7 +711,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // [핵심 추가] 내리막길 스프린트 시 튀어오름 방지
+        // [내리막길 스프린트 시 튀어오름 방지]
         if (isSprinting && OnSlope() && !isMidAir && Mathf.Abs(inputReader.MoveValue.x) >= 0.1f)
         {
             Vector2 slopeDir = GetSlopeMoveDirection(rb.linearVelocity.normalized);
@@ -724,48 +723,68 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-
-        if (IsPureGrounded() && !OnSlope())
+        // 🔥 [궁극의 수정] 기하학적 높이 비교를 통한 갈림길 완벽 분기
+        if (StateMachine.CurrentState == DropState)
         {
-            ToggleStairsCollision(false);
+            ToggleStairsCollision(false); // 밑점프는 묻지도 따지지도 않고 무조건 통과
         }
-        else if (StateMachine.CurrentState == DropState)
+        else if (StateMachine.CurrentState == AirState || StateMachine.CurrentState == JumpState)
         {
-            ToggleStairsCollision(false);
-        }
-        // 수정 3: AirState(낙하) 시 안착 로직 (겹침 방지)
-        else if (StateMachine.CurrentState == AirState)
-        {
-            // 캐릭터 몸통이 계단과 겹쳐있는지 간단히 확인 (0.95f로 약간 작게 해서 오작동 방지)
+            // 공중 상태
             bool isBodyInside = Physics2D.OverlapBox(cd.bounds.center, cd.bounds.size * 0.9f, 0f, stairsLayer) != null;
+            bool isStairUnder = Physics2D.BoxCast(new Vector2(cd.bounds.center.x, cd.bounds.min.y),
+                new Vector2(cd.bounds.size.x * 0.7f, 0.1f), 0f, Vector2.down, 1.0f, stairsLayer).collider != null;
 
-            // 2. 발밑에 계단이 있는지 확인 (안착할 땅이 있는가?)
-            bool isStairUnder = Physics2D.BoxCast(new Vector2(cd.bounds.center.x, cd.bounds.min.y), 
-                new Vector2(cd.bounds.size.x * 0.7f, 0.1f), 0f, Vector2.down, 3.0f, stairsLayer).collider != null;
+            if (isBodyInside) ToggleStairsCollision(false); // 머리가 박혀있으면 통과 (올라가는 중)
+            else if (isStairUnder && rb.linearVelocity.y <= 0.1f) ToggleStairsCollision(true); // 하강 중엔 켜서 안착
+            else ToggleStairsCollision(false);
+        }
+        else
+        {
+            // 지상 상태 (Idle, Move, Land, Dash/구르기 등)
+            // OnSlope()의 사각지대를 없애기 위해 플레이어 발바닥 주변 비탈길을 물리 엔진 무시 여부와 상관없이 강제로 긁어옵니다.
+            Vector2 boxCenter = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.3f);
+            Vector2 boxSize = new Vector2(cd.bounds.size.x * 0.8f, 0.6f);
+            RaycastHit2D stairHit = Physics2D.BoxCast(boxCenter, boxSize, 0f, Vector2.down, 0.2f, stairsLayer);
 
-            // [순위 1] 대시 중일 때 -> 무조건 통과 (대시가 최우선)
-            if (StateMachine.CurrentState == DashState)
+            bool pureGround = IsPureGrounded();
+
+            if (stairHit.collider != null && pureGround)
             {
-                ToggleStairsCollision(false);
+                // 🚨 [핵심] 평지와 비탈길이 겹치는 "갈림길" 구역입니다!
+                // 현재 닿은 비탈길의 '절반(Center Y)' 높이를 기준으로 내 발의 위치를 비교합니다.
+                float slopeCenterY = stairHit.collider.bounds.center.y;
+                float myFootY = cd.bounds.min.y;
+
+                if (myFootY < slopeCenterY)
+                {
+                    // 1. 내 발이 비탈길 절반보다 아래에 있다 = "아랫길에서 비탈길 입구를 만남"
+                    // 기획 의도: 점프하지 않았으므로 비탈길을 유령처럼 무시하고 통과해야 함!
+                    ToggleStairsCollision(false);
+                }
+                else
+                {
+                    // 2. 내 발이 비탈길 절반보다 위에 있다 = "윗평지에서 내리막길을 만남"
+                    // 기획 의도: 바닥이 끝날 때 스르륵 비탈길로 내려가야 하므로 켜둬야 함! (추락 방지)
+                    ToggleStairsCollision(true);
+                }
             }
-            // [순위 2] 몸통이 계단 안에 겹쳐 있을 때 -> 무조건 통과 (밑점프든, 점프 중이든 끼임 방지)
-            else if (isBodyInside)
+            else if (stairHit.collider != null)
             {
-                ToggleStairsCollision(false);
-            }
-            // [순위 3] 몸통은 밖으로 나왔는데, 발밑에 계단이 있을 때 -> 안착! (계단 위 착지 성공)
-            else if (isStairUnder)
-            {
+                // 주변에 평지 없이 순수 비탈길만 밟고 있음 -> 당연히 타야 함
                 ToggleStairsCollision(true);
             }
-            // [순위 4] 그 외 허공
+            else if (pureGround)
+            {
+                // 주변에 비탈길 없이 순수 평지만 밟고 있음 -> 통과 모드 대기
+                ToggleStairsCollision(false);
+            }
             else
             {
+                // 허공 (예외 처리)
                 ToggleStairsCollision(false);
             }
         }
-
-
     }
 
     // 2D 리지드바디이므로 Vector2를 사용
