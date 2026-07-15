@@ -11,11 +11,7 @@ public class HealthBarController : MonoBehaviour
     [SerializeField] private Image healthBarRecover;
 
     [Header("내상 체력(Recover) 연출 설정")]
-    [SerializeField] private float recoverSpeed = 2f;
-    [SerializeField] private float delayBeforeRecover = 0.5f;
-
-    private float currentTargetFill = 1f;
-    private float lastDamageTime;
+    [SerializeField] private float recoverBarChaseSpeed = 0.5f; // 회색 바가 목표치를 따라가는 부드러운 속도
 
     void Start()
     {
@@ -31,33 +27,26 @@ public class HealthBarController : MonoBehaviour
     void Update()
     {
         if (playerStats == null) return;
+        if (playerStats.baseMaxHp <= 0) return;
 
-        if (playerStats.baseMaxHp > 0)
+        float maxHp = playerStats.GetMaxHp();
+        if (maxHp <= 0f) maxHp = playerStats.baseMaxHp;
+
+        // 실제 체력 바 = 즉시 반영 (내상 체력은 별도 바가 담당)
+        float currentFill = playerStats.currentHp / maxHp;
+        if (healthBarFill != null)
         {
-            float targetFill = playerStats.currentHp / playerStats.baseMaxHp;
+            healthBarFill.fillAmount = currentFill;
+        }
 
-            if (targetFill < currentTargetFill)
-            {
-                lastDamageTime = Time.time;
-                currentTargetFill = targetFill;
-            }
-            else if (targetFill > currentTargetFill)
-            {
-                currentTargetFill = targetFill;
-            }
-
-            if (healthBarFill != null)
-            {
-                healthBarFill.fillAmount = targetFill;
-            }
-
-            if (healthBarRecover != null)
-            {
-                if (Time.time - lastDamageTime >= delayBeforeRecover || targetFill >= healthBarRecover.fillAmount)
-                {
-                    healthBarRecover.fillAmount = Mathf.Lerp(healthBarRecover.fillAmount, targetFill, Time.deltaTime * recoverSpeed);
-                }
-            }
+        // 회색(내상) 바 = "현재 체력 + 회복 가능한 내상 체력"을 목표로 부드럽게 추적
+        if (healthBarRecover != null)
+        {
+            float recoverTargetFill = (playerStats.currentHp + playerStats.currentRecoverableHp) / maxHp;
+            healthBarRecover.fillAmount = Mathf.MoveTowards(
+                healthBarRecover.fillAmount,
+                recoverTargetFill,
+                Time.deltaTime * recoverBarChaseSpeed);
         }
     }
 }

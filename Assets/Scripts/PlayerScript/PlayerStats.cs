@@ -17,7 +17,7 @@ public class PlayerStats : MonoBehaviour
     [Header("체력 (Health)")]
     public float baseMaxHp = 100f;
     public float currentHp;
-    public float baseMaxMp = 100f;
+    public float baseMaxMp = 500f;
     public float currentMp;
 
     [Header("가드 리게인 (내상 HP) 시스템")]
