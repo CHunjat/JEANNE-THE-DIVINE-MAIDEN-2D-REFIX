@@ -213,6 +213,8 @@ public class Checkpoint : MonoBehaviour
             if (menuCursors[i] != null) menuCursors[i].SetActive(i == currentMenuIndex);
     }
 
+
+
     private void ExecuteRest()
     {
         menuUI.SetActive(false);
@@ -352,4 +354,6 @@ public class Checkpoint : MonoBehaviour
 
         if (targetAlpha <= 0f) dimmerSprite.gameObject.SetActive(false);
     }
+
+
 }
