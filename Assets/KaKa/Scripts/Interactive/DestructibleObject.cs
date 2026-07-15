@@ -4,9 +4,6 @@ using UnityEngine;
 /// <summary>
 /// 때려서 파괴할 수 있는 오브젝트. 파괴된 상태는 GameOverManager.lastRespawnPosition과
 /// 완전히 같은 원리(static 필드)로 씬 리로드에도 유지됩니다.
-///
-/// 주의: static이므로 "플레이 모드 정지" 또는 "스크립트 재컴파일" 시에는 초기화됩니다.
-/// (GameOverManager의 static 변수들과 똑같은 특성이라 게임 세션 내내는 문제 없이 동작합니다.)
 /// </summary>
 public class DestructibleObject : MonoBehaviour
 {
@@ -22,6 +19,10 @@ public class DestructibleObject : MonoBehaviour
     public GameObject breakEffectPrefab; // 파괴될 때 생성할 파티클 등 (없으면 비워둬도 무방)
     public bool destroyGameObjectOnBreak = false; // true면 Destroy, false면 SetActive(false)로만 처리
 
+    [Header("파괴 시 추가 연동 (선택)")]
+    [Tooltip("이 오브젝트가 파괴될 때 함께 비활성화(SetActive(false))할 오브젝트를 여기에 넣어주세요.")]
+    public GameObject objectToDisable; // ★ 여기에 bossroom 오브젝트를 넣어주시면 됩니다!
+
     // ★ static이므로 SceneManager.LoadScene()으로 씬이 통째로 리로드되어도 값이 유지됩니다.
     private static readonly HashSet<string> destroyedObjectIds = new HashSet<string>();
 
@@ -36,6 +37,12 @@ public class DestructibleObject : MonoBehaviour
         if (destroyedObjectIds.Contains(objectId))
         {
             gameObject.SetActive(false);
+
+            // ★ [연동] 이미 파괴된 상태로 씬이 리로드되었다면, 연동된 오브젝트도 다시 꺼줍니다.
+            if (objectToDisable != null)
+            {
+                objectToDisable.SetActive(false);
+            }
             return;
         }
 
@@ -56,11 +63,19 @@ public class DestructibleObject : MonoBehaviour
 
     private void BreakObject()
     {
-        destroyedObjectIds.Add(objectId); // ★ 핵심: 파괴됐다는 사실을 static 저장소에 기록
+        destroyedObjectIds.Add(objectId); // ★ 파괴 상태 기록
 
+        // ★ [연동] 파괴되는 순간에 등록된 오브젝트를 비활성화합니다.
+        if (objectToDisable != null)
+        {
+            objectToDisable.SetActive(false);
+            Debug.Log($"[DestructibleObject] {gameObject.name} 파괴 완료! -> 연동된 {objectToDisable.name}을 비활성화했습니다.");
+        }
+
+        // 파괴 이펙트 생성
         if (breakEffectPrefab != null)
         {
-            Instantiate(breakEffectPrefab, transform.position, Quaternion.identity);
+            Instantiate(breakEffectPrefab, transform.position, transform.rotation);
         }
 
         if (destroyGameObjectOnBreak)
