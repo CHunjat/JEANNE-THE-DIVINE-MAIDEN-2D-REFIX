@@ -456,6 +456,13 @@ public class PlayerController : MonoBehaviour
     public string anim_DieGround = "Die"; // 땅 사망 모션
     public string anim_DieAir = "AirDie";// 공중 사망 모션
 
+    [Header("코요테 타임")]
+    public float coyoteTime = 0.1f; // 낭떠러지에서 떨어져도 이 시간 동안은 지상으로 판정
+    private float lastGroundedTime; // 클래스 멤버 변수로 반드시 선언되어 있어야 함
+
+    // 1. 순수 물리 판독기
+   
+
 
     public PlayerAttack1State Attack1State { get; private set; }
     public PlayerAttack2State Attack2State { get; private set; }
@@ -727,6 +734,11 @@ public class PlayerController : MonoBehaviour
         if (StateMachine.CurrentState == DropState)
         {
             ToggleStairsCollision(false); // 밑점프는 묻지도 따지지도 않고 무조건 통과
+        }
+        else if (StateMachine.CurrentState == DashState && !IsGrounded())
+        {
+            // 🔥 [원상복구] 공중(점프) 대쉬일 때는 비탈길에 안착하지 않고 유령처럼 뚫고 지나가게 켭니다!
+            ToggleStairsCollision(false);
         }
         else if (StateMachine.CurrentState == AirState || StateMachine.CurrentState == JumpState)
         {
@@ -1291,7 +1303,6 @@ public class PlayerController : MonoBehaviour
     //프로퍼티
     public bool CanSprintJump => sprintJumpCooldownTimer <= 0;
 
-    private float lastGroundedTime; // 클래스 멤버 변수로 반드시 선언되어 있어야 함
     public bool IsGrounded()
     {
         if (cd == null) return false;
@@ -1332,7 +1343,7 @@ public class PlayerController : MonoBehaviour
             return true;
         }
 
-        // 4. [핵심 수정] Coyote Time 적용
+        // 4. Coyote Time 
         // 만약 밑점프 중(ignoredDropCollider != null)이라면 버퍼를 무시하고 바로 false를 리턴!
         // 이게 밑점프를 뚫어주는 열쇠야.
         if (ignoredDropCollider == null && Time.time < lastGroundedTime + 0.1f)
@@ -1473,5 +1484,18 @@ public class PlayerController : MonoBehaviour
             }
         }
         return false;
+    }
+
+    public bool IsNearGround()
+    {
+        if (cd == null) return false;
+
+        Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
+
+        // 0.6f 정도 거리 확인 (비탈길을 스무스하게 내려가고 있을 때는 무조건 이 안에 걸림)
+        RaycastHit2D hit = Physics2D.BoxCast(rayStartPos, groundCheckSize, 0f, Vector2.down, 0.6f, GetCurrentGroundMask());
+
+        // 밑점프 무시 콜라이더면 안 닿은 걸로 처리!
+        return hit.collider != null && hit.collider != ignoredDropCollider;
     }
 }
