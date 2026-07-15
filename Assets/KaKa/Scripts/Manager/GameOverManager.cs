@@ -117,11 +117,21 @@ public class GameOverManager : MonoBehaviour
         // 1. 지정된 시간(3초) 동안 암전 상태로 대기
         yield return new WaitForSeconds(respawnDelay);
 
-        // 2. 부활할 위치를 저장하고 씬 전환 시 메인메뉴 스킵 플래그를 켭니다.
-        if (respawnPoint != null)
+        // 2. [수정됨] 체크포인트를 탐색하여 부활할 위치를 결정합니다.
+        Transform targetRespawnTransform = GetNearestUnlockedCheckpointSpawnPoint();
+
+        if (targetRespawnTransform != null)
         {
-            lastRespawnPosition = respawnPoint.position;
+            lastRespawnPosition = targetRespawnTransform.position;
+            Debug.Log($"[GameOverManager] 활성화된 체크포인트 발견! 부활 위치: {lastRespawnPosition}");
         }
+        else if (respawnPoint != null)
+        {
+            // 활성화된 체크포인트가 하나도 없다면 씬의 기본 시작 지점(respawnPoint)으로 보냅니다.
+            lastRespawnPosition = respawnPoint.position;
+            Debug.Log($"[GameOverManager] 활성화된 체크포인트가 없어 기본 시작 지점으로 설정합니다. 부활 위치: {lastRespawnPosition}");
+        }
+
         skipMainMenu = true;
         shouldFadeIn = true; // 재로드 후 어두운 화면에서 밝아지는 연출 작동용
 
@@ -151,5 +161,54 @@ public class GameOverManager : MonoBehaviour
         c.a = 0f;
         dimmerSprite.color = c;
         dimmerSprite.gameObject.SetActive(false);
+    }
+
+    // ========================================================
+    // ★ [새로 추가된 도우미 함수] 체크포인트 자동 검색
+    // ========================================================
+    /// <summary>
+    /// 씬 안의 모든 체크포인트 중 활성화(isUnlocked)된 것들을 필터링하고,
+    /// 플레이어가 사망한 위치와 가장 가까운 체크포인트의 spawnPoint를 반환합니다.
+    /// </summary>
+    private Transform GetNearestUnlockedCheckpointSpawnPoint()
+    {
+        if (playerStats == null) return null;
+
+        // 1. 씬 안에 배치된 모든 Checkpoint 컴포넌트를 찾습니다. 
+        // (Unity 2023 이후 최적화된 FindObjectsByType 사용)
+        Checkpoint[] checkpoints = FindObjectsByType<Checkpoint>(FindObjectsSortMode.None);
+        Checkpoint nearestCheckpoint = null;
+        float minDistance = float.MaxValue;
+
+        // 2. Checkpoint.cs의 private 필드인 'isUnlocked' 값을 읽기 위해 리플렉션 정보를 가져옵니다.
+        var field = typeof(Checkpoint).GetField("isUnlocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        foreach (var cp in checkpoints)
+        {
+            bool unlocked = false;
+            if (field != null)
+            {
+                unlocked = (bool)field.GetValue(cp);
+            }
+
+            // 3. 활성화된 체크포인트인 경우에만 거리를 비교합니다.
+            if (unlocked)
+            {
+                float dist = Vector3.Distance(playerStats.transform.position, cp.transform.position);
+                if (dist < minDistance)
+                {
+                    minDistance = dist;
+                    nearestCheckpoint = cp;
+                }
+            }
+        }
+
+        // 4. 찾은 체크포인트의 spawnPoint를 반환합니다. (없다면 체크포인트 자체의 Transform 반환)
+        if (nearestCheckpoint != null)
+        {
+            return nearestCheckpoint.spawnPoint != null ? nearestCheckpoint.spawnPoint : nearestCheckpoint.transform;
+        }
+
+        return null;
     }
 }
