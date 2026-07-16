@@ -19,6 +19,7 @@ public class Checkpoint : MonoBehaviour
 
     [Header("암전 연출 (SpriteRenderer 연결 필수)")]
     public SpriteRenderer dimmerSprite;
+    private Vector3 originalDimmerPos; // 🔥 추가: 암전막의 원래 위치 저장용
 
     [Header("메뉴 네비게이션 UI")]
     public GameObject[] menuCursors;
@@ -43,6 +44,7 @@ public class Checkpoint : MonoBehaviour
         // Dimmer 초기화
         if (dimmerSprite != null)
         {
+            originalDimmerPos = dimmerSprite.transform.localPosition; // 시작할 때 원래 위치 기억해두기
             Color c = dimmerSprite.color;
             c.a = 0f;
             dimmerSprite.color = c;
@@ -98,17 +100,14 @@ public class Checkpoint : MonoBehaviour
                 {
                     Checkpoint dest = destinations[currentTeleportIndex];
 
-                    // 🔥 [핵심 예외 처리] 목적지가 자기 자신(현재 모닥불)일 때!
                     if (dest == this)
                     {
                         Debug.Log("<color=yellow>현재 위치로는 텔레포트할 수 없습니다!</color>");
-                        // 아무 일도 안 일어나게 하거나, 
-                        // 아래처럼 창을 닫고 메인 메뉴로 돌려보내는 게 제일 깔끔합니다.
                         isInTeleportMenu = false;
                         teleportMenuUI.SetActive(false);
                         menuUI.SetActive(true);
                     }
-                    else // 다른 곳일 때만 정상 텔레포트!
+                    else
                     {
                         StartCoroutine(TeleportRoutine(dest));
                     }
@@ -126,7 +125,7 @@ public class Checkpoint : MonoBehaviour
                 teleportMenuUI.SetActive(false);
                 menuUI.SetActive(true);
             }
-            return; // 텔레포트 창이 켜져있을 땐 아래 메인메뉴 로직을 무시
+            return;
         }
 
         // 1순위: 메인 메뉴가 열려있을 때
@@ -213,15 +212,12 @@ public class Checkpoint : MonoBehaviour
             if (menuCursors[i] != null) menuCursors[i].SetActive(i == currentMenuIndex);
     }
 
-
-
     private void ExecuteRest()
     {
         menuUI.SetActive(false);
         StartCoroutine(RestEffectRoutine());
     }
 
-    //텔레포트 서브메뉴 진입
     private void ExecuteTeleport()
     {
         if (teleportMenuUI != null && teleportCursors.Length > 0)
@@ -244,29 +240,36 @@ public class Checkpoint : MonoBehaviour
             if (teleportCursors[i] != null) teleportCursors[i].SetActive(i == currentTeleportIndex);
     }
 
-    //암전 -> 이동 -> 바통터치 로직
+    // 🔥 [핵심 연출 로직] 번쩍임 방지 + 완벽한 타이밍
     private IEnumerator TeleportRoutine(Checkpoint destination)
     {
         isRestingProcess = true;
         isInTeleportMenu = false;
         if (teleportMenuUI != null) teleportMenuUI.SetActive(false);
 
-        // 텔레포트 도중 OnTriggerExit2D가 playerObj를 null로 만들어버리는 것을 방지하기 위해,
-        // 현재 플레이어 정보를 로컬 변수(p)에 꽉 붙잡아(Cache) 둡니다!
         PlayerController p = playerObj;
 
-        // 1. 완전 암전 (플레이어 가리기)
+        // 1. 출발지에서 화면 완전 암전
         if (dimmerSprite != null) dimmerSprite.sortingOrder = 5;
         yield return StartCoroutine(FadeAlpha(1f));
 
-        // 2. 물리 튕김 방지 및 좌표 텔레포트 (이제 p 를 사용합니다)
-        p.rb.linearVelocity = Vector2.zero;
-        p.transform.position = destination.spawnPoint.position;
-
-        // 3. 맵 로딩 체감을 위한 안정화 대기
+        // 2. 화면이 다 까매지고 나서 대기 (여운 주기)
         yield return new WaitForSeconds(0.5f);
 
-        // 4. 원래 있던 체크포인트의 암전막(Dimmer) 치우기
+        // 🔥 3. 이동 직전에 '목적지'의 암전막을 카메라 렌즈에 딱 붙이고 까맣게 켜버림! 
+        // (카메라가 날아가는 동안 화면을 원천 차단)
+        if (destination.dimmerSprite != null && Camera.main != null)
+        {
+            destination.dimmerSprite.transform.SetParent(Camera.main.transform);
+            destination.dimmerSprite.transform.localPosition = new Vector3(0f, 0f, 10f); // 렌즈 바로 앞 Z축 여유
+            destination.dimmerSprite.sortingOrder = 5;
+            destination.dimmerSprite.gameObject.SetActive(true);
+            Color destColor = destination.dimmerSprite.color;
+            destColor.a = 1f;
+            destination.dimmerSprite.color = destColor;
+        }
+
+        // 4. 이제 출발지 암전은 필요 없으니 꺼버림
         if (dimmerSprite != null)
         {
             Color c = dimmerSprite.color;
@@ -275,48 +278,61 @@ public class Checkpoint : MonoBehaviour
             dimmerSprite.gameObject.SetActive(false);
         }
 
-        // 5. 목적지 체크포인트가 화면 밝히기 바통터치!
-        destination.StartFadeInFromTeleport(p);
+        // 5. 물리적 좌표 텔레포트 (이동)
+        p.rb.linearVelocity = Vector2.zero;
+        p.transform.position = destination.spawnPoint.position;
 
-       
+        // 6. 목적지 체크포인트로 바통 터치!
+        destination.StartCoroutine(destination.FadeInAfterTeleport(p));
 
         isRestingProcess = false;
     }
 
-    // 텔레포트 도착 직후, 도착지 체크포인트가 화면을 밝혀주는 함수
-    public void StartFadeInFromTeleport(PlayerController arrivedPlayer)
+    // 텔레포트 도착 직후 처리
+    public IEnumerator FadeInAfterTeleport(PlayerController arrivedPlayer)
     {
-        // 1. 도착지 체크포인트가 플레이어를 인식하게 만듦
+        isRestingProcess = true;
         playerObj = arrivedPlayer;
         isPlayerInRange = true;
-        isUnlocked = true; // 텔레포트로 도착했으니 당연히 해금됨!
+        isUnlocked = true;
 
-        // 2. 암전막 설정 (메뉴창을 띄워야 하니 -5로 뒤로 깔기)
+        // 🔥 1. 이동 완료 후 암전(까만 화면) 상태 유지하며 카메라 안정화 대기!
+        yield return new WaitForSeconds(1.0f);
+
         if (dimmerSprite != null)
         {
+            // 2. 1초 대기 후 화면 서서히 밝아짐
+            yield return StartCoroutine(FadeAlpha(0f));
+
+            // 🔥 3. 다 밝아지면 렌즈에 붙였던 암전막을 원래 자리(목적지 체크포인트)로 복구!
+            dimmerSprite.transform.SetParent(this.transform);
+            dimmerSprite.transform.localPosition = originalDimmerPos;
+
+            // 4. 메뉴 배경용으로 세팅하여 다시 켬
             dimmerSprite.sortingOrder = -5;
-            dimmerSprite.gameObject.SetActive(true);
-
-            // 까만 화면(1f)에서 시작
             Color c = dimmerSprite.color;
-            c.a = 1f;
+            c.a = 0.6f;
             dimmerSprite.color = c;
-
-            // 0.6f(메뉴 배경 밝기)로 서서히 밝아지기!
-            StartCoroutine(FadeAlpha(0.6f));
+            dimmerSprite.gameObject.SetActive(true);
         }
 
-        // 3. 도착한 곳의 메인 메뉴 열어주기!
+        // 5. 도착한 곳의 메인 메뉴 오픈
         menuUI.SetActive(true);
         currentMenuIndex = 0;
         UpdateCursorUI();
+
+        isRestingProcess = false;
     }
 
     private IEnumerator RestEffectRoutine()
     {
         isRestingProcess = true;
 
-        if (dimmerSprite != null) dimmerSprite.sortingOrder = 5;
+        if (dimmerSprite != null)
+        {
+            dimmerSprite.sortingOrder = 5;
+            dimmerSprite.gameObject.SetActive(true);
+        }
         yield return StartCoroutine(FadeAlpha(1f));
 
         if (playerObj != null && playerObj.playerStats != null)
@@ -338,6 +354,8 @@ public class Checkpoint : MonoBehaviour
     {
         if (dimmerSprite == null) yield break;
 
+        if (targetAlpha > 0f) dimmerSprite.gameObject.SetActive(true);
+
         Color c = dimmerSprite.color;
         float startAlpha = c.a;
         float time = 0;
@@ -354,6 +372,4 @@ public class Checkpoint : MonoBehaviour
 
         if (targetAlpha <= 0f) dimmerSprite.gameObject.SetActive(false);
     }
-
-
 }

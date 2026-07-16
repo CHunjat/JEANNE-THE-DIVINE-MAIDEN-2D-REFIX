@@ -22,6 +22,8 @@ public class GameOverManager : MonoBehaviour
     public static bool skipMainMenu = false;
     public static bool shouldFadeIn = false;
 
+    public static bool isRespawnFade = false;
+
     private bool isGameOverTriggered = false;
 
     private void Start()
@@ -29,20 +31,21 @@ public class GameOverManager : MonoBehaviour
         if (gameOverScreen != null)
             gameOverScreen.SetActive(false);
 
-        // ========================================================
-        // ★ [씬 재로드 시 처리]
-        // ========================================================
-        // 1. 만약 이전에 저장해둔 부활 포인트 좌표가 있다면, 플레이어를 그리로 순간이동시킵니다.
+        // 부활 위치 적용
         if (lastRespawnPosition.HasValue && playerStats != null)
         {
             playerStats.transform.position = lastRespawnPosition.Value;
         }
 
-        // 2. 부활 또는 새 게임 버튼으로 진입한 경우, 부드럽게 화면을 밝혀줍니다.
-        if (shouldFadeIn && dimmerSprite != null)
+        // ====================================================
+        // 게임오버 후 부활일 때만 FadeIn 실행
+        // ====================================================
+        if (shouldFadeIn && isRespawnFade && dimmerSprite != null)
         {
-            shouldFadeIn = false; // 플래그 원상 복구
-            StartCoroutine(FadeInEffectRoutine());
+            shouldFadeIn = false;
+            isRespawnFade = false;
+
+            StartCoroutine(DelayedFadeIn(0.1f));
         }
     }
 
@@ -65,14 +68,16 @@ public class GameOverManager : MonoBehaviour
             inGameScreen.SetActive(false);
         }
 
-        if (dimmerSprite == null) yield break;
+        if (dimmerSprite == null)
+            yield break;
 
         // 카메라 위치 추적 암전 (보스방 위치 고려)
         Camera mainCamera = Camera.main;
         if (mainCamera != null)
         {
             Vector3 camPos = mainCamera.transform.position;
-            dimmerSprite.transform.position = new Vector3(camPos.x, camPos.y, dimmerSprite.transform.position.z);
+            dimmerSprite.transform.position =
+                new Vector3(camPos.x, camPos.y, dimmerSprite.transform.position.z);
         }
 
         dimmerSprite.gameObject.SetActive(true);
@@ -87,6 +92,7 @@ public class GameOverManager : MonoBehaviour
         while (elapsed < fadeDuration)
         {
             elapsed += Time.deltaTime;
+
             float currentAlpha = Mathf.Lerp(startAlpha, 1.0f, elapsed / fadeDuration);
 
             c.a = currentAlpha;
@@ -95,6 +101,7 @@ public class GameOverManager : MonoBehaviour
             if (!isUiActivated && currentAlpha >= uiTriggerAlpha)
             {
                 isUiActivated = true;
+
                 if (gameOverScreen != null)
                 {
                     gameOverScreen.SetActive(true);
@@ -108,16 +115,14 @@ public class GameOverManager : MonoBehaviour
         dimmerSprite.color = c;
 
         if (!isUiActivated && gameOverScreen != null)
+        {
             gameOverScreen.SetActive(true);
+        }
 
-        // ========================================================
-        // ★ [씬 초기화 및 부활 로직] 3초 대기 후 씬 재로드
-        // ========================================================
-
-        // 1. 지정된 시간(3초) 동안 암전 상태로 대기
+        // 3초 대기
         yield return new WaitForSeconds(respawnDelay);
 
-        // 2. [수정됨] 체크포인트를 탐색하여 부활할 위치를 결정합니다.
+        // 체크포인트 탐색
         Transform targetRespawnTransform = GetNearestUnlockedCheckpointSpawnPoint();
 
         if (targetRespawnTransform != null)
@@ -127,19 +132,21 @@ public class GameOverManager : MonoBehaviour
         }
         else if (respawnPoint != null)
         {
-            // 활성화된 체크포인트가 하나도 없다면 씬의 기본 시작 지점(respawnPoint)으로 보냅니다.
             lastRespawnPosition = respawnPoint.position;
-            Debug.Log($"[GameOverManager] 활성화된 체크포인트가 없어 기본 시작 지점으로 설정합니다. 부활 위치: {lastRespawnPosition}");
+            Debug.Log($"[GameOverManager] 기본 시작 지점으로 부활합니다. 부활 위치: {lastRespawnPosition}");
         }
 
+        // =====================================================
+        // ★ 게임오버로 인한 재로드임을 표시
+        // =====================================================
         skipMainMenu = true;
-        shouldFadeIn = true; // 재로드 후 어두운 화면에서 밝아지는 연출 작동용
+        shouldFadeIn = true;
+        isRespawnFade = true;   // ★ 추가
 
-        // 3. 현재 활성화된 씬을 통째로 재로드하여 보스와 맵 전체를 '순정 상태'로 리셋합니다.
+        // 씬 재로드
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    // 완전히 어두운 상태에서 원래 밝기로 부드럽게 되돌리는 연출용 코루틴
     private IEnumerator FadeInEffectRoutine()
     {
         dimmerSprite.gameObject.SetActive(true);
@@ -160,7 +167,35 @@ public class GameOverManager : MonoBehaviour
 
         c.a = 0f;
         dimmerSprite.color = c;
-        dimmerSprite.gameObject.SetActive(false);
+
+        // =================================================================
+        // 🔥 [수정된 부분] 
+        // dimmerSprite를 끄기 전에, 혹시 체크포인트가 휴식 중인지 검사합니다.
+        // =================================================================
+        bool isAnyCheckpointResting = false;
+        Checkpoint[] checkpoints = FindObjectsByType<Checkpoint>(FindObjectsSortMode.None);
+
+        // Checkpoint.cs의 private 변수 'isRestingProcess'를 가져올 리플렉션 설정
+        var field = typeof(Checkpoint).GetField("isRestingProcess", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        foreach (var cp in checkpoints)
+        {
+            if (field != null)
+            {
+                if ((bool)field.GetValue(cp)) // 체크포인트가 휴식 중이라면(true)
+                {
+                    isAnyCheckpointResting = true;
+                    break;
+                }
+            }
+        }
+
+        // 아무도 쉬고 있지 않을 때만 비활성화합니다.
+        if (!isAnyCheckpointResting)
+        {
+            dimmerSprite.gameObject.SetActive(false);
+        }
+        // =================================================================
     }
 
     // ========================================================
@@ -210,5 +245,11 @@ public class GameOverManager : MonoBehaviour
         }
 
         return null;
+    }
+
+    private IEnumerator DelayedFadeIn(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        StartCoroutine(FadeInEffectRoutine());
     }
 }

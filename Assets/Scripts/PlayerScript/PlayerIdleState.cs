@@ -44,17 +44,41 @@ public class PlayerIdleState : PlayerState
         player.HandleGrappleInput();
         if (stateMachine.CurrentState == player.GrappleState) return; // 그래플로 넘어갔다면 아래 로직 스킵
 
+        // =========================================================
+        // 🔥 [개발자님 특제 로직] 거리에 따른 유예시간(GraceTime) 조절 (Idle 버전)
+        // =========================================================
+        if (player.IsGrounded())
+        {
+            player.groundedTimer = player.groundedGraceTime;
+        }
+        else
+        {
+            // 발밑에 바닥이 가깝게 있으면 천천히 타이머 깎기
+            if (player.IsNearGround())
+            {
+                player.groundedTimer -= Time.deltaTime;
+            }
+            // 발밑에 닿는 게 없는 허공이면 타이머 즉시 0 압수
+            else
+            {
+                player.groundedTimer = 0f;
+            }
+        }
+
+        // 타이머가 다 닳았는데도 땅이 아니면 AirState로 날려버리기
+        if (player.groundedTimer <= 0)
+        {
+            if (!player.IsGrounded())
+            {
+                stateMachine.ChangeState(player.AirState);
+                return;
+            }
+        }
+        // =========================================================
+
         base.LogicUpdate();
         player.HandleAttackInput();
         float xInput = player.inputReader.MoveValue.x;
-
-        //idle 시 갑자기 공중으로 떨어졌을때 air 스테이트로 넘겨주는 코드
-        if (!player.IsGrounded())
-        {
-            stateMachine.ChangeState(player.AirState);
-            return;
-        }
-
 
         if (player.inputReader.DashPressed && player.CanDash) // 쿨타임 확인 추가
         {

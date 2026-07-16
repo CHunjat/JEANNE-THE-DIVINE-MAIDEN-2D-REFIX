@@ -21,16 +21,37 @@ public class UIButtonManager : MonoBehaviour
         {
             GameOverManager.skipMainMenu = false; // 플래그는 사용 후 즉시 리셋
 
-            if (InGame != null) InGame.SetActive(true);
-            if (MainScreen != null) MainScreen.SetActive(false);
-            Time.timeScale = 1f; // 게임 시간 정상 진행
+            if (InGame != null)
+                InGame.SetActive(true);
+
+            if (MainScreen != null)
+                MainScreen.SetActive(false);
+
+            // 혹시 남아있는 UI가 있으면 모두 닫기
+            if (Pause != null)
+                Pause.SetActive(false);
+
+            if (Option != null)
+                Option.SetActive(false);
+
+            Time.timeScale = 1f;
         }
         else
         {
-            // 빌드 후 게임을 처음 실행했을 때의 타이틀 화면 기본 세팅
-            if (InGame != null) InGame.SetActive(false);
-            if (MainScreen != null) MainScreen.SetActive(true);
-            Time.timeScale = 0f; // 타이틀 화면에서는 시간 정지
+            // 게임 최초 실행
+            if (InGame != null)
+                InGame.SetActive(false);
+
+            if (MainScreen != null)
+                MainScreen.SetActive(true);
+
+            if (Pause != null)
+                Pause.SetActive(false);
+
+            if (Option != null)
+                Option.SetActive(false);
+
+            Time.timeScale = 0f;
         }
     }
 
@@ -52,10 +73,54 @@ public class UIButtonManager : MonoBehaviour
 
     private void HandlePauseInput()
     {
+        // ========================================================
+        // 🔥 [추가] 체크포인트 예외 처리
+        // 플레이어가 휴식 중이거나 메뉴를 탈출하는 도중이라면 일시정지 감지를 무시합니다.
+        // ========================================================
+        if (IsPlayerInteractingWithCheckpoint()) return;
+
         if (InGame != null && InGame.activeSelf)
         {
             TogglePause();
         }
+    }
+
+    // ========================================================
+    // 🔥 [추가] 플레이어가 체크포인트와 상호작용 중인지 판별하는 헬퍼 함수
+    // ========================================================
+    private bool IsPlayerInteractingWithCheckpoint()
+    {
+        // 1. 플레이어 상태를 기반으로 체크
+        PlayerController player = FindObjectOfType<PlayerController>();
+        if (player != null && player.StateMachine != null)
+        {
+            var currentState = player.StateMachine.CurrentState;
+            // 휴식 중(RestState)이거나 일어나는 상태(StandUpState)인 경우 일시정지 방지
+            if (currentState == player.RestState || currentState == player.StandUpState)
+            {
+                return true;
+            }
+        }
+
+        // 2. 씬에 배치된 체크포인트 UI의 활성화 여부를 기반으로 체크 (방어용 서브 시스템)
+        Checkpoint[] checkpoints = FindObjectsOfType<Checkpoint>();
+        if (checkpoints != null)
+        {
+            foreach (var cp in checkpoints)
+            {
+                if (cp != null)
+                {
+                    // 메인 휴식 메뉴나 텔레포트 메뉴 중 하나라도 켜져 있다면 상호작용 중으로 간주
+                    if ((cp.menuUI != null && cp.menuUI.activeSelf) ||
+                        (cp.teleportMenuUI != null && cp.teleportMenuUI.activeSelf))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     public void TogglePause()
@@ -68,21 +133,34 @@ public class UIButtonManager : MonoBehaviour
         }
     }
 
-    // ========================================================
-    // ★ [새 게임 기능 수정]
-    // ========================================================
     public void NewGameButton()
     {
         Time.timeScale = 1f;
 
-        // 새 게임을 시작하는 것이므로 기존 부활 체크포인트 이력을 완전히 날립니다.
+        // ==========================
+        // 게임 상태 초기화
+        // ==========================
         GameOverManager.lastRespawnPosition = null;
-
-        // 타이틀(메인 화면)을 건너뛰고 바로 게임 인게임이 뜨게끔 만듭니다.
         GameOverManager.skipMainMenu = true;
-        GameOverManager.shouldFadeIn = true; // 새 게임 진입 시에도 부드럽게 화면이 켜지게 함
 
-        // 씬을 완전히 새로 로드하여 맵, 보스, 플레이어 스탯을 완전 순정으로 새 출발합니다!
+        // ★ 게임오버 연출 비활성화
+        GameOverManager.shouldFadeIn = false;
+        GameOverManager.isRespawnFade = false;
+
+        // UI 초기화
+        if (Pause != null)
+            Pause.SetActive(false);
+
+        if (Option != null)
+            Option.SetActive(false);
+
+        if (InGame != null)
+            InGame.SetActive(true);
+
+        if (MainScreen != null)
+            MainScreen.SetActive(false);
+
+        // 씬 완전 초기화
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 

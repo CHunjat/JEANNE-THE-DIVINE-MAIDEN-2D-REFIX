@@ -224,7 +224,7 @@ public class SkillUIManager : MonoBehaviour
         if (inGameUIPanel != null) inGameUIPanel.SetActive(true);
         if (skillUIPanel != null) skillUIPanel.SetActive(false);
 
-        // ⭐ [핵심 아이디어] Checkpoint.cs를 건드리지 않고, 플레이어와 제일 가까운 체크포인트 1개만 찾아서 엽니다!
+        // ⭐ [수정된 부분] 가장 가까운 체크포인트를 찾아서 닫고, 메인 메뉴를 다시 켭니다.
         if (checkpointSkillHandlers != null && checkpointSkillHandlers.Length > 0)
         {
             GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -247,15 +247,29 @@ public class SkillUIManager : MonoBehaviour
                     }
                 }
 
-                // 현재 플레이어가 서 있는(가장 가까운) 체크포인트 딱 하나만 메뉴를 닫음(메인화면 호출)
+                // 현재 플레이어가 서 있는(가장 가까운) 체크포인트 처리
                 if (closestHandler != null)
                 {
+                    // 1. 기존에 작성하신 핸들러의 닫기 동작 실행
                     closestHandler.CloseSkillMenu();
+
+                    // 🔥 2. [핵심 추가] 해당 핸들러와 같은 오브젝트에 있는 Checkpoint 컴포넌트를 찾아 메인 메뉴를 켭니다.
+                    Checkpoint closestCheckpoint = closestHandler.GetComponent<Checkpoint>();
+
+                    // 만약 자식/부모 오브젝트에 있다면 아래 코드로 찾아냅니다.
+                    if (closestCheckpoint == null)
+                        closestCheckpoint = closestHandler.GetComponentInParent<Checkpoint>();
+
+                    // 체크포인트의 메인 메뉴 UI를 다시 활성화!
+                    if (closestCheckpoint != null && closestCheckpoint.menuUI != null)
+                    {
+                        closestCheckpoint.menuUI.SetActive(true);
+                    }
                 }
             }
         }
 
-        // 2. 빈 스킬 데이터가 넘어와도 에러 없이 UI가 꺼지도록 방어(Try-Catch)
+        // 빈 스킬 데이터가 넘어와도 에러 없이 UI가 꺼지도록 방어(Try-Catch)
         if (skillRotationManager != null && skillSlots != null)
         {
             try
