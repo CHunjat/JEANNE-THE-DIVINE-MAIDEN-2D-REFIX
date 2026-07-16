@@ -594,7 +594,7 @@ public class PlayerController : MonoBehaviour
             Debug.Log("<color=magenta>테스트용 자살 버튼 작동!</color>");
 
             // 만약 체력 UI도 같이 깎이는 걸 보고 싶다면 아래 주석 해제
-            // if (playerStats != null) playerStats.currentHp = 0;
+            if (playerStats != null) playerStats.currentHp = 0;
 
             StateMachine.ChangeState(DieState);
             return;

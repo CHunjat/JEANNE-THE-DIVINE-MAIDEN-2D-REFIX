@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement; // ★ 씬 관리를 위해 필수 추가
 
 public class UIButtonManager : MonoBehaviour
