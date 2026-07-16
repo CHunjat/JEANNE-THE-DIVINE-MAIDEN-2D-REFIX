@@ -96,10 +96,10 @@ MonoBehaviour:
   Path: Assets/StreamingAssets/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639196172907580896
+  lastModified: 639197897529227126
   FileSizes:
   - Name: 
-    Value: 2478
+    Value: 2712
   Exists: 1
 --- !u!114 &-7941335690144576329
 MonoBehaviour:
@@ -371,6 +371,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 0
+--- !u!114 &-2784358029731805066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/Voice/Voice_001
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/Voice/Voice_001
+  Guid:
+    Data1: 341908079
+    Data2: 1325805968
+    Data3: 55665040
+    Data4: -1017532204
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1500
 --- !u!114 &-1317400637887467077
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -398,6 +425,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 5774
+--- !u!114 &-1190820447947967817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/Voice/Voice_002
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/Voice/Voice_002
+  Guid:
+    Data1: 1617190722
+    Data2: 1258380984
+    Data3: 1549743026
+    Data4: -1007302625
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1041
 --- !u!114 &-1186223177692977431
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -452,6 +506,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 800
+--- !u!114 &-524272433687435053
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Player_Dead
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Player_Dead
+  Guid:
+    Data1: -805517662
+    Data2: 1122276160
+    Data3: 377047424
+    Data4: -1640767087
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 8000
 --- !u!114 &-493035528662845270
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -556,13 +637,17 @@ MonoBehaviour:
   - {fileID: 7722643736475689656}
   - {fileID: -3729500494524145053}
   - {fileID: 6213048353427349253}
+  - {fileID: 691579570148411195}
+  - {fileID: -1190820447947967817}
+  - {fileID: -2784358029731805066}
+  - {fileID: -524272433687435053}
   EditorParameters: []
   MasterBanks:
   - {fileID: 858878391108560638}
   StringsBanks:
   - {fileID: -8124024757644268347}
   cacheVersion: 131860
-  cacheTime: 639196172907580896
+  cacheTime: 639197897529227126
   SerializableEventsDict:
   - key: event:/Player/Player_Foot_Step_Sprint
     index: 0
@@ -632,6 +717,14 @@ MonoBehaviour:
     index: 32
   - key: event:/Player/Player_Normal_Attack_Charging
     index: 33
+  - key: event:/FinalBoss/Voice/Voice_003
+    index: 34
+  - key: event:/FinalBoss/Voice/Voice_002
+    index: 35
+  - key: event:/FinalBoss/Voice/Voice_001
+    index: 36
+  - key: event:/Player/Player_Dead
+    index: 37
 --- !u!114 &538423973531881020
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -659,6 +752,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 200
+--- !u!114 &691579570148411195
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/Voice/Voice_003
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/Voice/Voice_003
+  Guid:
+    Data1: -136515067
+    Data2: 1286685154
+    Data3: -481232214
+    Data4: -217496766
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
 --- !u!114 &858878391108560638
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -674,7 +794,7 @@ MonoBehaviour:
   Path: Assets/StreamingAssets/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639196172907580896
+  lastModified: 639197897529227126
   FileSizes: []
   Exists: 1
 --- !u!114 &1694854564234410638

@@ -73,7 +73,7 @@ public class BossSequenceController : MonoBehaviour
 
         if (bossDamageText != null) bossDamageText.text = "0";
 
-        if (bossRoomTilemap != null) bossRoomTilemap.SetActive(false);
+        //if (bossRoomTilemap != null) bossRoomTilemap.SetActive(false);
         if (entryDoorCamera != null) entryDoorCamera.SetActive(false);
         if (exitDoorCamera != null) exitDoorCamera.SetActive(false);
         if (bossCamera != null) bossCamera.SetActive(false);

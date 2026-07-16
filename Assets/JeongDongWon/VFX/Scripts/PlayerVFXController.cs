@@ -260,4 +260,48 @@ public class PlayerVFXController : MonoBehaviour
         parryCountHardVFXPool[index].gameObject.SetActive(false);
         parryCountHardVFXCoroutines[index] = null;
     }
+
+    // ── VFX 전체 정지 (방어 로직 포함) ────────────────────
+    public void StopAllPlayerVFX()
+    {
+        if (chargingCompleteRoutine != null)
+        {
+            StopCoroutine(chargingCompleteRoutine);
+            chargingCompleteRoutine = null;
+        }
+        if (lightningChargingVFX != null && lightningChargingVFX.gameObject.activeSelf)
+        {
+            lightningChargingVFX.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            lightningChargingVFX.gameObject.SetActive(false);
+        }
+
+        if (electricVFX_1_ActiveIndex >= 0)
+        {
+            int index = electricVFX_1_ActiveIndex;
+            electricVFX_1_ActiveIndex = -1;
+
+            if (electricVFX_1_StopRoutines[index] != null)
+            {
+                StopCoroutine(electricVFX_1_StopRoutines[index]);
+                electricVFX_1_StopRoutines[index] = null;
+            }
+            if (electricVFX_1_Pool[index] != null && electricVFX_1_Pool[index].gameObject.activeSelf)
+            {
+                electricVFX_1_Pool[index].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                electricVFX_1_Pool[index].gameObject.SetActive(false);
+            }
+        }
+
+        if (electricVFX_2 != null && electricVFX_2.gameObject.activeSelf)
+        {
+            electricVFX_2.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            electricVFX_2.gameObject.SetActive(false);
+        }
+
+        if (electricVFX_3 != null && electricVFX_3.gameObject.activeSelf)
+        {
+            electricVFX_3.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            electricVFX_3.gameObject.SetActive(false);
+        }
+    }
 }
