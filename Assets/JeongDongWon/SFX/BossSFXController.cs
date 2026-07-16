@@ -25,6 +25,7 @@ public class BossSFXController : MonoBehaviour
     public void OnBossAttackClearing() => Play("event:/FinalBoss/Boss_Attack_Clearing");
     public void OnBossAttackHardSlash() => Play("event:/FinalBoss/Boss_Attack_Hard_Slash");
     public void OnBossAttackJump() => Play("event:/FinalBoss/Boss_Attack_Jump");
+    public void OnBossAttackJump_JohnCena() => Play("event:/FinalBoss/BGM/Boss_Attack_Jump_JohnCena");
     public void OnBossAttackLanding() => Play("event:/FinalBoss/Boss_Attack_Landing");
     public void OnBossAttackPierce() => Play("event:/FinalBoss/Boss_Attack_Normal_Pierce");
     public void OnBossAttackSlash() => Play("event:/FinalBoss/Boss_Attack_Normal_Slash");

@@ -128,12 +128,12 @@ public class PlayerSFXController : MonoBehaviour
     public void OnShieldReady() => Play("event:/Player/Player_Shield_Ready");
 
     // ── 상호작용 ────────────────────────────────
-    public void OnShieldParry() => Play("event:/Player/Interaction/Player_Shield_Parry");
-    public void OnShieldParryCounter() => Play("event:/Player/Interaction/Player_Shield_Parry_Counter");
-    public void OnShieldGuard() => Play("event:/Player/Interaction/Player_Shield_Guard");
-    public void OnPlayerAttackHit() => Play("event:/Player/Interaction/Player_Attack_Hit");
-    public void OnPlayerDamagedHurtVoice() => Play("event:/Player/Interaction/Player_Damaged_Hurt_Voice");
-    public void OnFinalBossAttackHit() => Play("event:/FinalBoss/Interaction/Final_Boss_Attack_Hit");
+    public void OnShieldParry() => Play("event:/Player/Interaction_Battle/Player_Shield_Parry");
+    public void OnShieldParryCounter() => Play("event:/Player/Interaction_Battle/Player_Shield_Parry_Counter");
+    public void OnShieldGuard() => Play("event:/Player/Interaction_Battle/Player_Shield_Guard");
+    public void OnPlayerAttackHit() => Play("event:/Player/Interaction_Battle/Player_Attack_Hit");
+    public void OnPlayerDamagedHurtVoice() => Play("event:/Player/Interaction_Battle/Player_Damaged_Hurt_Voice");
+    public void OnFinalBossAttackHit() => Play("event:/FinalBoss/Interaction_Battle/Final_Boss_Attack_Hit");
 
     // ── 회복 ────────────────────────────────
     public void OnHeal() => Play("event:/Player/Player_Skill_Heal");
