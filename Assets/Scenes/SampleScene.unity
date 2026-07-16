@@ -5159,6 +5159,10 @@ PrefabInstance:
       propertyPath: m_IsTrigger
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3422334648348411454, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3832418321723928890, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: distanceType
       value: 0
@@ -5213,7 +5217,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5145147845001952587, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5656119948597351064, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: maxHp
