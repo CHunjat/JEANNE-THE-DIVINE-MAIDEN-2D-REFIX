@@ -1,19 +1,21 @@
 using UnityEngine;
 using System.Collections;
-// =====================================================
-// MidBossPattern4.cs (2중 착지 버그 완벽 해결본)
-// =====================================================
+// =============================================================
+// MidBossPattern4.cs  기본 점프 공격
+// =============================================================
 public class MidBossPattern4 : BossPatternBase
 {
     [Header("점프 공격 설정")]
     [SerializeField] private float trackTime = 2.7f;
     [SerializeField] private float dropDelay = 0.3f;
-    [SerializeField] private float hitboxActiveDuration = 1.0f;
+
     private GameObject landingHitbox;
     private MidBoss owner;
+
     private bool isJumping = false;
+    public override bool IsBusy => isJumping;
+
     private Animator visualAnimator;
-    private float originalGroundY;
 
     private void Awake()
     {
@@ -21,7 +23,7 @@ public class MidBossPattern4 : BossPatternBase
         owner = GetComponent<MidBoss>();
         if (owner != null) landingHitbox = owner.hitBox_Landing;
         if (landingHitbox != null) landingHitbox.SetActive(false);
-        originalGroundY = transform.position.y;
+
         cooldown = 20f;
         priority = 2;
         distanceType = DistanceType.Any;
@@ -39,15 +41,12 @@ public class MidBossPattern4 : BossPatternBase
     {
         if (!isJumping) return;
 
-        // Visual 끄기
         Transform visual = transform.Find("Visual");
         if (visual != null) visual.gameObject.SetActive(false);
 
-        // Hurtbox_Body 끄기
         Transform hurtbox = transform.Find("Hurtbox_Body");
         if (hurtbox != null) hurtbox.gameObject.SetActive(false);
 
-        // 본체 콜라이더 끄기
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 
@@ -58,6 +57,7 @@ public class MidBossPattern4 : BossPatternBase
     {
         GameObject playerObj = GameObject.FindWithTag("Player");
         float timer = 0f;
+
         while (timer < trackTime)
         {
             if (playerObj != null)
@@ -65,33 +65,56 @@ public class MidBossPattern4 : BossPatternBase
             timer += Time.deltaTime;
             yield return null;
         }
-        yield return new WaitForSeconds(dropDelay);
-        transform.position = new Vector2(transform.position.x, originalGroundY);
 
-        // Visual 켜기
+        yield return new WaitForSeconds(dropDelay);
+
         Transform visual = transform.Find("Visual");
         if (visual != null) visual.gameObject.SetActive(true);
 
-        // Hurtbox_Body 켜기
         Transform hurtbox = transform.Find("Hurtbox_Body");
         if (hurtbox != null) hurtbox.gameObject.SetActive(true);
 
-        // 본체 콜라이더 켜기
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = true;
 
         if (visualAnimator != null) visualAnimator.SetTrigger("doLand");
-        isJumping = false;
     }
 
     public void AnimEvent_LandImpact()
     {
+        if (!isJumping) return;
+
         if (landingHitbox != null)
         {
-            landingHitbox.SetActive(true);
-            Invoke(nameof(DeactivateLanding), hitboxActiveDuration);
+            StartCoroutine(ReactivateHitboxRoutine(landingHitbox));
         }
+
+        isJumping = false;
     }
 
-    private void DeactivateLanding() { if (landingHitbox != null) landingHitbox.SetActive(false); }
+    private IEnumerator ReactivateHitboxRoutine(GameObject hitbox)
+    {
+        hitbox.SetActive(false);
+        yield return null;
+        hitbox.SetActive(true);
+        yield return new WaitForSeconds(0.1f);
+        hitbox.SetActive(false);
+    }
+
+    public void EndExecution()
+    {
+        isJumping = false;
+        StopAllCoroutines();
+
+        if (landingHitbox != null) landingHitbox.SetActive(false);
+
+        Transform visual = transform.Find("Visual");
+        if (visual != null) visual.gameObject.SetActive(true);
+
+        Transform hurtbox = transform.Find("Hurtbox_Body");
+        if (hurtbox != null) hurtbox.gameObject.SetActive(true);
+
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = true;
+    }
 }

@@ -19,11 +19,15 @@ public class AttackDataSO : ScriptableObject
     public AttackCategory attackCategory; // [핵심] 이 공격이 어떤 타입인지 인스펙터에서 선택!
     public Vector2 size;                  // 타격 범위 크기
     public Vector2 offset;                // 공격 중심점 오프셋
-    public float damageMultiplier;                  // 기본 데미지 수치
+    public float damageMultiplier;        // 기본 데미지 수치
 
     [Header("타격감 (Game Feel) 요소")]
     public float hitStopDuration;         // 역경직(멈춤) 시간 (예: 0.05초)
 
+    // 수정된 부분 고정값이 아니라 데미지 비례 '비율(Ratio)'로 변경!
+    [Header("마나(MP) 수급 설정")]
+    [Tooltip("적에게 준 최종 데미지의 몇 %를 마나로 흡수할지 (예: 0.1 입력 시 데미지의 10% 회복)")]
+    public float mpRecoveryRatio = 0.1f;
 
     // =========================================================
     // 그로기 및 패리 카운터 시스템 (기획자 조절 영역)

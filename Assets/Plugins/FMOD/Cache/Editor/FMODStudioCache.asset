@@ -1,5 +1,32 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8864255464459149223
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/BGM/Boss_Intro_002_JohnCena
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/BGM/Boss_Intro_002_JohnCena
+  Guid:
+    Data1: -1839229371
+    Data2: 1191323887
+    Data3: 590764447
+    Data4: 1218973281
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 19256
 --- !u!114 &-8589154509672233122
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -81,6 +108,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 950
+--- !u!114 &-8241012395019910860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Ambient/Forest/Forest_Object_001
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Ambient/Forest/Forest_Object_001
+  Guid:
+    Data1: -1850518117
+    Data2: 1317487257
+    Data3: -770811007
+    Data4: 82093237
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 15500
 --- !u!114 &-8124024757644268347
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -96,38 +150,11 @@ MonoBehaviour:
   Path: Assets/StreamingAssets/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639197977387589799
+  lastModified: 639198250353178305
   FileSizes:
   - Name: 
-    Value: 2712
+    Value: 3182
   Exists: 1
---- !u!114 &-7941335690144576329
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Player/Interaction/Player_Shield_Guard
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Player/Interaction/Player_Shield_Guard
-  Guid:
-    Data1: 79967654
-    Data2: 1095157193
-    Data3: -1835738751
-    Data4: -2015327560
-  Banks:
-  - {fileID: 858878391108560638}
-  IsStream: 0
-  Is3D: 1
-  IsOneShot: 1
-  Parameters: []
-  MinDistance: 1
-  MaxDistance: 20
-  Length: 495
 --- !u!114 &-7416544577720656592
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -155,6 +182,33 @@ MonoBehaviour:
   MinDistance: 0
   MaxDistance: 20
   Length: 0
+--- !u!114 &-7179329209468720602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Ambient/Forest/Forest_Object_002
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Ambient/Forest/Forest_Object_002
+  Guid:
+    Data1: 532769344
+    Data2: 1239082922
+    Data3: -1795208309
+    Data4: 919494678
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 6792
 --- !u!114 &-6760687477007759808
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -182,7 +236,7 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 740
---- !u!114 &-6572758951698462234
+--- !u!114 &-6705431835962561889
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -192,14 +246,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Player/Interaction/Player_Shield_Parry_Counter
+  m_Name: event:/Player/Interaction_Battle/Player_Skill_Grapling
   m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Player/Interaction/Player_Shield_Parry_Counter
+  Path: event:/Player/Interaction_Battle/Player_Skill_Grapling
   Guid:
-    Data1: -359251208
-    Data2: 1172277117
-    Data3: -959212609
-    Data4: -1588721442
+    Data1: -1012767394
+    Data2: 1302831510
+    Data3: 793848223
+    Data4: -91535311
   Banks:
   - {fileID: 858878391108560638}
   IsStream: 1
@@ -208,7 +262,7 @@ MonoBehaviour:
   Parameters: []
   MinDistance: 1
   MaxDistance: 20
-  Length: 1065
+  Length: 550
 --- !u!114 &-4763259929732182848
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -614,14 +668,10 @@ MonoBehaviour:
   - {fileID: 5487921862929290957}
   - {fileID: -154399780820808726}
   - {fileID: -6760687477007759808}
-  - {fileID: 8235396215773152304}
   - {fileID: -8589154509672233122}
   - {fileID: -8348901989192997594}
-  - {fileID: 2980233417756432782}
   - {fileID: 538423973531881020}
   - {fileID: -4763259929732182848}
-  - {fileID: -7941335690144576329}
-  - {fileID: 1694854564234410638}
   - {fileID: -1186223177692977431}
   - {fileID: 5560184847272357413}
   - {fileID: -4755469746843708223}
@@ -629,11 +679,9 @@ MonoBehaviour:
   - {fileID: 2796953547795470394}
   - {fileID: 8454090903439758873}
   - {fileID: -7416544577720656592}
-  - {fileID: 3509516183021838859}
   - {fileID: 4602700890927834151}
   - {fileID: -1317400637887467077}
   - {fileID: 7235546124526541545}
-  - {fileID: -6572758951698462234}
   - {fileID: 7722643736475689656}
   - {fileID: -3729500494524145053}
   - {fileID: 6213048353427349253}
@@ -641,13 +689,27 @@ MonoBehaviour:
   - {fileID: -1190820447947967817}
   - {fileID: -2784358029731805066}
   - {fileID: -524272433687435053}
+  - {fileID: 2472636996189243656}
+  - {fileID: 5635566851909566893}
+  - {fileID: -7179329209468720602}
+  - {fileID: -8864255464459149223}
+  - {fileID: -6705431835962561889}
+  - {fileID: 2721173115961112123}
+  - {fileID: 5705030964889731941}
+  - {fileID: 5642036983828704668}
+  - {fileID: -8241012395019910860}
+  - {fileID: 2215247021424242642}
+  - {fileID: 4735519750463282279}
+  - {fileID: 6455075985228075250}
+  - {fileID: 8350997889046110479}
+  - {fileID: 6777926493531338171}
   EditorParameters: []
   MasterBanks:
   - {fileID: 858878391108560638}
   StringsBanks:
   - {fileID: -8124024757644268347}
   cacheVersion: 131860
-  cacheTime: 639197977387589799
+  cacheTime: 639198250353178305
   SerializableEventsDict:
   - key: event:/Player/Player_Foot_Step_Sprint
     index: 0
@@ -671,60 +733,76 @@ MonoBehaviour:
     index: 9
   - key: event:/FinalBoss/Boss_Attack_Normal_Pierce
     index: 10
-  - key: event:/Player/Interaction/Player_Skill_Grapling
-    index: 11
   - key: event:/FinalBoss/Boss_Attack_Normal_Slash
-    index: 12
+    index: 11
   - key: event:/Player/Player_Skill_Heal
-    index: 13
-  - key: event:/Player/Interaction/Player_Attack_Hit
-    index: 14
+    index: 12
   - key: event:/Player/Player_Foot_Step_Jump _Land
-    index: 15
+    index: 13
   - key: event:/FinalBoss/Boss_Death
-    index: 16
-  - key: event:/Player/Interaction/Player_Shield_Guard
-    index: 17
-  - key: event:/Player/Interaction/Player_Damaged_Hurt_Voice
-    index: 18
+    index: 14
   - key: event:/Player/Player_Skill_Attack_Charging_Complete
-    index: 19
+    index: 15
   - key: event:/Player/Player_Skill_Attack_Lightning_Cut_Slash
-    index: 20
+    index: 16
   - key: event:/FinalBoss/Boss_Attack_Landing
-    index: 21
+    index: 17
   - key: event:/Player/Player_Skill_Attack_Charging_Slash
-    index: 22
+    index: 18
   - key: event:/Player/Player_Skill_Attack_Charging
-    index: 23
+    index: 19
   - key: event:/FinalBoss/Boss_Attack_Clearing
-    index: 24
+    index: 20
   - key: event:/Player/Player_Normal_Attack_Swing_Slash
-    index: 25
-  - key: event:/Player/Interaction/Player_Shield_Parry
-    index: 26
+    index: 21
   - key: event:/Player/Player_Foot_Step_Jump
-    index: 27
+    index: 22
   - key: event:/FinalBoss/Boss_Attack_Jump
-    index: 28
+    index: 23
   - key: event:/Player/Player_Air_Attack_Hard_Attack
-    index: 29
-  - key: event:/Player/Interaction/Player_Shield_Parry_Counter
-    index: 30
+    index: 24
   - key: event:/Player/Player_Skill_Attack_Lightning_Cut_Ready
-    index: 31
+    index: 25
   - key: event:/Player/Player_Movement_Walling
-    index: 32
+    index: 26
   - key: event:/Player/Player_Normal_Attack_Charging
-    index: 33
+    index: 27
   - key: event:/FinalBoss/Voice/Voice_003
-    index: 34
+    index: 28
   - key: event:/FinalBoss/Voice/Voice_002
-    index: 35
+    index: 29
   - key: event:/FinalBoss/Voice/Voice_001
-    index: 36
+    index: 30
   - key: event:/Player/Player_Dead
+    index: 31
+  - key: event:/FinalBoss/BGM/Boss_Intro_001_]Are_You_Ready
+    index: 32
+  - key: event:/Ambient/Forest/Forest_Ambient_002
+    index: 33
+  - key: event:/Ambient/Forest/Forest_Object_002
+    index: 34
+  - key: event:/FinalBoss/BGM/Boss_Intro_002_JohnCena
+    index: 35
+  - key: event:/Player/Interaction_Battle/Player_Skill_Grapling
+    index: 36
+  - key: event:/FinalBoss/BGM/Boss_Attack_Jump_JohnCena
     index: 37
+  - key: event:/Player/Interaction_Battle/Player_Attack_Hit
+    index: 38
+  - key: event:/Ambient/Mood/Fear/Mood_Fear_001
+    index: 39
+  - key: event:/Ambient/Forest/Forest_Object_001
+    index: 40
+  - key: event:/Player/Interaction_Battle/Player_Shield_Guard
+    index: 41
+  - key: event:/Player/Interaction_Battle/Player_Damaged_Hurt_Voice
+    index: 42
+  - key: event:/Player/Interaction_Battle/Player_Shield_Parry
+    index: 43
+  - key: event:/Ambient/Forest/Forest_Ambient_001
+    index: 44
+  - key: event:/Player/Interaction_Battle/Player_Shield_Parry_Counter
+    index: 45
 --- !u!114 &538423973531881020
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -794,10 +872,10 @@ MonoBehaviour:
   Path: Assets/StreamingAssets/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639197977387569858
+  lastModified: 639198250353178305
   FileSizes: []
   Exists: 1
---- !u!114 &1694854564234410638
+--- !u!114 &2215247021424242642
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -807,14 +885,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Player/Interaction/Player_Damaged_Hurt_Voice
+  m_Name: event:/Player/Interaction_Battle/Player_Shield_Guard
   m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Player/Interaction/Player_Damaged_Hurt_Voice
+  Path: event:/Player/Interaction_Battle/Player_Shield_Guard
   Guid:
-    Data1: -2095731028
-    Data2: 1205540748
-    Data3: -637538668
-    Data4: -864968903
+    Data1: 79967654
+    Data2: 1095157193
+    Data3: -1835738751
+    Data4: -2015327560
   Banks:
   - {fileID: 858878391108560638}
   IsStream: 0
@@ -823,7 +901,61 @@ MonoBehaviour:
   Parameters: []
   MinDistance: 1
   MaxDistance: 20
-  Length: 0
+  Length: 495
+--- !u!114 &2472636996189243656
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/BGM/Boss_Intro_001_]Are_You_Ready
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/BGM/Boss_Intro_001_]Are_You_Ready
+  Guid:
+    Data1: -774748142
+    Data2: 1328122926
+    Data3: 587957131
+    Data4: 2043937447
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1040
+--- !u!114 &2721173115961112123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/FinalBoss/BGM/Boss_Attack_Jump_JohnCena
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/FinalBoss/BGM/Boss_Attack_Jump_JohnCena
+  Guid:
+    Data1: 530580087
+    Data2: 1171665723
+    Data3: 615188919
+    Data4: -161071342
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 7802
 --- !u!114 &2796953547795470394
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -851,60 +983,6 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 8800
---- !u!114 &2980233417756432782
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Player/Interaction/Player_Attack_Hit
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Player/Interaction/Player_Attack_Hit
-  Guid:
-    Data1: 1444215185
-    Data2: 1299237125
-    Data3: -1165725787
-    Data4: 982081521
-  Banks:
-  - {fileID: 858878391108560638}
-  IsStream: 1
-  Is3D: 1
-  IsOneShot: 1
-  Parameters: []
-  MinDistance: 1
-  MaxDistance: 20
-  Length: 550
---- !u!114 &3509516183021838859
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Player/Interaction/Player_Shield_Parry
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Player/Interaction/Player_Shield_Parry
-  Guid:
-    Data1: -2033538856
-    Data2: 1206350988
-    Data3: -1458756222
-    Data4: 1880236013
-  Banks:
-  - {fileID: 858878391108560638}
-  IsStream: 0
-  Is3D: 1
-  IsOneShot: 1
-  Parameters: []
-  MinDistance: 1
-  MaxDistance: 20
-  Length: 690
 --- !u!114 &3662623911672475340
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -959,6 +1037,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 250
+--- !u!114 &4735519750463282279
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Interaction_Battle/Player_Damaged_Hurt_Voice
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Interaction_Battle/Player_Damaged_Hurt_Voice
+  Guid:
+    Data1: -2095731028
+    Data2: 1205540748
+    Data3: -637538668
+    Data4: -864968903
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
 --- !u!114 &5487921862929290957
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1013,6 +1118,87 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 2191
+--- !u!114 &5635566851909566893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Ambient/Forest/Forest_Ambient_002
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Ambient/Forest/Forest_Ambient_002
+  Guid:
+    Data1: 439963704
+    Data2: 1282011728
+    Data3: -336959603
+    Data4: 98663185
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 15495
+--- !u!114 &5642036983828704668
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Ambient/Mood/Fear/Mood_Fear_001
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Ambient/Mood/Fear/Mood_Fear_001
+  Guid:
+    Data1: 1278872471
+    Data2: 1299228363
+    Data3: -942657876
+    Data4: 1218803453
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 20004
+--- !u!114 &5705030964889731941
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Interaction_Battle/Player_Attack_Hit
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Interaction_Battle/Player_Attack_Hit
+  Guid:
+    Data1: 1444215185
+    Data2: 1299237125
+    Data3: -1165725787
+    Data4: 982081521
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 550
 --- !u!114 &6213048353427349253
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1040,6 +1226,60 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 580
+--- !u!114 &6455075985228075250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Interaction_Battle/Player_Shield_Parry
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Interaction_Battle/Player_Shield_Parry
+  Guid:
+    Data1: -2033538856
+    Data2: 1206350988
+    Data3: -1458756222
+    Data4: 1880236013
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 690
+--- !u!114 &6777926493531338171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Interaction_Battle/Player_Shield_Parry_Counter
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Interaction_Battle/Player_Shield_Parry_Counter
+  Guid:
+    Data1: -359251208
+    Data2: 1172277117
+    Data3: -959212609
+    Data4: -1588721442
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1065
 --- !u!114 &6905973074772153885
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1121,7 +1361,7 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 3900
---- !u!114 &8235396215773152304
+--- !u!114 &8350997889046110479
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1131,23 +1371,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Player/Interaction/Player_Skill_Grapling
+  m_Name: event:/Ambient/Forest/Forest_Ambient_001
   m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Player/Interaction/Player_Skill_Grapling
+  Path: event:/Ambient/Forest/Forest_Ambient_001
   Guid:
-    Data1: -1012767394
-    Data2: 1302831510
-    Data3: 793848223
-    Data4: -91535311
+    Data1: 1199533786
+    Data2: 1232769409
+    Data3: -789308228
+    Data4: 2039262098
   Banks:
   - {fileID: 858878391108560638}
   IsStream: 1
   Is3D: 1
-  IsOneShot: 1
+  IsOneShot: 0
   Parameters: []
   MinDistance: 1
   MaxDistance: 20
-  Length: 550
+  Length: 23911
 --- !u!114 &8454090903439758873
 MonoBehaviour:
   m_ObjectHideFlags: 0

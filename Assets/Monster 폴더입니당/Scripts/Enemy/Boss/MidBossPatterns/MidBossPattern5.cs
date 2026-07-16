@@ -3,7 +3,7 @@ using UnityEngine;
 
 // =====================================================
 // MidBossPattern5.cs
-// 클리어링 - 근거리, 쿨타임 0초(내부 5초), 우선순위 1, 2페이즈 관계없이 적용
+// 클리어링 - 넉백 거리 제한 및 히트박스 처리 수정
 // =====================================================
 public class MidBossPattern5 : BossPatternBase
 {
@@ -52,19 +52,18 @@ public class MidBossPattern5 : BossPatternBase
     {
         if (clearingHitbox != null)
         {
-            clearingHitbox.SetActive(true);
-            Invoke(nameof(DeactivateClearing), hitboxActiveDuration);
+            StartCoroutine(ReactivateHitboxRoutine(clearingHitbox, hitboxActiveDuration));
         }
 
         if (targetPlayer == null) return;
 
-        Rigidbody2D playerRb = targetPlayer.GetComponent<Rigidbody2D>();
-        if (playerRb == null) return;
-
         float xDiff = targetPlayer.transform.position.x - transform.position.x;
+
+        // 클리어링 시점에 플레이어가 이미 범위를 벗어났으면 넉백 생략
+        if (Mathf.Abs(xDiff) > clearingRange * 1.5f) return;
+
         float dirX;
 
-        // 등 위(정수리)에 올라타 있어도 무조건 거미가 바라보는 쪽이나 바깥쪽으로 방향 결정
         if (Mathf.Abs(xDiff) < 0.05f)
         {
             dirX = transform.localScale.x > 0 ? 1f : -1f;
@@ -76,13 +75,9 @@ public class MidBossPattern5 : BossPatternBase
 
         float knockbackSpeed = knockbackDistance / Mathf.Max(knockbackDuration, 0.01f);
 
-        // [100% 완벽 해결 코루틴 시작!]
-        StartCoroutine(PushPlayerXOnlyRoutine(playerRb, dirX, knockbackSpeed, knockbackDuration));
-
-        Debug.Log($"[클리어링 100% 확정 넉백 발동] 방향: {dirX}, 속도: {knockbackSpeed}");
+        StartCoroutine(PushPlayerXOnlyRoutine(targetPlayer.GetComponent<Rigidbody2D>(), dirX, knockbackSpeed, knockbackDuration));
     }
 
-    // 플레이어 컨트롤러를 100% 무시하고 옆(X축)으로만 밀어버리는 궁극의 코루틴
     private IEnumerator PushPlayerXOnlyRoutine(Rigidbody2D playerRb, float dirX, float speedX, float duration)
     {
         float timer = 0f;
@@ -90,11 +85,9 @@ public class MidBossPattern5 : BossPatternBase
         {
             if (playerRb == null) yield break;
 
-            // 1. 위쪽 Y축 속도 튀는 걸 완벽 차단! (위로는 1픽셀도 안 뜸)
             float currentY = Mathf.Min(0f, playerRb.linearVelocity.y);
             playerRb.linearVelocity = new Vector2(dirX * speedX, currentY);
 
-            // 2.핵심 : 플레이어가 속도를 0으로 지워도 무조건 물리 좌표를 이동시킴!
             Vector2 targetPos = playerRb.position + new Vector2(dirX * speedX * Time.fixedDeltaTime, 0f);
             playerRb.MovePosition(targetPos);
 
@@ -103,8 +96,12 @@ public class MidBossPattern5 : BossPatternBase
         }
     }
 
-    private void DeactivateClearing()
+    private IEnumerator ReactivateHitboxRoutine(GameObject hitbox, float duration)
     {
-        if (clearingHitbox != null) clearingHitbox.SetActive(false);
+        hitbox.SetActive(false);
+        yield return null;
+        hitbox.SetActive(true);
+        yield return new WaitForSeconds(duration);
+        hitbox.SetActive(false);
     }
 }

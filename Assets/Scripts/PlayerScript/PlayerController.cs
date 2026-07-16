@@ -18,7 +18,7 @@ public class PlayerController : MonoBehaviour
     [Header("Layer Settings")]
     public LayerMask stairsLayer; //
     public LayerMask enemyLayer; // 
-   
+
     [Header("Input Data")]
     public InputReader inputReader;
 
@@ -122,7 +122,7 @@ public class PlayerController : MonoBehaviour
 
     public bool hasUsedAirUp;   // 윗공격 1회 제한 스위치
 
-  
+
 
     [Header("스킬 데이터")]
     public float healAmount = 50f;  // 체력 회복량
@@ -240,7 +240,7 @@ public class PlayerController : MonoBehaviour
     // 애니메이션 이벤트에서 호출할 차지 공격 전용 함수
     public void ExecuteChargeAttack(int baseIndex)
     {
-      
+
         int finalIndex = baseIndex + (currentChargeLevel - 1);
 
         if (finalIndex < 0 || finalIndex >= attackLibrary.Count) return;
@@ -265,8 +265,8 @@ public class PlayerController : MonoBehaviour
     public void ExecuteAttack(int index)
     {
         if (index < 0 || index >= attackLibrary.Count)
-        { 
-            return; 
+        {
+            return;
         }
 
         currentActiveData = attackLibrary[index];
@@ -299,7 +299,7 @@ public class PlayerController : MonoBehaviour
             {
                 float finalDamage = totalAttackPower * data.damageMultiplier;
                 float finalGroggy = baseGroggy;
-               // Debug.Log($"<color=cyan>[데미지 추적]</color> 기량스탯: {playerStats.statDex} / 근력스탯: {playerStats.statStr} / 기준치(SO): {playerStats.statBalance.baseAttackPerStat} / 캐릭터총공격력: {totalAttackPower} / 모션배율: {data.damageMultiplier}");
+                // Debug.Log($"<color=cyan>[데미지 추적]</color> 기량스탯: {playerStats.statDex} / 근력스탯: {playerStats.statStr} / 기준치(SO): {playerStats.statBalance.baseAttackPerStat} / 캐릭터총공격력: {totalAttackPower} / 모션배율: {data.damageMultiplier}");
                 // [추가] 인스펙터에서 설정한 Enum 카테고리에 맞춰 그로기 배율 곱하기
                 switch (data.attackCategory)
                 {
@@ -311,7 +311,7 @@ public class PlayerController : MonoBehaviour
                     case AttackCategory.ParryCounterHeavy: finalGroggy *= data.parryCounterHeavyGroggyRatio; break;
                 }
 
-              
+
 
                 // [수정] 몬스터에게 데미지와 그로기 데미지 2개를 전달!
                 // ※ EnemyFSM 스크립트의 TakeDamage 함수 인자를 2개 받도록(float damage, float groggy) 수정해 주세요.
@@ -339,6 +339,9 @@ public class PlayerController : MonoBehaviour
         // [기존 동일] 적을 한 명이라도 맞췄을 때 한 번만 실행되는 '타격감' 연출
         if (hasHitEnemy)
         {
+            // 고정값이 아니라, (누적 최종데미지, SO에 적힌 흡수비율) 2개를 넘겨줍니다!
+            playerStats.RestoreMpByDamage(totalDealtDamage, data.mpRecoveryRatio);
+
             if (data.hitStopDuration > 0f)
             {
                 StartCoroutine(HitStopRoutine(data.hitStopDuration));
@@ -443,7 +446,7 @@ public class PlayerController : MonoBehaviour
     public AttackDataSO diveDropData; // 유니티 에디터에서 방금 만든 SO를 할당할 곳 오직 공중 강공격을 위한 선언;;
 
     public enum SkillSlot
-    { HeavyAttack, LightningCut, Heal}
+    { HeavyAttack, LightningCut, Heal }
     public SkillSlot currentSkillSlot = SkillSlot.HeavyAttack; // 현재 선택된 스킬 슬롯
 
 
@@ -461,7 +464,7 @@ public class PlayerController : MonoBehaviour
     private float lastGroundedTime; // 클래스 멤버 변수로 반드시 선언되어 있어야 함
 
     // 1. 순수 물리 판독기
-   
+
 
 
     public PlayerAttack1State Attack1State { get; private set; }
@@ -551,7 +554,7 @@ public class PlayerController : MonoBehaviour
         GuardOffState = new PlayerGuardOffState(this, StateMachine, anim_GuardOff);
         ParryLightCounterState = new PlayerParryLightCounterState(this, StateMachine, anim_ParryLightCounter);
         ParryHeavyCounterState = new PlayerParryHeavyCounterState(this, StateMachine, anim_ParryHeavyCounter);
-      
+
         GrappleState = new PlayerGrappleState(this, StateMachine, anim_Grapple);
 
         DropState = new PlayerDropState(this, StateMachine, "Falling");
@@ -562,9 +565,9 @@ public class PlayerController : MonoBehaviour
         HealState = new PlayerHealState(this, StateMachine, anim_Heal);
         RestState = new PlayerRestState(this, StateMachine, anim_ToRest);
         StandUpState = new PlayerStandUpState(this, StateMachine, anim_Standing);
-        DieState = new PlayerDieState(this, StateMachine, anim_DieGround,anim_DieAir);
+        DieState = new PlayerDieState(this, StateMachine, anim_DieGround, anim_DieAir);
         HitState = new PlayerHitState(this, StateMachine, anim_Hit);
-        
+
 
         rb = GetComponent<Rigidbody2D>(); // 2D로 변경
         cd = GetComponent<BoxCollider2D>(); // 2D로 변경
@@ -591,7 +594,7 @@ public class PlayerController : MonoBehaviour
             Debug.Log("<color=magenta>테스트용 자살 버튼 작동!</color>");
 
             // 만약 체력 UI도 같이 깎이는 걸 보고 싶다면 아래 주석 해제
-            // if (playerStats != null) playerStats.currentHp = 0;
+            if (playerStats != null) playerStats.currentHp = 0;
 
             StateMachine.ChangeState(DieState);
             return;
@@ -642,7 +645,7 @@ public class PlayerController : MonoBehaviour
             ResetAirActions(); // 바닥에 닿으면 공중 공격 횟수 초기화
         }
 
-     
+
         if (gizmoDisplayTimer > 0)
         {
             gizmoDisplayTimer -= Time.deltaTime;
@@ -997,8 +1000,8 @@ public class PlayerController : MonoBehaviour
     {
         if (!inputReader.ThrustAttackPressed) return;
 
-        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState || 
-            StateMachine.CurrentState == DieState || StateMachine.CurrentState == ParryLightCounterState || 
+        if (StateMachine.CurrentState == RestState || StateMachine.CurrentState == StandUpState ||
+            StateMachine.CurrentState == DieState || StateMachine.CurrentState == ParryLightCounterState ||
             StateMachine.CurrentState == ParryHeavyCounterState
         || StateMachine.CurrentState == HitState)
         {
@@ -1151,7 +1154,7 @@ public class PlayerController : MonoBehaviour
         {
             if (hit.collider == null || hit.collider == cd || hit.collider == ignoredDropCollider) continue;
 
-           
+
             // hit.collider가 속한 레이어가 stairsLayer에 포함되는지 확인
             bool isStairs = ((1 << hit.collider.gameObject.layer) & stairsLayer) != 0;
             bool hasEffector = hit.collider.GetComponent<PlatformEffector2D>() != null;
@@ -1203,7 +1206,7 @@ public class PlayerController : MonoBehaviour
 
     public bool OnSlope(bool isDashing = false)
     {
-        if (cd == null || ignoreSlopeDetection || 
+        if (cd == null || ignoreSlopeDetection ||
             (StateMachine != null && StateMachine.CurrentState == DropState))
             return false;
 
@@ -1249,7 +1252,7 @@ public class PlayerController : MonoBehaviour
                 // 콜라이더의 좌우 끝단(min.x, max.x)으로부터 margin 만큼은 경사로 판정에서 제외합니다.
                 // 이렇게 하면 모서리 끝에 도달했을 때 OnSlope가 false를 반환하여 평지로 전환됩니다.
                 float margin = isDashing ? 0.05f : 0.5f;
-                
+
                 if (bestHit.point.x <= bestHit.collider.bounds.min.x + margin ||
                     bestHit.point.x >= bestHit.collider.bounds.max.x - margin)
                 {
@@ -1417,7 +1420,7 @@ public class PlayerController : MonoBehaviour
                currentState == Attack3State ||
                currentState == DashAndSprintATK ||
                currentState == ThrustReadyState ||
-               currentState == ParryLightCounterState||
+               currentState == ParryLightCounterState ||
                currentState == ParryHeavyCounterState;
 
 

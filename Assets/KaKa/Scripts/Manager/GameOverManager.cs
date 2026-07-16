@@ -9,6 +9,7 @@ public class GameOverManager : MonoBehaviour
     public SpriteRenderer dimmerSprite;   // 암전용 Dimmer_Sprite
     public GameObject gameOverScreen;     // Canvas의 GameOverScreen 오브젝트
     public GameObject inGameScreen;       // Canvas의 InGameScreen 오브젝트
+    public GameObject bossUiScreen;       // Canvas의 Boss UI 오브젝트 (보스 체력바 등)
     public Transform respawnPoint;        // 플레이어가 부활할 위치 (보이지 않는 큐브 등)
 
     [Header("연출 설정")]
@@ -63,9 +64,16 @@ public class GameOverManager : MonoBehaviour
     {
         isGameOverTriggered = true;
 
+        // 일반 인게임 UI 비활성화
         if (inGameScreen != null)
         {
             inGameScreen.SetActive(false);
+        }
+
+        // 화면이 어두워지기 전에 보스 UI도 즉시 꺼줍니다.
+        if (bossUiScreen != null)
+        {
+            bossUiScreen.SetActive(false);
         }
 
         if (dimmerSprite == null)
@@ -141,7 +149,7 @@ public class GameOverManager : MonoBehaviour
         // =====================================================
         skipMainMenu = true;
         shouldFadeIn = true;
-        isRespawnFade = true;   // ★ 추가
+        isRespawnFade = true;
 
         // 씬 재로드
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
@@ -157,8 +165,20 @@ public class GameOverManager : MonoBehaviour
         dimmerSprite.color = c;
 
         float elapsed = 0f;
+
+        // Checkpoint.cs의 private 변수 'isRestingProcess'를 루프 밖에서 미리 한 번만 캐싱합니다 (매 프레임 호출 방지 최적화)
+        var field = typeof(Checkpoint).GetField("isRestingProcess", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
         while (elapsed < fadeDuration)
         {
+            // 🔥 [추가] 페이드인 도중 플레이어가 체크포인트와 상호작용(메뉴 열기 혹은 휴식)을 시도했다면,
+            // 게임오버 매니저의 코루틴을 즉각 종료(yield break)하여 겹침 현상을 원천 차단합니다.
+            if (IsPlayerInteractingWithCheckpoint(field))
+            {
+                Debug.Log("[GameOverManager] 페이드인 도중 체크포인트 상호작용 감지! 코루틴을 양보하고 종료합니다.");
+                yield break;
+            }
+
             elapsed += Time.deltaTime;
             c.a = Mathf.Lerp(1.0f, 0f, elapsed / fadeDuration);
             dimmerSprite.color = c;
@@ -168,54 +188,52 @@ public class GameOverManager : MonoBehaviour
         c.a = 0f;
         dimmerSprite.color = c;
 
-        // =================================================================
-        // 🔥 [수정된 부분] 
-        // dimmerSprite를 끄기 전에, 혹시 체크포인트가 휴식 중인지 검사합니다.
-        // =================================================================
-        bool isAnyCheckpointResting = false;
-        Checkpoint[] checkpoints = FindObjectsByType<Checkpoint>(FindObjectsSortMode.None);
-
-        // Checkpoint.cs의 private 변수 'isRestingProcess'를 가져올 리플렉션 설정
-        var field = typeof(Checkpoint).GetField("isRestingProcess", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-        foreach (var cp in checkpoints)
-        {
-            if (field != null)
-            {
-                if ((bool)field.GetValue(cp)) // 체크포인트가 휴식 중이라면(true)
-                {
-                    isAnyCheckpointResting = true;
-                    break;
-                }
-            }
-        }
-
-        // 아무도 쉬고 있지 않을 때만 비활성화합니다.
-        if (!isAnyCheckpointResting)
+        // 페이드 아웃이 완전히 끝난 시점에도 체크포인트 조작 중이 아닐 때만 디머를 비활성화합니다.
+        if (!IsPlayerInteractingWithCheckpoint(field))
         {
             dimmerSprite.gameObject.SetActive(false);
         }
-        // =================================================================
+    }
+
+    // 🔥 [새로 추가된 도우미 함수] 플레이어가 현재 체크포인트와 상호작용 중인지 실시간 검사
+    private bool IsPlayerInteractingWithCheckpoint(System.Reflection.FieldInfo field)
+    {
+        Checkpoint[] checkpoints = FindObjectsByType<Checkpoint>(FindObjectsSortMode.None);
+        foreach (var cp in checkpoints)
+        {
+            if (cp == null) continue;
+
+            // 1. 체크포인트 메뉴 UI 혹은 텔레포트 메뉴 UI가 켜져 있는지 확인
+            if ((cp.menuUI != null && cp.menuUI.activeSelf) ||
+                (cp.teleportMenuUI != null && cp.teleportMenuUI.activeSelf))
+            {
+                return true;
+            }
+
+            // 2. 체크포인트에서 휴식 혹은 텔레포트 동작이 실행 중인지 확인 (isRestingProcess 변수 값 확인)
+            if (field != null)
+            {
+                bool isResting = (bool)field.GetValue(cp);
+                if (isResting)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // ========================================================
     // ★ [새로 추가된 도우미 함수] 체크포인트 자동 검색
     // ========================================================
-    /// <summary>
-    /// 씬 안의 모든 체크포인트 중 활성화(isUnlocked)된 것들을 필터링하고,
-    /// 플레이어가 사망한 위치와 가장 가까운 체크포인트의 spawnPoint를 반환합니다.
-    /// </summary>
     private Transform GetNearestUnlockedCheckpointSpawnPoint()
     {
         if (playerStats == null) return null;
 
-        // 1. 씬 안에 배치된 모든 Checkpoint 컴포넌트를 찾습니다. 
-        // (Unity 2023 이후 최적화된 FindObjectsByType 사용)
         Checkpoint[] checkpoints = FindObjectsByType<Checkpoint>(FindObjectsSortMode.None);
         Checkpoint nearestCheckpoint = null;
         float minDistance = float.MaxValue;
 
-        // 2. Checkpoint.cs의 private 필드인 'isUnlocked' 값을 읽기 위해 리플렉션 정보를 가져옵니다.
         var field = typeof(Checkpoint).GetField("isUnlocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         foreach (var cp in checkpoints)
@@ -226,7 +244,6 @@ public class GameOverManager : MonoBehaviour
                 unlocked = (bool)field.GetValue(cp);
             }
 
-            // 3. 활성화된 체크포인트인 경우에만 거리를 비교합니다.
             if (unlocked)
             {
                 float dist = Vector3.Distance(playerStats.transform.position, cp.transform.position);
@@ -238,7 +255,6 @@ public class GameOverManager : MonoBehaviour
             }
         }
 
-        // 4. 찾은 체크포인트의 spawnPoint를 반환합니다. (없다면 체크포인트 자체의 Transform 반환)
         if (nearestCheckpoint != null)
         {
             return nearestCheckpoint.spawnPoint != null ? nearestCheckpoint.spawnPoint : nearestCheckpoint.transform;
