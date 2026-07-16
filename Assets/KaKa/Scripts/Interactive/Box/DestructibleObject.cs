@@ -24,6 +24,10 @@ public class DestructibleObject : MonoBehaviour
     public GameObject breakEffectPrefab;    // 파괴되는 "순간"에 한 번 재생할 파티클 등 (없으면 비워둬도 무방)
     public bool disableColliderOnBreak = true; // 파괴 후 더 이상 맞지 않도록 콜라이더 끄기
 
+    [Header("연동 오브젝트")]
+    [Tooltip("파괴 시 비활성화할 오브젝트 (예: 보스방 입구를 막던 벽/오브젝트)")]
+    public GameObject objectToDisableOnBreak;
+
     // ★ static이므로 SceneManager.LoadScene()으로 씬이 통째로 리로드되어도 값이 유지됩니다.
     private static readonly HashSet<string> destroyedObjectIds = new HashSet<string>();
 
@@ -90,6 +94,13 @@ public class DestructibleObject : MonoBehaviour
         {
             Collider2D col = GetComponent<Collider2D>();
             if (col != null) col.enabled = false;
+        }
+
+        // ★ 보스방 입구 등, 파괴와 연동된 오브젝트 비활성화
+        // (Awake에서 "이미 파괴됐던 경우"에도 이 함수가 호출되므로, 씬을 다시 불러와도 계속 꺼진 상태로 유지됨)
+        if (objectToDisableOnBreak != null)
+        {
+            objectToDisableOnBreak.SetActive(false);
         }
     }
 }
