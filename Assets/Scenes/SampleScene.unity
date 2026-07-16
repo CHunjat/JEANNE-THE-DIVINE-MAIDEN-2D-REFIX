@@ -2885,7 +2885,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9af4766af41f756438df53b03aa84435, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  groundedGraceTime: 0.13
+  groundedGraceTime: 0.8
   groundedTimer: 0
   ignoredDropCollider: {fileID: 0}
   playerStats: {fileID: 0}
