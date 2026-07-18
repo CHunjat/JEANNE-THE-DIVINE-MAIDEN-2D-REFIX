@@ -5,6 +5,8 @@ using FMOD.Studio;
 
 public class BossSFXController : MonoBehaviour
 {
+    
+
     private List<EventInstance> activeInstances = new();
 
     // ── 내부 재생 ────────────────────────────
@@ -35,8 +37,8 @@ public class BossSFXController : MonoBehaviour
     // ── 사망 ────────────────────────────────
     public void OnBossDeath() => Play("event:/FinalBoss/Boss_Death");
 
-    // ── 그로기 (전체 정지) ───────────────────
-    public void OnBossGroggy()
+    
+    public void StopAllBossSFX()
     {
         foreach (var instance in activeInstances)
         {
@@ -48,4 +50,7 @@ public class BossSFXController : MonoBehaviour
         }
         activeInstances.Clear();
     }
+
+    // ── 그로기 (전체 정지) ───────────────────
+    public void OnBossGroggy() => StopAllBossSFX();
 }

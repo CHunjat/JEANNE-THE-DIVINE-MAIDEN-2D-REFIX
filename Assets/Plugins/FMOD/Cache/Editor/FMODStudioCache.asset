@@ -134,7 +134,7 @@ MonoBehaviour:
   Parameters: []
   MinDistance: 1
   MaxDistance: 20
-  Length: 15500
+  Length: 10600
 --- !u!114 &-8124024757644268347
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -150,10 +150,10 @@ MonoBehaviour:
   Path: Assets/StreamingAssets/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639198250353178305
+  lastModified: 639200071829060252
   FileSizes:
   - Name: 
-    Value: 3182
+    Value: 3450
   Exists: 1
 --- !u!114 &-7416544577720656592
 MonoBehaviour:
@@ -262,7 +262,34 @@ MonoBehaviour:
   Parameters: []
   MinDistance: 1
   MaxDistance: 20
-  Length: 550
+  Length: 500
+--- !u!114 &-6295285007079986313
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/BGM/Forest/ForestBGM_002
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/BGM/Forest/ForestBGM_002
+  Guid:
+    Data1: -1119957416
+    Data2: 1160706312
+    Data3: -1305814603
+    Data4: -1636103185
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 130949
 --- !u!114 &-4763259929732182848
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -452,6 +479,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 1500
+--- !u!114 &-1455118689089542434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/BGM/Boss/BossBGM_002
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/BGM/Boss/BossBGM_002
+  Guid:
+    Data1: -1386326396
+    Data2: 1091578451
+    Data3: -1421775480
+    Data4: -758061557
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 128218
 --- !u!114 &-1317400637887467077
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -703,13 +757,18 @@ MonoBehaviour:
   - {fileID: 6455075985228075250}
   - {fileID: 8350997889046110479}
   - {fileID: 6777926493531338171}
+  - {fileID: -6295285007079986313}
+  - {fileID: 5527495337063385694}
+  - {fileID: 1343899593308027300}
+  - {fileID: -1455118689089542434}
+  - {fileID: 1910129633478194347}
   EditorParameters: []
   MasterBanks:
   - {fileID: 858878391108560638}
   StringsBanks:
   - {fileID: -8124024757644268347}
   cacheVersion: 131860
-  cacheTime: 639198250353178305
+  cacheTime: 639200071829060252
   SerializableEventsDict:
   - key: event:/Player/Player_Foot_Step_Sprint
     index: 0
@@ -803,6 +862,16 @@ MonoBehaviour:
     index: 44
   - key: event:/Player/Interaction_Battle/Player_Shield_Parry_Counter
     index: 45
+  - key: event:/BGM/Forest/ForestBGM_002
+    index: 46
+  - key: event:/BGM/Boss/BossBGM_001
+    index: 47
+  - key: event:/BGM/Boss/BossBGM_003
+    index: 48
+  - key: event:/BGM/Boss/BossBGM_002
+    index: 49
+  - key: event:/BGM/Forest/ForestBGM_001
+    index: 50
 --- !u!114 &538423973531881020
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -872,9 +941,63 @@ MonoBehaviour:
   Path: Assets/StreamingAssets/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639198250353178305
+  lastModified: 639200071829035127
   FileSizes: []
   Exists: 1
+--- !u!114 &1343899593308027300
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/BGM/Boss/BossBGM_003
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/BGM/Boss/BossBGM_003
+  Guid:
+    Data1: -1670563719
+    Data2: 1156288197
+    Data3: -1754708037
+    Data4: 1128726317
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 151999
+--- !u!114 &1910129633478194347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/BGM/Forest/ForestBGM_001
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/BGM/Forest/ForestBGM_001
+  Guid:
+    Data1: 1291844275
+    Data2: 1213679898
+    Data3: 1490345870
+    Data4: 1244700161
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 290399
 --- !u!114 &2215247021424242642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1091,6 +1214,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 1441
+--- !u!114 &5527495337063385694
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/BGM/Boss/BossBGM_001
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/BGM/Boss/BossBGM_001
+  Guid:
+    Data1: -761206413
+    Data2: 1228393178
+    Data3: -661145210
+    Data4: 1544124610
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 88615
 --- !u!114 &5560184847272357413
 MonoBehaviour:
   m_ObjectHideFlags: 0

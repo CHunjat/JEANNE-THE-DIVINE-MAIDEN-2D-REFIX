@@ -6,7 +6,14 @@ using System.Collections.Generic;
 
 public class PlayerSFXController : MonoBehaviour
 {
+
+    [Header("참조")]
+    [SerializeField] private PlayerController playerController; // 인스펙터에서 연결 (같은 오브젝트면 GetComponent도 가능)
+    [SerializeField] private BossSFXController bossSFX;          // 인스펙터에서 보스 오브젝트 드래그
+
+    private bool deathSFXHandled = false;
     private bool sprintJumpSoundPlayed = false;
+    private bool wasGroundedLastFrame = true;
 
     private List<EventInstance> activeInstances = new();
 
@@ -14,6 +21,54 @@ public class PlayerSFXController : MonoBehaviour
     private EventInstance chargingInstance;
     private EventInstance WallingInstance;
     private Coroutine chargingCompleteCoroutine;
+
+    private void Awake()
+    {
+        if (playerController == null) playerController = GetComponent<PlayerController>();
+    }
+
+    private void Update()
+    {
+        if (deathSFXHandled) return;
+
+        if (playerController != null &&
+            playerController.StateMachine.CurrentState == playerController.DieState)
+        {
+            deathSFXHandled = true;
+            HandlePlayerDeathSFX();
+        }
+
+        bool groundedNow = playerController.IsGrounded();
+
+        // "공중에 있다가 → 방금 착지한" 순간에만 리셋
+        if (sprintJumpSoundPlayed && !wasGroundedLastFrame && groundedNow)
+        {
+            sprintJumpSoundPlayed = false;
+        }
+
+        wasGroundedLastFrame = groundedNow;
+    }
+
+    private void HandlePlayerDeathSFX()
+    {
+        //OnPlayerHit(); // 플레이어 자기 사운드 전부 정지 (기존 함수 재사용)
+
+        if (bossSFX != null)
+            bossSFX.StopAllBossSFX(); // 보스 사운드도 정지
+    }
+
+    // ── 점프 애니메이션 첫 프레임에서 호출 (점프 vs 공중 그래플링 구분) ────
+    public void CheckJumpStateSFX()
+    {
+        if (playerController != null && playerController.StateMachine.CurrentState == playerController.GrappleState)
+        {
+            OnSkillGrapling();
+        }
+        else
+        {
+            OnFootStepJump();
+        }
+    }
 
     // ── 내부 재생 ────────────────────────────
     private EventInstance Play(string path)
@@ -122,8 +177,7 @@ public class PlayerSFXController : MonoBehaviour
     public void OnSkillLightningCutSlash() => Play("event:/Player/Player_Skill_Attack_Lightning_Cut_Slash");
 
     // ── 스킬 그래플링 ────────────────────────────────
-    public void OnSkillGrapling() => Play("event:/Player/Interaction/Player_Skill_Grapling");
-
+    public void OnSkillGrapling() => Play("event:/Player/Interaction_Battle/Player_Skill_Grapling");
     // ── 방어 ────────────────────────────────
     public void OnShieldReady() => Play("event:/Player/Player_Shield_Ready");
 
