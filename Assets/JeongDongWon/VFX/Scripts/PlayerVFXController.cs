@@ -29,6 +29,7 @@ public class PlayerVFXController : MonoBehaviour
     [SerializeField] private int parryCountHardVFXPoolSize = 3;
     [SerializeField] private float parryCountHardVFXDuration = 0.5f;
 
+
     private List<ParticleSystem> parryVFXPool = new List<ParticleSystem>();
     private List<Coroutine> parryVFXCoroutines = new List<Coroutine>();
 
