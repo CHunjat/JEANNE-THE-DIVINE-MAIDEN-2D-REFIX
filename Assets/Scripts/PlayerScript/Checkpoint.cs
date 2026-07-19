@@ -1,5 +1,6 @@
-﻿using UnityEngine;
+﻿using FMODUnity;
 using System.Collections;
+using UnityEngine;
 
 public class Checkpoint : MonoBehaviour
 {
@@ -243,6 +244,9 @@ public class Checkpoint : MonoBehaviour
     // 🔥 [핵심 연출 로직] 번쩍임 방지 + 완벽한 타이밍
     private IEnumerator TeleportRoutine(Checkpoint destination)
     {
+        // 텔로포트 SFX 소리 추가
+        RuntimeManager.PlayOneShot("event:/Player/Interaction_Function/Player_Teleport", transform.position);
+
         isRestingProcess = true;
         isInTeleportMenu = false;
         if (teleportMenuUI != null) teleportMenuUI.SetActive(false);
