@@ -161,7 +161,7 @@ public class PlayerStats : MonoBehaviour
         return false;
     }
 
-    // 🔥 데미지에 비례한 타격 마나 회복 실행 함수
+    //데미지에 비례한 타격 마나 회복 실행 함수
     public void RestoreMpByDamage(float totalDamage, float baseRatio)
     {
         if (currentMp >= GetMaxMp()) return; // 이미 풀마나면 패스
@@ -179,6 +179,7 @@ public class PlayerStats : MonoBehaviour
         if (currentHp <= 0) return;
         currentHp = Mathf.Min(currentHp + amount, GetMaxHp());
         Debug.Log($"힐 발동 완료! 현재 체력: {currentHp}");
+        Debug.Log($"<color=red>[힐 검거] 요청된 힐량: {amount}</color> / 최대체력: {GetMaxHp()} / 최종 체력: {currentHp}");
     }
 
     private IEnumerator InvincibilityRoutine()

@@ -59,5 +59,6 @@ public class PlayerHeavyAttackState : PlayerAttackState
     {
         base.Exit();
         player.rb.gravityScale = 1f; // 2D gravityScale 사용 (상태 나갈 때 중력 원복 필수!)
+        player.currentChargeLevel = 1;
     }
 }
