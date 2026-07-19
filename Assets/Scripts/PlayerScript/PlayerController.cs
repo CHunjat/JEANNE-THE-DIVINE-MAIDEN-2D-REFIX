@@ -34,7 +34,6 @@ public class PlayerController : MonoBehaviour
     public float dashcooltime = 1.5f;
     private float dashCooltimer;
 
-    [HideInInspector]
     [Header("대쉬 잔상효과")]
     public GameObject playerModelForTrail;
     public Vector2 trailOffset = new Vector2(0f, -0.5f);
@@ -96,6 +95,27 @@ public class PlayerController : MonoBehaviour
     public string anim_ThrustReady = "MiddleToCharge"; // 기 모으기 모션 이름
     [HideInInspector]
     public string anim_ThrustAtk = "MiddleChargeATK";  // 찌르기 모션 이름
+
+    [Header("찌르기(Thrust /F키) 데미지 뻥튀기 설정")]
+    public float thrustInstantDamageRate = 1.0f;    // 즉발 시 데미지 배율 (기본 1배)
+    public float thrustFullChargeDamageRate = 2.0f; // 풀차지 시 데미지 배율 (예: 2배)
+
+    public void ExecuteThrustAttack(int index)
+    {
+        if (index < 0 || index >= attackLibrary.Count) return;
+
+        // 핵심: 풀차지 깃발(isThrustCharged)이 켜져있으면 인스펙터의 '풀차지 배율'을, 아니면 '즉발 배율'을 가져옴!
+        float damageBonus = isThrustCharged ? thrustFullChargeDamageRate : thrustInstantDamageRate;
+
+        Debug.Log($"<color=orange>찌르기 발동! (풀차지 여부: {isThrustCharged} / 적용 배율: {damageBonus}배)</color>");
+
+        currentActiveData = attackLibrary[index];
+        gizmoDisplayTimer = 0.2f;
+
+        // 3단계에서 수정할 함수에 배율(damageBonus)을 넘겨줍니다.
+        PerformMeleeAttack(attackLibrary[index], damageBonus);
+    }
+
 
     [Header("벽 애니메이션 관리변수")]
     [HideInInspector]
@@ -288,7 +308,7 @@ public class PlayerController : MonoBehaviour
         PerformMeleeAttack(attackLibrary[index]);
     }
 
-    private void PerformMeleeAttack(AttackDataSO data)
+    private void PerformMeleeAttack(AttackDataSO data, float bonusMultiplier = 1f)
     {
         Debug.Log($"<color=red>[진짜 파일 확인]</color> 이름: {data.name} | 데미지 배율: {data.damageMultiplier}");
         float dir = isFacingRight ? 1f : -1f;
@@ -311,7 +331,7 @@ public class PlayerController : MonoBehaviour
             EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
             if (enemyFSM != null)
             {
-                float finalDamage = totalAttackPower * data.damageMultiplier;
+                float finalDamage = totalAttackPower * data.damageMultiplier * bonusMultiplier;
                 float finalGroggy = baseGroggy;
                 // Debug.Log($"<color=cyan>[데미지 추적]</color> 기량스탯: {playerStats.statDex} / 근력스탯: {playerStats.statStr} / 기준치(SO): {playerStats.statBalance.baseAttackPerStat} / 캐릭터총공격력: {totalAttackPower} / 모션배율: {data.damageMultiplier}");
                 // [추가] 인스펙터에서 설정한 Enum 카테고리에 맞춰 그로기 배율 곱하기
