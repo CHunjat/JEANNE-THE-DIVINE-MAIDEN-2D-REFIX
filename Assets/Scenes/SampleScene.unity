@@ -463,6 +463,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 050eff7571eaf8441822fa6342017bd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSFXController
+  playerController: {fileID: 0}
+  bossSFX: {fileID: 974721177}
 --- !u!114 &216596086
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -776,6 +778,7 @@ MonoBehaviour:
   parryKnockbackForce: 2
   parryCounterWindow: 0.3
   guardStartTime: 0
+  maxChargeTime: 1.5
   currentChargeLevel: 1
   attackPoint: {fileID: 1489247337}
   attackLibrary:
