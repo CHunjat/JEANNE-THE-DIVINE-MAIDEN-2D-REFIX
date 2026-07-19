@@ -10,18 +10,17 @@ public class PlayerController : MonoBehaviour
 {
     public float groundedGraceTime = 0.8f; // 공중 판정 유예 시간
     public float groundedTimer;
-    public Collider2D ignoredDropCollider;
-    public PlayerStats playerStats; //스탯 컴포넌트 연결
+    [HideInInspector] public Collider2D ignoredDropCollider;
+    [HideInInspector] public PlayerStats playerStats; //스탯 컴포넌트 연결
 
     public bool ignoreSlopeDetection = false;
 
     [Header("Layer Settings")]
     public LayerMask stairsLayer; //
-    public LayerMask enemyLayer; // 
-
+     public LayerMask enemyLayer; // 
     [Header("Input Data")]
     public InputReader inputReader;
-
+    [HideInInspector]
     [Header("Components")]
     public Rigidbody2D rb; // 2D로 전환
     public BoxCollider2D cd; // 2D로 전환
@@ -35,6 +34,7 @@ public class PlayerController : MonoBehaviour
     public float dashcooltime = 1.5f;
     private float dashCooltimer;
 
+    [HideInInspector]
     [Header("대쉬 잔상효과")]
     public GameObject playerModelForTrail;
     public Vector2 trailOffset = new Vector2(0f, -0.5f);
@@ -44,7 +44,7 @@ public class PlayerController : MonoBehaviour
     public float landDashDelay = 0.5f;
     private float landTimer;
 
-
+    [HideInInspector]
     [Header("Orientation")]
     public bool isFacingRight = true;
 
@@ -77,32 +77,40 @@ public class PlayerController : MonoBehaviour
     public bool wasSprinting; // ★ 방금 전까지 전력질주 중이었는지 저장 (Break 모션용)
 
     [Header("스프린트 관리변수")]
-    public string anim_SprintStart = "To sprint";
-    public string anim_SprintIng = "Sprinting";
-    public string anim_SprintBreak = "SprintBreak";
-    public string anim_SprintJump = "Sprint-jump-falling";
-    public string anim_SprintLand = "sprint-falling-land";
+    [HideInInspector] public string anim_SprintStart = "To sprint";
+    [HideInInspector] public string anim_SprintIng = "Sprinting";
+    [HideInInspector] public string anim_SprintBreak = "SprintBreak";
+    [HideInInspector] public string anim_SprintJump = "Sprint-jump-falling";
+    [HideInInspector] public string anim_SprintLand = "sprint-falling-land";
+
+
+
     //스프린트 점프 쿨타임 변수
     public float sprintJumpCooldown = 0.5f; // 스프린트 점프 후 대기 시간
-    private float sprintJumpCooldownTimer;
-    public bool isJumpCut; //쿨타임때문에 점프가 캔슬되었는지 기록, 쿨타임이 안돌았는데 스프린트 점프시 다시 movestate로 돌아가는 코드로 스프린트애니메이션이 다시 재생되는 현상으로 컷내려고만듦
+    [HideInInspector] private float sprintJumpCooldownTimer;
+    [HideInInspector] public bool isJumpCut; //쿨타임때문에 점프가 캔슬되었는지 기록, 쿨타임이 안돌았는데 스프린트 점프시 다시 movestate로 돌아가는 코드로 스프린트애니메이션이 다시 재생되는 현상으로 컷내려고만듦
 
+    
     [Header("강공 찌르기 애니메이션 관리변수")] //스킬X 스킬아님!!
+    [HideInInspector]
     public string anim_ThrustReady = "MiddleToCharge"; // 기 모으기 모션 이름
+    [HideInInspector]
     public string anim_ThrustAtk = "MiddleChargeATK";  // 찌르기 모션 이름
 
-
     [Header("벽 애니메이션 관리변수")]
+    [HideInInspector]
     public string anim_WallSlide = "walling";
+    [HideInInspector]
     public string anim_WallJump = "WallJump";
 
+    [HideInInspector]
     [Header("점프 직후 벽감지 쿨타임 추가")]
     public float wallGrabCooldown = 0.2f;
     public float wallGrabTimer;
 
 
     [Header("Thrust Attack Settings")]
-    public AnimationCurve thrustVelocityCurve; // 찌르기 속도 그래프
+    [HideInInspector] public AnimationCurve thrustVelocityCurve; // 찌르기 속도 그래프
     public float thrustDuration = 0.5f;        // 찌르기 전체 지속 시간 (초)
 
 
@@ -113,13 +121,15 @@ public class PlayerController : MonoBehaviour
 
     [Header("공중 찍기공격")]
     public float diveDropSpeed = 25f; // 밑으로 내리꽂는 속도 (엄청 빨라야 찰집니다!)
-    public string anim_DiveDrop = "AirHeavyDrop";
-    public string anim_DiveLand = "AirHeavyAtk";
+    [HideInInspector] public string anim_DiveDrop = "AirHeavyDrop";
+    [HideInInspector] public string anim_DiveLand = "AirHeavyAtk";
 
+    [HideInInspector]
     [Header("방향키 공중 공격 애니메이션")]
     public string anim_AirUpAtk = "AirUpAtk";
+    [HideInInspector]
     public string anim_AirDownAtk = "AirDownAtk";
-
+    [HideInInspector]
     public bool hasUsedAirUp;   // 윗공격 1회 제한 스위치
 
 
@@ -129,6 +139,8 @@ public class PlayerController : MonoBehaviour
     public float healMpCost = 30f;  // 마나 소모량
     public float HolySlashmp = 30;
     public float lightningMpCost = 30;
+
+    [HideInInspector]
     [Header("히트 애니메이션 변수값")]
     public string anim_Hit = "Hit";
 
@@ -143,15 +155,13 @@ public class PlayerController : MonoBehaviour
     }
 
 
-
-
     [Header("방어 및 패리 애니메이션 관리")]
-    public string anim_GuardNormal = "BlockNormal";
-    public string anim_GuardOff = "Blockoff";
-    public string anim_BlockHit = "BlockNormalHit";
-    public string anim_GuardParry = "GuardParry";
-    public string anim_ParryLightCounter = "ParryLightCounter";
-    public string anim_ParryHeavyCounter = "ParryHeavyCounter";
+    [HideInInspector] public string anim_GuardNormal = "BlockNormal";
+    [HideInInspector] public string anim_GuardOff = "Blockoff";
+    [HideInInspector] public string anim_BlockHit = "BlockNormalHit";
+    [HideInInspector] public string anim_GuardParry = "GuardParry";
+    [HideInInspector] public string anim_ParryLightCounter = "ParryLightCounter";
+    [HideInInspector] public string anim_ParryHeavyCounter = "ParryHeavyCounter";
 
     [Header("가드 및 패링 수치세팅")]
     public float parryWindowDuration = 0.2f;//패링 타이밍 시간 가드 키를 누른 직후, 정확히 0.2초 안에 적의 공격에 맞아야
@@ -235,6 +245,7 @@ public class PlayerController : MonoBehaviour
 
 
     [Header("차지 공격 설정")]
+    public float maxChargeTime = 1.5f; // 기획자가 인스펙터에서 조절할 풀차지 시간
     public int currentChargeLevel = 1; // 1: 즉발(또는 덜 모음), 2: 풀차지
 
     // 애니메이션 이벤트에서 호출할 차지 공격 전용 함수
@@ -246,14 +257,17 @@ public class PlayerController : MonoBehaviour
         if (finalIndex < 0 || finalIndex >= attackLibrary.Count) return;
 
         Debug.Log($"홀리 슬래쉬 {currentChargeLevel}단계 발동! (인덱스: {finalIndex})");
+        currentActiveData = attackLibrary[finalIndex]; // 기즈모에 그릴 SO 데이터 등록
+        gizmoDisplayTimer = 0.2f;
         PerformMeleeAttack(attackLibrary[finalIndex]);
     }
 
-
+    [HideInInspector]
     [Header("전투 세팅")]
     public Transform attackPoint;           // 타격 기준점
     public List<AttackDataSO> attackLibrary; // SO 파일들을 드래그해서 담는 곳
 
+    
     [Header("실시간 기즈모 설정")]
     public bool useLiveGizmoOnly = true;     // true: 공격할 때만 뜸 / false: 기존처럼 에디터에서 항상 뜸
     private AttackDataSO currentActiveData;   // 현재 실행 중인 공격의 데이터 저장용
@@ -396,19 +410,26 @@ public class PlayerController : MonoBehaviour
     public float grappleMinRange = 0.1f;
     public LayerMask grappleLayer;        // "GrapplePoint" 레이어
 
+    [HideInInspector]
     [Header("Grapple Animation")]
     public string anim_Grapple = "GrappleStart"; // 방금 주신 스프라이트 애니메이션 이름
 
 
     [Header("비탈길(Slope) 세팅")]
     public float maxSlopeAngle = 45f;
+    [HideInInspector]
     public RaycastHit2D slopeHit; // 2D로 전환
 
-
     [Header("라이트닝 컷 변수")]
+    [HideInInspector]
     public string anim_LightningReady = "LightningReady";   // 애니메이션 이름은 프로젝트에 맞게 수정
+    [HideInInspector]
     public string anim_LightningCharge = "LightningCharge";
+    [HideInInspector]
     public string anim_LightningAttack = "LightningAttack";
+
+
+    [HideInInspector]
     [Header("힐 애니메이션")]
     public string anim_Heal = "Heal";
 
@@ -418,6 +439,8 @@ public class PlayerController : MonoBehaviour
     public GameObject thrustChargeFxPrefab;
     public Transform thrustChargeFxSpawnPoint;
 
+
+    [HideInInspector]
     [Header("변수 선언부")]
 
     public bool hasUsedAirDash;
@@ -442,6 +465,9 @@ public class PlayerController : MonoBehaviour
     [HideInInspector]
     public bool isThrustCharged = false;
     public bool isDashGracePeriod = false; // 대쉬 후 물리 튐 방지 유예 시간
+
+
+    [HideInInspector]
     [Header("스킬 데이터 (SO)")]
     public AttackDataSO diveDropData; // 유니티 에디터에서 방금 만든 SO를 할당할 곳 오직 공중 강공격을 위한 선언;;
 
@@ -449,12 +475,12 @@ public class PlayerController : MonoBehaviour
     { HeavyAttack, LightningCut, Heal }
     public SkillSlot currentSkillSlot = SkillSlot.HeavyAttack; // 현재 선택된 스킬 슬롯
 
-
+    [HideInInspector]
     [Header("체크포인트 애니메이션")]
     public string anim_ToRest = "ToRest";     // 앉는 과정 (0~5 프레임)
     public string anim_Resting = "Resting";   // 앉아서 대기 (0~8 프레임 반복)
     public string anim_Standing = "Standing"; // 일어나는 과정 (0~1 프레임)
-
+    [HideInInspector]
     [Header("사망 애니메이션")]
     public string anim_DieGround = "Die"; // 땅 사망 모션
     public string anim_DieAir = "AirDie";// 공중 사망 모션
@@ -733,14 +759,14 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // 🔥 [궁극의 수정] 기하학적 높이 비교를 통한 갈림길 완벽 분기
+        //  기하학적 높이 비교를 통한 갈림길 완벽 분기
         if (StateMachine.CurrentState == DropState)
         {
             ToggleStairsCollision(false); // 밑점프는 묻지도 따지지도 않고 무조건 통과
         }
         else if (StateMachine.CurrentState == DashState && !IsGrounded())
         {
-            // 🔥 [원상복구] 공중(점프) 대쉬일 때는 비탈길에 안착하지 않고 유령처럼 뚫고 지나가게 켭니다!
+            // 공중(점프) 대쉬일 때는 비탈길에 안착하지 않고 유령처럼
             ToggleStairsCollision(false);
         }
         else if (StateMachine.CurrentState == AirState || StateMachine.CurrentState == JumpState)
@@ -1501,4 +1527,10 @@ public class PlayerController : MonoBehaviour
         // 밑점프 무시 콜라이더면 안 닿은 걸로 처리!
         return hit.collider != null && hit.collider != ignoredDropCollider;
     }
+
+
+
+
+
+
 }

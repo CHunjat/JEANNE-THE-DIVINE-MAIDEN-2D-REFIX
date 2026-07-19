@@ -3000,7 +3000,7 @@ MonoBehaviour:
   anim_AirUpAtk: AirUpAtk
   anim_AirDownAtk: AirDownAtk
   hasUsedAirUp: 0
-  healAmount: 50
+  healAmount: 10
   healMpCost: 30
   HolySlashmp: 30
   lightningMpCost: 30
@@ -3020,6 +3020,7 @@ MonoBehaviour:
   parryKnockbackForce: 2
   parryCounterWindow: 0.3
   guardStartTime: 0
+  maxChargeTime: 10
   currentChargeLevel: 1
   attackPoint: {fileID: 1252207914}
   attackLibrary:
@@ -3217,9 +3218,10 @@ MonoBehaviour:
   statFaith: 1
   statEndurance: 1
   baseMaxHp: 1000
-  currentHp: 0
+  currentHp: 1
   baseMaxMp: 100
   currentMp: 0
+  spiritBonusPercent: 0.01
   currentRecoverableHp: 0
   recoverableRatio: 0.5
   lifestealRatio: 0.2
