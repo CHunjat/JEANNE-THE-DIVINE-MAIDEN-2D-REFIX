@@ -4,6 +4,9 @@ using System.Collections;
 // MidBossPattern6.cs
 // 강화 앞발 찍기 2연찍기 + 뒷발 찌르기 (무조건 3연타)
 // (그로기 판정 타이밍 경합 제거: Update로 실시간 감시)
+// [수정] 히트박스 재활성화 시 같은 프레임에서 끄고 바로 켜서
+//        물리 엔진이 상태 변화를 못 읽고 판정을 놓치던 문제 수정
+//        -> WaitForFixedUpdate로 물리 스텝을 확실히 한 번 통과시킨 뒤 재활성화
 // =====================================================
 public class MidBossPattern6 : BossPatternBase
 {
@@ -24,7 +27,7 @@ public class MidBossPattern6 : BossPatternBase
     private Animator visualAnimator;
     private EnemyGroggy groggy;
     private bool isExecuting = false;
-    private bool wasInterruptedByGroggy = false; // [추가됨] 실행 도중 그로기 발생 여부를 실시간 기록
+    private bool wasInterruptedByGroggy = false;
     private Coroutine failsafeCoroutine;
 
     public override bool IsBusy => isExecuting;
@@ -50,7 +53,6 @@ public class MidBossPattern6 : BossPatternBase
         distanceType = DistanceType.Mid;
     }
 
-    // [추가됨] 실행 중일 때만 매 프레임 그로기 진입 여부를 감시 (타이밍 경합 방지)
     private void Update()
     {
         if (isExecuting && groggy != null && groggy.IsGroggy)
@@ -63,7 +65,7 @@ public class MidBossPattern6 : BossPatternBase
     {
         if (isExecuting) return;
         isExecuting = true;
-        wasInterruptedByGroggy = false; // [추가됨] 새 사이클 시작 시 초기화
+        wasInterruptedByGroggy = false;
 
         if (visualAnimator != null) visualAnimator.SetTrigger("doTriple");
         StartCoroutine(MoveRoutine());
@@ -90,13 +92,12 @@ public class MidBossPattern6 : BossPatternBase
         }
     }
 
+    // [수정됨] 같은 프레임에서 끄고 바로 켜던 걸 코루틴 + WaitForFixedUpdate 방식으로 변경
     public void AnimEvent_DoubleStamp()
     {
         if (stampHitbox != null)
         {
-            stampHitbox.SetActive(false);
-            stampHitbox.SetActive(true);
-            Invoke(nameof(DeactivateStamp), stampHitboxDuration);
+            StartCoroutine(ReactivateHitboxRoutine(stampHitbox, stampHitboxDuration));
         }
     }
 
@@ -104,12 +105,20 @@ public class MidBossPattern6 : BossPatternBase
     {
         if (backKickHitbox != null)
         {
-            backKickHitbox.SetActive(false);
-            backKickHitbox.SetActive(true);
-            Invoke(nameof(DeactivateBackKick), backKickHitboxDuration);
+            StartCoroutine(ReactivateHitboxRoutine(backKickHitbox, backKickHitboxDuration));
         }
 
         EndExecution();
+    }
+
+    // Pattern8과 동일한 방식: WaitForFixedUpdate로 물리 스텝을 확실히 한 번 통과시킴
+    private IEnumerator ReactivateHitboxRoutine(GameObject hitbox, float duration)
+    {
+        hitbox.SetActive(false);
+        yield return new WaitForFixedUpdate();
+        hitbox.SetActive(true);
+        yield return new WaitForSeconds(duration);
+        hitbox.SetActive(false);
     }
 
     private void EndExecution()
@@ -122,7 +131,6 @@ public class MidBossPattern6 : BossPatternBase
         }
     }
 
-    // [수정됨] 5초 "후"에 그로기 여부를 확인하는 대신, Update에서 실시간 기록해둔 값을 사용
     private IEnumerator FailsafeRoutine()
     {
         yield return new WaitForSeconds(maxExecutionTime);
@@ -139,7 +147,4 @@ public class MidBossPattern6 : BossPatternBase
         }
         failsafeCoroutine = null;
     }
-
-    private void DeactivateStamp() { if (stampHitbox != null) stampHitbox.SetActive(false); }
-    private void DeactivateBackKick() { if (backKickHitbox != null) backKickHitbox.SetActive(false); }
 }

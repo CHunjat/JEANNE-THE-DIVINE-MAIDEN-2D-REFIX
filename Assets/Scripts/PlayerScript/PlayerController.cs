@@ -1,3 +1,4 @@
+using FMODUnity;
 using NUnit.Framework;
 using System;
 using System.Collections;
@@ -154,11 +155,11 @@ public class PlayerController : MonoBehaviour
 
 
 
-    [Header("스킬 데이터")]
-    public float healAmount = 50f;  // 체력 회복량
-    public float healMpCost = 30f;  // 마나 소모량
-    public float HolySlashmp = 30;
-    public float lightningMpCost = 30;
+    //[Header("스킬 데이터")]
+    ////public float healAmount = 50f;  // 체력 회복량
+    ////public float healMpCost = 30f;  // 마나 소모량
+    ////public float HolySlashmp = 30;
+    ////public float lightningMpCost = 30;
 
     [HideInInspector]
     [Header("히트 애니메이션 변수값")]
@@ -373,6 +374,9 @@ public class PlayerController : MonoBehaviour
         // [기존 동일] 적을 한 명이라도 맞췄을 때 한 번만 실행되는 '타격감' 연출
         if (hasHitEnemy)
         {
+            //히트 소리 재생
+            RuntimeManager.PlayOneShot("event:/Player/Interaction_Battle/Player_Attack_Hit", transform.position);
+            
             // 고정값이 아니라, (누적 최종데미지, SO에 적힌 흡수비율) 2개를 넘겨줍니다!
             playerStats.RestoreMpByDamage(totalDealtDamage, data.mpRecoveryRatio);
 
@@ -1006,38 +1010,12 @@ public class PlayerController : MonoBehaviour
             bool isSuccess = false;
 
             // 현재 활성화된 슬롯에 따라 전이할 상태 결정
-            switch (currentSkillSlot)
-            {
-                case SkillSlot.HeavyAttack:
-                    if (playerStats.TryConsumeMp(HolySlashmp))
-                    {
-                        StateMachine.ChangeState(HeavyReadyState);
-                        isSuccess = true;
-                    }
-                    break;
-
-                case SkillSlot.LightningCut:
-                    if (playerStats.TryConsumeMp(lightningMpCost))
-                    {
-                        StateMachine.ChangeState(LightningReadyState);
-                        isSuccess = true;
-                    }
-                    break;
-
-                case SkillSlot.Heal:
-                    if (playerStats.TryConsumeMp(healMpCost))
-                    {
-                        StateMachine.ChangeState(HealState);
-                        isSuccess = true;
-                    }
-                    break;
-            }
 
             // 4. 결제 실패(마나 부족) 시 입력 강제 초기화
-            if (!isSuccess)
-            {
+            //if (!isSuccess)
+            //{
                 inputReader.HAttackPressed = false;
-            }
+            //}
         }
     }
 
