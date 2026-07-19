@@ -194,6 +194,9 @@ public class MidBoss : EnemyFSM
     {
         currentPhase = 2;
         isPhaseChanging = true;
+
+        if (BGMManager.Instance != null) BGMManager.Instance.SetBattlePhase(2);
+
         Invoke(nameof(EndPhaseTransition), 2f);
     }
 
@@ -399,6 +402,9 @@ public class MidBoss : EnemyFSM
         Collider2D coll = GetComponent<Collider2D>();
         if (coll != null) coll.enabled = false;
         if (animator != null) animator.SetBool("isDead", true);
+
+        // 보스 죽었으면 배틀 음악 종료!
+        if (BGMManager.Instance != null) BGMManager.Instance.ExitBattle();   // ← 여기 추가
     }
 
     public void AnimEvent_DisableAllHitBox()
