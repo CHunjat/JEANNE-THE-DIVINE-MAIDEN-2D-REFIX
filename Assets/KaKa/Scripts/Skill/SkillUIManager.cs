@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
-using UnityEngine.UI; // 일반 Text용
-using TMPro;           // TextMeshPro용
+using UnityEngine.UI;
+using TMPro;
 
 public class SkillUIManager : MonoBehaviour
 {
@@ -32,13 +32,13 @@ public class SkillUIManager : MonoBehaviour
     public SkillRotationManager skillRotationManager;
 
     [Header("Confirm Button Actions")]
-    public GameObject inGameUIPanel;    // 활성화할 인게임 화면 UI 오브젝트
-    public GameObject skillUIPanel;     // 비활성화할 스킬 화면 UI 오브젝트
-    public CheckpointSkillHandler checkpointSkillHandler;   // ★ 추가
+    public GameObject inGameUIPanel;
+    public GameObject skillUIPanel;
+
+    // 유니티 인스펙터에서 3개의 체크포인트를 모두 넣어주세요!
+    public CheckpointSkillHandler[] checkpointSkillHandlers;
 
     private int currentSelectedIndex = -1;
-
-    // 💡 [추가] 이전 프레임의 스킬 장착 상태를 기억해두기 위한 배열
     private SkillData[] lastSyncedSkills;
 
     private void Start()
@@ -54,7 +54,6 @@ public class SkillUIManager : MonoBehaviour
 
     private void Update()
     {
-        // 💡 [추가] 실시간 스킬 장착/해제 상태 감지 루프
         if (skillSlots != null && lastSyncedSkills != null)
         {
             bool isAnySlotChanged = false;
@@ -62,19 +61,17 @@ public class SkillUIManager : MonoBehaviour
             {
                 if (skillSlots[i] != null && skillSlots[i].skillData != lastSyncedSkills[i])
                 {
-                    lastSyncedSkills[i] = skillSlots[i].skillData; // 변경 기록 갱신
+                    lastSyncedSkills[i] = skillSlots[i].skillData;
                     isAnySlotChanged = true;
                 }
             }
 
-            // 스킬 데이터 장착 상태가 변했다면 실시간으로 즉시 인게임 연동 실행!
             if (isAnySlotChanged)
             {
                 UpdateAvailableSlotsCount();
             }
         }
 
-        // 기존 키보드 스킬 선택 로직
         if (currentSelectedIndex != -1)
         {
             if (Input.GetKeyDown(KeyCode.LeftArrow))
@@ -133,7 +130,8 @@ public class SkillUIManager : MonoBehaviour
 
         if (skillRotationManager != null)
         {
-            skillRotationManager.SyncSkills(currentSlotSkills);
+            try { skillRotationManager.SyncSkills(currentSlotSkills); }
+            catch { }
         }
     }
 
@@ -221,34 +219,74 @@ public class SkillUIManager : MonoBehaviour
         }
     }
 
-    // 💡 UI의 '확인' 버튼에 연결할 함수
     public void OnConfirmButtonClick()
     {
-        // 1. 인게임 화면 켜고, 스킬 화면 끄기
         if (inGameUIPanel != null) inGameUIPanel.SetActive(true);
         if (skillUIPanel != null) skillUIPanel.SetActive(false);
 
-        if (checkpointSkillHandler != null)
+        // ⭐ [수정된 부분] 가장 가까운 체크포인트를 찾아서 닫고, 메인 메뉴를 다시 켭니다.
+        if (checkpointSkillHandlers != null && checkpointSkillHandlers.Length > 0)
         {
-            checkpointSkillHandler.CloseSkillMenu();   // ★ ConfirmAndExit() → CloseSkillMenu()로 변경
-        }
-
-        // 2. ⭐ [핵심 추가] 스킬창 슬롯의 데이터를 인게임 회전 UI로 전달 및 아이콘 새로고침
-        if (skillRotationManager != null && skillSlots != null)
-        {
-            // 인게임 회전 슬롯 개수(3개)만큼 반복문 실행
-            for (int i = 0; i < skillRotationManager.skills.Length; i++)
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null)
             {
-                // 스킬 장착창 슬롯에 데이터가 존재한다면
-                if (i < skillSlots.Length && skillSlots[i] != null)
+                CheckpointSkillHandler closestHandler = null;
+                float minDistance = float.MaxValue;
+
+                // 배열에 있는 모든 체크포인트 핸들러와 플레이어 사이의 거리를 계산
+                foreach (var handler in checkpointSkillHandlers)
                 {
-                    // 장착창의 스킬 데이터를 인게임 스킬 데이터로 복사합니다.
-                    skillRotationManager.skills[i] = skillSlots[i].skillData;
+                    if (handler != null)
+                    {
+                        float dist = Vector2.Distance(player.transform.position, handler.transform.position);
+                        if (dist < minDistance)
+                        {
+                            minDistance = dist;
+                            closestHandler = handler; // 가장 가까운 녀석 갱신
+                        }
+                    }
+                }
+
+                // 현재 플레이어가 서 있는(가장 가까운) 체크포인트 처리
+                if (closestHandler != null)
+                {
+                    // 1. 기존에 작성하신 핸들러의 닫기 동작 실행
+                    closestHandler.CloseSkillMenu();
+
+                    // 🔥 2. [핵심 추가] 해당 핸들러와 같은 오브젝트에 있는 Checkpoint 컴포넌트를 찾아 메인 메뉴를 켭니다.
+                    Checkpoint closestCheckpoint = closestHandler.GetComponent<Checkpoint>();
+
+                    // 만약 자식/부모 오브젝트에 있다면 아래 코드로 찾아냅니다.
+                    if (closestCheckpoint == null)
+                        closestCheckpoint = closestHandler.GetComponentInParent<Checkpoint>();
+
+                    // 체크포인트의 메인 메뉴 UI를 다시 활성화!
+                    if (closestCheckpoint != null && closestCheckpoint.menuUI != null)
+                    {
+                        closestCheckpoint.menuUI.SetActive(true);
+                    }
                 }
             }
+        }
 
-            // 복사된 최신 데이터를 기준으로 인게임 스킬 아이콘들을 즉시 새로고침합니다.
-            skillRotationManager.UpdateAllSlotsUI();
+        // 빈 스킬 데이터가 넘어와도 에러 없이 UI가 꺼지도록 방어(Try-Catch)
+        if (skillRotationManager != null && skillSlots != null)
+        {
+            try
+            {
+                for (int i = 0; i < skillRotationManager.skills.Length; i++)
+                {
+                    if (i < skillSlots.Length && skillSlots[i] != null)
+                    {
+                        skillRotationManager.skills[i] = skillSlots[i].skillData;
+                    }
+                }
+                skillRotationManager.UpdateAllSlotsUI();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning("빈 스킬 슬롯으로 인한 아이콘 갱신 무시됨 : " + e.Message);
+            }
         }
     }
 }

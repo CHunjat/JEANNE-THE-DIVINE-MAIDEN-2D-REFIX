@@ -2,7 +2,8 @@
 using System.Collections;
 
 // =====================================================
-// MidBossPattern8.cs (2중 착지 버그 완벽 해결본)
+// MidBossPattern8.cs
+// 수정: 엉뚱한 시작 위치 조절 변수 삭제, 패턴 3과 동일한 타겟 조준점(playerYOffset) 방식 적용
 // =====================================================
 public class MidBossPattern8 : BossPatternBase
 {
@@ -15,14 +16,26 @@ public class MidBossPattern8 : BossPatternBase
     [SerializeField] private float bindDuration = 3f;
     [SerializeField] private float airTime = 1.8f;
     [SerializeField] private float landingHitboxDuration = 0.4f;
-    [SerializeField] private float boundDamageMultiplier = 2f;
 
     [SerializeField] private GameObject webPrefab;
+
+    [Header("거미줄 발사 위치 및 조준")]
+    [SerializeField] private Transform mouthSpawnPoint;
+
+    [Tooltip("거미줄이 향할 플레이어의 높이 오프셋 (패턴 3처럼 -5 추천)")]
+    [SerializeField] private float playerYOffset = -5f;
+
+    [Header("안전장치")]
+    [SerializeField] private float maxExecutionTime = 8f;
 
     private GameObject clearingHitbox;
     private GameObject landingHitbox;
     private Animator visualAnimator;
     private bool isExecuting = false;
+    private bool hasFiredWeb = false;
+    private Coroutine failsafeCoroutine;
+
+    public override bool IsBusy => isExecuting;
 
     private void Awake()
     {
@@ -47,7 +60,12 @@ public class MidBossPattern8 : BossPatternBase
     {
         if (isExecuting) return;
         isExecuting = true;
+        hasFiredWeb = false;
+
         if (visualAnimator != null) visualAnimator.SetTrigger("doSpit");
+
+        if (failsafeCoroutine != null) StopCoroutine(failsafeCoroutine);
+        failsafeCoroutine = StartCoroutine(FailsafeRoutine());
     }
 
     public void AnimEvent_UltClearing()
@@ -55,21 +73,40 @@ public class MidBossPattern8 : BossPatternBase
         ApplyClearing();
         if (clearingHitbox != null)
         {
-            clearingHitbox.SetActive(true);
-            Invoke(nameof(DeactivateClearing), clearingDuration);
+            StartCoroutine(ReactivateHitboxRoutine(clearingHitbox, clearingDuration));
         }
     }
 
-    public void AnimEvent_UltWeb()
+    public void AnimEvent_SpitWeb()
     {
+        if (!isExecuting) return;
+
+        if (hasFiredWeb) return;
+        hasFiredWeb = true;
+
         if (webPrefab != null)
         {
             SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
             bool isFacingLeft = (sr != null && sr.flipX);
-            GameObject playerObj = GameObject.FindWithTag("Player");
-            Vector2 dir = playerObj != null ? ((Vector2)(playerObj.transform.position - transform.position)).normalized : new Vector2(isFacingLeft ? -1f : 1f, 0f);
 
-            GameObject web = Instantiate(webPrefab, transform.position, Quaternion.identity);
+            // 미세조정(Offset) 다 날리고 우리가 잡아둔 입 위치 100% 신뢰
+            Vector3 spawnPos = mouthSpawnPoint != null ? mouthSpawnPoint.position : transform.position;
+
+            // 패턴 3과 완벽하게 동일한 조준 로직 적용
+            GameObject playerObj = GameObject.FindWithTag("Player");
+            Vector2 dir;
+            if (playerObj != null)
+            {
+                // 플레이어의 위치에 playerYOffset(-5)을 더해서 조준점을 끌어내림
+                Vector3 targetPos = playerObj.transform.position + new Vector3(0, playerYOffset, 0);
+                dir = ((Vector2)(targetPos - spawnPos)).normalized;
+            }
+            else
+            {
+                dir = new Vector2(isFacingLeft ? -1f : 1f, 0f);
+            }
+
+            GameObject web = Instantiate(webPrefab, spawnPos, Quaternion.identity);
             MidBossWebProjectile webScript = web.GetComponent<MidBossWebProjectile>();
             if (webScript != null) webScript.Initialize(dir, webSpeed, webRange, bindDuration);
         }
@@ -81,15 +118,12 @@ public class MidBossPattern8 : BossPatternBase
     {
         if (!isExecuting) return;
 
-        // Visual 끄기
         Transform visual = transform.Find("Visual");
         if (visual != null) visual.gameObject.SetActive(false);
 
-        // Hurtbox_Body 끄기
         Transform hurtbox = transform.Find("Hurtbox_Body");
         if (hurtbox != null) hurtbox.gameObject.SetActive(false);
 
-        // 본체 콜라이더 끄기
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 
@@ -103,29 +137,58 @@ public class MidBossPattern8 : BossPatternBase
         GameObject playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null) transform.position = playerObj.transform.position;
 
-        // Visual 켜기
         Transform visual = transform.Find("Visual");
         if (visual != null) visual.gameObject.SetActive(true);
 
-        // Hurtbox_Body 켜기
         Transform hurtbox = transform.Find("Hurtbox_Body");
         if (hurtbox != null) hurtbox.gameObject.SetActive(true);
 
-        // 본체 콜라이더 켜기
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = true;
 
         if (visualAnimator != null) visualAnimator.SetTrigger("doLand");
+
+        Invoke(nameof(EndExecution), landingHitboxDuration + 1.0f);
     }
 
-    public void AnimEvent_UltLandImpact()
+    public void AnimEvent_LandImpact()
     {
+        if (!isExecuting) return;
+
         if (landingHitbox != null)
         {
-            landingHitbox.SetActive(true);
-            Invoke(nameof(DeactivateLanding), landingHitboxDuration);
+            StartCoroutine(ReactivateHitboxRoutine(landingHitbox, landingHitboxDuration));
         }
+    }
+
+    private IEnumerator ReactivateHitboxRoutine(GameObject hitbox, float duration)
+    {
+        hitbox.SetActive(false);
+        yield return new WaitForFixedUpdate();
+        hitbox.SetActive(true);
+
+        yield return new WaitForSeconds(duration);
+        hitbox.SetActive(false);
+    }
+
+    private void EndExecution()
+    {
         isExecuting = false;
+        if (failsafeCoroutine != null)
+        {
+            StopCoroutine(failsafeCoroutine);
+            failsafeCoroutine = null;
+        }
+    }
+
+    private IEnumerator FailsafeRoutine()
+    {
+        yield return new WaitForSeconds(maxExecutionTime);
+        if (isExecuting)
+        {
+            isExecuting = false;
+        }
+        failsafeCoroutine = null;
     }
 
     private void ApplyClearing()
@@ -139,7 +202,4 @@ public class MidBossPattern8 : BossPatternBase
             if (playerRb != null) playerRb.linearVelocity = knockbackDir * (knockbackDistance / 0.3f);
         }
     }
-
-    private void DeactivateClearing() { if (clearingHitbox != null) clearingHitbox.SetActive(false); }
-    private void DeactivateLanding() { if (landingHitbox != null) landingHitbox.SetActive(false); }
 }

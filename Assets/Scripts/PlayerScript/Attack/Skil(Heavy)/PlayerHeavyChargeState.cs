@@ -3,7 +3,6 @@
 public class PlayerHeavyChargeState : PlayerState
 {
     private bool isFullyCharged;
-    private float fullChargeTime = 1.5f; // 풀차지에 걸리는 시간 (원하는 시간으로 조절)
     private bool isLoopAnimStarted;
 
     public PlayerHeavyChargeState(PlayerController player, PlayerStateMachine stateMachine, string animName)
@@ -54,7 +53,7 @@ public class PlayerHeavyChargeState : PlayerState
 
         // 2. 풀차지 도달 체크
         // 지정한 시간이 지나면 2단계로 승급시킴
-        if (stateTimer >= fullChargeTime && !isFullyCharged)
+        if (stateTimer >= player.maxChargeTime && !isFullyCharged)
         {
             isFullyCharged = true;
             player.currentChargeLevel = 2; // ★ 풀차지 달성 시 2단계로 변환

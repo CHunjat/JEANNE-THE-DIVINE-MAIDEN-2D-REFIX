@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 // =====================================================
 // MidBoss.cs
+// 보스 메인 상태 및 패턴 제어
+// 수정: 사운드 연동용 CurrentPhase 프로퍼티 추가
+// 수정: 문워크 방지를 위해 방향 전환 쿨타임(minFlipInterval) 삭제 (데드존만 유지)
 // =====================================================
 public class MidBoss : EnemyFSM
 {
@@ -12,9 +15,14 @@ public class MidBoss : EnemyFSM
     [SerializeField] private float phase2Threshold = 0.5f;
     private bool isPhaseChanging = false;
 
-    [Header("공격 쿨타임")]
+    // 사운드 스크립트 등 외부에서 현재 페이즈를 안전하게 읽어갈 수 있도록 추가
+    public int CurrentPhase => currentPhase;
+
+    [Header("공격 쿨타임 및 헛스윙 설정")]
     [SerializeField] private float attackCooldown = 2.5f;
+    [SerializeField] private float basicAttackLockDuration = 0.8f;
     private float nextAttackTime = 0f;
+    private float attackAnimationLockTime = 0f;
 
     [Header("거리 범위 설정")]
     [SerializeField] private float closeRangeMax = 5f;
@@ -24,6 +32,7 @@ public class MidBoss : EnemyFSM
     [Header("피격 피드백")]
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private Material flashMaterial;
+    [SerializeField] private float flashDuration = 0.05f;
     private Material originalMaterial;
     private Coroutine flashCoroutine;
 
@@ -40,20 +49,31 @@ public class MidBoss : EnemyFSM
     public GameObject hitBox_Clearing;
     public GameObject hitBox_Slash;
     public GameObject hitBox_BackKick;
+    public GameObject webFirePoint;
+
+    [Header("입 위치 수동 보정 (완결판)")]
+    [Tooltip("오른쪽 볼 때 입의 로컬 좌표")]
+    public Vector2 mouthRightPos = new Vector2(0.34f, 2.58f);
+    [Tooltip("왼쪽 볼 때 입의 로컬 좌표")]
+    public Vector2 mouthLeftPos = new Vector2(-3.5f, 2.58f);
 
     [Header("방향 전환 및 오프셋 설정")]
-    [SerializeField] private float flipHeightThreshold = 1f;
-    // [추가] 1. 추적 정지 거리: 이 거리 안으로는 무지성으로 다가가지 않고 멈춰 섬 (예: 5f)
     [SerializeField] private float chaseOffset = 5f;
-    // [추가] 2. 파고들기 감지 거리: 이 거리 안으로 들어오면 클리어링 패턴 강제 시전 (예: 2f)
     [SerializeField] private float overlapDistance = 2f;
 
+    [Header("방향 전환 - 와이퍼 현상 방지")]
+    [Tooltip("플립 데드존: 플레이어와 너무 가까울 때 덜덜 떠는 것 방지")]
+    [SerializeField] private float flipDeadzoneX = 0.3f;
+
+    [Header("뒤쪽 클리어링 발동 설정")]
+    [SerializeField] private float behindClearingRange = 4f;
+
     private bool isDeadProcessed = false;
+    private Dictionary<GameObject, float> hitboxBaseX = new Dictionary<GameObject, float>();
 
     protected override void Awake()
     {
         base.Awake();
-
         Collider2D myCollider = GetComponent<Collider2D>();
         GameObject playerObj = GameObject.FindWithTag("Player");
 
@@ -87,19 +107,56 @@ public class MidBoss : EnemyFSM
         if (spriteRenderer != null) originalMaterial = spriteRenderer.material;
         groggy = GetComponent<EnemyGroggy>();
         AnimEvent_DisableAllHitBox();
+        CacheHitboxPositions();
     }
 
-    // [수정됨] 부모랑 똑같이 인수 2개로 맞춤
+    private void CacheHitboxPositions()
+    {
+        GameObject[] hitboxes = { hitBox_Stamp, hitBox_Landing, hitBox_Clearing, hitBox_Slash, hitBox_BackKick };
+        foreach (var hb in hitboxes)
+        {
+            if (hb != null)
+                hitboxBaseX[hb] = Mathf.Abs(hb.transform.localPosition.x);
+        }
+    }
+
+    protected override void OnFacingChanged(bool facingLeft)
+    {
+        foreach (var kvp in hitboxBaseX)
+        {
+            GameObject hb = kvp.Key;
+            float baseX = kvp.Value;
+            Vector3 pos = hb.transform.localPosition;
+            pos.x = facingLeft ? -baseX : baseX;
+            hb.transform.localPosition = pos;
+        }
+
+        if (webFirePoint != null)
+        {
+            Vector3 webPos = webFirePoint.transform.localPosition;
+            webPos.x = facingLeft ? mouthLeftPos.x : mouthRightPos.x;
+            webPos.y = facingLeft ? mouthLeftPos.y : mouthRightPos.y;
+            webFirePoint.transform.localPosition = webPos;
+        }
+    }
+
+    private bool IsAnyPatternBusy()
+    {
+        List<BossPatternBase> currentList = (currentPhase == 1) ? phase1Patterns : phase2Patterns;
+        foreach (var p in currentList)
+        {
+            if (p.IsBusy) return true;
+        }
+        return false;
+    }
+
     public override void TakeDamage(float amount, float groggyDamage = 0f)
     {
         if (isPhaseChanging || GetCurrentState() == EnemyState.Dead) return;
 
         float finalDamage = (groggy != null) ? amount * groggy.GetDamageMultiplier() : amount;
-
-        // 부모(Base)한테 체력 데미지랑 그로기 데미지 둘 다 넘겨줌
         base.TakeDamage(finalDamage, groggyDamage);
 
-        // 그로기 게이지는 새로 추가된 groggyDamage 값으로 채움
         if (groggy != null) groggy.AddGauge(groggyDamage);
 
         if (spriteRenderer != null && flashMaterial != null)
@@ -116,7 +173,7 @@ public class MidBoss : EnemyFSM
     private IEnumerator FlashRoutine()
     {
         spriteRenderer.material = flashMaterial;
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(flashDuration);
         spriteRenderer.material = originalMaterial;
     }
 
@@ -137,9 +194,6 @@ public class MidBoss : EnemyFSM
     {
         currentPhase = 2;
         isPhaseChanging = true;
-
-        Debug.Log("<color=magenta><b>[MidBoss] 체력 50% 이하! 2페이즈 전환 (잠시 대기 후 패턴 변경)</b></color>");
-
         Invoke(nameof(EndPhaseTransition), 2f);
     }
 
@@ -163,8 +217,28 @@ public class MidBoss : EnemyFSM
     private void FlipIfGroundLevel()
     {
         if (player == null) return;
-        if (player.position.y <= transform.position.y + flipHeightThreshold)
-            FlipTowardsPlayer();
+
+        // 쿨타임 삭제, 데드존(거리) 체크만 남겨서 문워크 완벽 차단
+        float diffX = Mathf.Abs(player.position.x - transform.position.x);
+        if (diffX < flipDeadzoneX) return;
+
+        FlipTowardsPlayer();
+    }
+
+    private void EnterAttackState()
+    {
+        if (rb != null) rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        ChangeState(EnemyState.Attack);
+    }
+
+    private bool IsPlayerBehind()
+    {
+        if (player == null || spriteRenderer == null) return false;
+
+        bool facingLeft = spriteRenderer.flipX;
+        float diffX = player.position.x - transform.position.x;
+
+        return facingLeft ? (diffX > 0f) : (diffX < 0f);
     }
 
     protected override void OnIdle()
@@ -182,40 +256,44 @@ public class MidBoss : EnemyFSM
     protected override void OnChase()
     {
         if (isPhaseChanging) return;
-
         FlipIfGroundLevel();
-
         if (animator != null) animator.SetBool("isMoving", true);
 
-        // [수정] 1. 파고들기 감지: 거미 배 밑(overlapDistance)으로 들어오면 즉시 공격 상태로 넘어가서 클리어링 유도
-        if (GetDistanceToPlayer() <= overlapDistance && clearingPattern != null && clearingPattern.IsUsable())
+        if (!IsAnyPatternBusy() && Time.time >= attackAnimationLockTime
+            && IsPlayerBehind() && GetDistanceToPlayer() <= behindClearingRange
+            && clearingPattern != null && clearingPattern.IsUsable())
         {
-            ChangeState(EnemyState.Attack);
+            EnterAttackState();
             return;
         }
 
-        if (Time.time >= nextAttackTime)
+        if (!IsAnyPatternBusy() && Time.time >= attackAnimationLockTime && GetDistanceToPlayer() <= overlapDistance && clearingPattern != null && clearingPattern.IsUsable())
+        {
+            EnterAttackState();
+            return;
+        }
+
+        if (Time.time >= nextAttackTime && Time.time >= attackAnimationLockTime)
         {
             List<BossPatternBase> currentList = (currentPhase == 1) ? phase1Patterns : phase2Patterns;
             foreach (var p in currentList)
             {
                 if (p.canUseInChase && p.IsUsable())
                 {
-                    ChangeState(EnemyState.Attack);
+                    EnterAttackState();
                     return;
                 }
             }
         }
 
-        if (GetDistanceToPlayer() <= attackRange)
+        if (GetDistanceToPlayer() <= attackRange && Time.time >= attackAnimationLockTime)
         {
-            ChangeState(EnemyState.Attack);
+            EnterAttackState();
             return;
         }
 
         if (player != null)
         {
-            // [수정] 2. 오프셋 적용: 플레이어와 거리가 chaseOffset보다 멀 때만 다가감
             if (GetDistanceToPlayer() > chaseOffset)
             {
                 float moveDirX = Mathf.Sign(player.position.x - transform.position.x);
@@ -223,7 +301,6 @@ public class MidBoss : EnemyFSM
             }
             else
             {
-                // 오프셋 거리 안쪽이면 무지성 돌진을 멈추고 제자리에 섬 (겹침 방지)
                 rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
             }
         }
@@ -235,12 +312,8 @@ public class MidBoss : EnemyFSM
 
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
 
-        // [수정] 3. 클리어링 시전: 무조건 쓰는 게 아니라, 플레이어가 overlapDistance 안으로 들어왔을 때만 밀어내기 용도로 시전
-        if (clearingPattern != null && clearingPattern.IsUsable() && GetDistanceToPlayer() <= overlapDistance)
+        if (IsAnyPatternBusy() || Time.time < attackAnimationLockTime)
         {
-            if (animator != null) { animator.SetBool("isMoving", false); animator.SetBool("isAttacking", true); }
-            clearingPattern.Execute();
-            nextAttackTime = Time.time + attackCooldown;
             return;
         }
 
@@ -253,6 +326,18 @@ public class MidBoss : EnemyFSM
             return;
         }
 
+        bool overlapClose = GetDistanceToPlayer() <= overlapDistance;
+        bool behindClose = IsPlayerBehind() && GetDistanceToPlayer() <= behindClearingRange;
+        if (clearingPattern != null && clearingPattern.IsUsable() && (overlapClose || behindClose))
+        {
+            if (animator != null) { animator.SetBool("isMoving", false); animator.SetBool("isAttacking", true); }
+            clearingPattern.Execute();
+
+            attackAnimationLockTime = Time.time + basicAttackLockDuration;
+            nextAttackTime = Time.time + attackCooldown;
+            return;
+        }
+
         List<BossPatternBase> currentPatterns = (currentPhase == 1) ? phase1Patterns : phase2Patterns;
         BossPatternBase.DistanceType currentDist = GetCurrentDistanceType();
 
@@ -260,7 +345,6 @@ public class MidBoss : EnemyFSM
         foreach (var p in currentPatterns)
         {
             if (!p.IsUsable()) continue;
-
             bool distanceOk = false;
             switch (p.distanceType)
             {
@@ -269,7 +353,6 @@ public class MidBoss : EnemyFSM
                 case BossPatternBase.DistanceType.Mid: distanceOk = (currentDist == BossPatternBase.DistanceType.Close || currentDist == BossPatternBase.DistanceType.Mid); break;
                 case BossPatternBase.DistanceType.Far: distanceOk = (currentDist == BossPatternBase.DistanceType.Far); break;
             }
-
             if (distanceOk) candidates.Add(p);
         }
 
@@ -280,7 +363,6 @@ public class MidBoss : EnemyFSM
         }
 
         candidates.Sort((a, b) => a.priority.CompareTo(b.priority));
-
         int highestPriority = candidates[0].priority;
         List<BossPatternBase> topCandidates = new List<BossPatternBase>();
         foreach (var p in candidates)
@@ -292,24 +374,26 @@ public class MidBoss : EnemyFSM
         int randomIdx = Random.Range(0, topCandidates.Count);
         BossPatternBase selectedPattern = topCandidates[randomIdx];
 
-        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
         if (animator != null) { animator.SetBool("isMoving", false); animator.SetBool("isAttacking", true); }
 
-        Debug.Log($"<color=cyan>[MidBoss] 패턴 발동: {selectedPattern.GetType().Name}</color>");
         selectedPattern.Execute();
+
+        attackAnimationLockTime = Time.time + basicAttackLockDuration;
         nextAttackTime = Time.time + attackCooldown;
     }
 
     protected override void OnHit() { }
-    protected override void OnGroggy() { rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y); }
+
+    protected override void OnGroggy()
+    {
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        SendMessage("EndExecution", SendMessageOptions.DontRequireReceiver);
+    }
 
     protected override void OnDead()
     {
         if (isDeadProcessed) return;
         isDeadProcessed = true;
-
-        Debug.Log("<color=red><size=15><b>[MidBoss_Spider] 거미 사망!!! (HP 0)</b></size></color>");
-
         rb.linearVelocity = Vector2.zero;
         rb.gravityScale = 0f;
         Collider2D coll = GetComponent<Collider2D>();
@@ -317,12 +401,6 @@ public class MidBoss : EnemyFSM
         if (animator != null) animator.SetBool("isDead", true);
     }
 
-    public void AnimEvent_Slash1() { if (hitBox_Slash) { hitBox_Slash.SetActive(true); Invoke(nameof(DeactivateSlash), 0.2f); } }
-    private void DeactivateSlash() { if (hitBox_Slash) hitBox_Slash.SetActive(false); }
-    public void AnimEvent_Stamp() { if (hitBox_Stamp) { hitBox_Stamp.SetActive(true); Invoke(nameof(DeactivateStamp), 0.2f); } }
-    private void DeactivateStamp() { if (hitBox_Stamp) hitBox_Stamp.SetActive(false); }
-    public void AnimEvent_BackKickHit() { if (hitBox_BackKick) { hitBox_BackKick.SetActive(true); Invoke(nameof(DeactivateBackKick), 0.2f); } }
-    private void DeactivateBackKick() { if (hitBox_BackKick) hitBox_BackKick.SetActive(false); }
     public void AnimEvent_DisableAllHitBox()
     {
         if (hitBox_Stamp) hitBox_Stamp.SetActive(false);

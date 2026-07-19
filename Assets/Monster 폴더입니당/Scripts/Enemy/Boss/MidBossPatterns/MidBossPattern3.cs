@@ -1,7 +1,8 @@
 using UnityEngine;
 
 // =====================================================
-// MidBossPattern3.cs
+// MidBossPattern3.cs 거미줄 뱉기
+// 수정: 거미줄이 위로 솟구치지 않도록 Y오프셋 기본값 0으로 변경
 // =====================================================
 public class MidBossPattern3 : BossPatternBase
 {
@@ -9,14 +10,19 @@ public class MidBossPattern3 : BossPatternBase
     [SerializeField] private float webSpeed = 6f;
     [SerializeField] private float webRange = 12f;
     [SerializeField] private float bindDuration = 3f;
-    [SerializeField] private float playerYOffset = 1.5f;
+
+    [Tooltip("거미줄이 향할 플레이어의 높이 오프셋 (승천 버그 방지용)")]
+    [SerializeField] private float playerYOffset = 0f; // 1.5에서 0으로 변경!
+
     [SerializeField] private GameObject webPrefab;
     [SerializeField] private Transform webSpawnPoint;
 
     private Transform owner;
     private Animator visualAnimator;
     private bool isSpitting = false;
-    private bool hasFiredThisTurn = false; // 2연발 발사 절대 차단용 
+    private bool hasFiredThisTurn = false;
+
+    public override bool IsBusy => isSpitting;
 
     private void Awake()
     {
@@ -32,7 +38,7 @@ public class MidBossPattern3 : BossPatternBase
     {
         if (isSpitting) return;
         isSpitting = true;
-        hasFiredThisTurn = false; // 턴 시작 시 자물쇠 초기화
+        hasFiredThisTurn = false;
         if (visualAnimator != null) visualAnimator.SetTrigger("doSpit");
         Invoke(nameof(UnlockSpitting), 2.0f);
     }
@@ -41,22 +47,22 @@ public class MidBossPattern3 : BossPatternBase
 
     public void AnimEvent_SpitWeb()
     {
-        // 애니메이션 프레임 이벤트가 2번 들어와도 1발만 쏘고 칼같이 컷!
-        if (hasFiredThisTurn) return;
+        if (!isSpitting || hasFiredThisTurn) return;
         hasFiredThisTurn = true;
-
         if (webPrefab == null) return;
 
         SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
         bool isFacingLeft = (sr != null && sr.flipX);
 
-        Vector3 spawnPos = owner.position;
-        if (webSpawnPoint != null)
+        Vector3 spawnPos;
+        if (webSpawnPoint == null)
         {
-            Vector3 localOffset = webSpawnPoint.localPosition;
-            if (isFacingLeft) localOffset.x = -Mathf.Abs(localOffset.x);
-            else localOffset.x = Mathf.Abs(localOffset.x);
-            spawnPos = owner.position + localOffset;
+            Debug.LogError("Web Spawn Point 누락!");
+            spawnPos = owner.position;
+        }
+        else
+        {
+            spawnPos = webSpawnPoint.position;
         }
 
         GameObject playerObj = GameObject.FindWithTag("Player");
@@ -66,12 +72,24 @@ public class MidBossPattern3 : BossPatternBase
             Vector3 targetPos = playerObj.transform.position + new Vector3(0, playerYOffset, 0);
             dir = ((Vector2)(targetPos - spawnPos)).normalized;
         }
-        else dir = new Vector2(isFacingLeft ? -1f : 1f, 0f);
+        else
+        {
+            dir = new Vector2(isFacingLeft ? -1f : 1f, 0f);
+        }
 
         GameObject web = Instantiate(webPrefab, spawnPos, Quaternion.identity);
-        MidBossWebProjectile webScript = web.GetComponent<MidBossWebProjectile>();
-        if (webScript != null) webScript.Initialize(dir, webSpeed, webRange, bindDuration);
 
-        Debug.Log($"<color=cyan>[MidBossPattern3] 거미줄 발사 완료!</color>");
+        MidBossWebProjectile webScript = web.GetComponent<MidBossWebProjectile>();
+        if (webScript != null)
+        {
+            webScript.Initialize(dir, webSpeed, webRange, bindDuration);
+        }
+    }
+
+    public void EndExecution()
+    {
+        isSpitting = false;
+        hasFiredThisTurn = false;
+        CancelInvoke(nameof(UnlockSpitting));
     }
 }

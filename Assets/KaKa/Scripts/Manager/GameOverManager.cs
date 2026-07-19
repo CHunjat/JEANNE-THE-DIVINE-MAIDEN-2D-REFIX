@@ -9,6 +9,7 @@ public class GameOverManager : MonoBehaviour
     public SpriteRenderer dimmerSprite;   // 암전용 Dimmer_Sprite
     public GameObject gameOverScreen;     // Canvas의 GameOverScreen 오브젝트
     public GameObject inGameScreen;       // Canvas의 InGameScreen 오브젝트
+    public GameObject bossUiScreen;       // Canvas의 Boss UI 오브젝트 (보스 체력바 등)
     public Transform respawnPoint;        // 플레이어가 부활할 위치 (보이지 않는 큐브 등)
 
     [Header("연출 설정")]
@@ -22,6 +23,8 @@ public class GameOverManager : MonoBehaviour
     public static bool skipMainMenu = false;
     public static bool shouldFadeIn = false;
 
+    public static bool isRespawnFade = false;
+
     private bool isGameOverTriggered = false;
 
     private void Start()
@@ -29,20 +32,21 @@ public class GameOverManager : MonoBehaviour
         if (gameOverScreen != null)
             gameOverScreen.SetActive(false);
 
-        // ========================================================
-        // ★ [씬 재로드 시 처리]
-        // ========================================================
-        // 1. 만약 이전에 저장해둔 부활 포인트 좌표가 있다면, 플레이어를 그리로 순간이동시킵니다.
+        // 부활 위치 적용
         if (lastRespawnPosition.HasValue && playerStats != null)
         {
             playerStats.transform.position = lastRespawnPosition.Value;
         }
 
-        // 2. 부활 또는 새 게임 버튼으로 진입한 경우, 부드럽게 화면을 밝혀줍니다.
-        if (shouldFadeIn && dimmerSprite != null)
+        // ====================================================
+        // 게임오버 후 부활일 때만 FadeIn 실행
+        // ====================================================
+        if (shouldFadeIn && isRespawnFade && dimmerSprite != null)
         {
-            shouldFadeIn = false; // 플래그 원상 복구
-            StartCoroutine(FadeInEffectRoutine());
+            shouldFadeIn = false;
+            isRespawnFade = false;
+
+            StartCoroutine(DelayedFadeIn(0.1f));
         }
     }
 
@@ -60,19 +64,28 @@ public class GameOverManager : MonoBehaviour
     {
         isGameOverTriggered = true;
 
+        // 일반 인게임 UI 비활성화
         if (inGameScreen != null)
         {
             inGameScreen.SetActive(false);
         }
 
-        if (dimmerSprite == null) yield break;
+        // 화면이 어두워지기 전에 보스 UI도 즉시 꺼줍니다.
+        if (bossUiScreen != null)
+        {
+            bossUiScreen.SetActive(false);
+        }
+
+        if (dimmerSprite == null)
+            yield break;
 
         // 카메라 위치 추적 암전 (보스방 위치 고려)
         Camera mainCamera = Camera.main;
         if (mainCamera != null)
         {
             Vector3 camPos = mainCamera.transform.position;
-            dimmerSprite.transform.position = new Vector3(camPos.x, camPos.y, dimmerSprite.transform.position.z);
+            dimmerSprite.transform.position =
+                new Vector3(camPos.x, camPos.y, dimmerSprite.transform.position.z);
         }
 
         dimmerSprite.gameObject.SetActive(true);
@@ -87,6 +100,7 @@ public class GameOverManager : MonoBehaviour
         while (elapsed < fadeDuration)
         {
             elapsed += Time.deltaTime;
+
             float currentAlpha = Mathf.Lerp(startAlpha, 1.0f, elapsed / fadeDuration);
 
             c.a = currentAlpha;
@@ -95,6 +109,7 @@ public class GameOverManager : MonoBehaviour
             if (!isUiActivated && currentAlpha >= uiTriggerAlpha)
             {
                 isUiActivated = true;
+
                 if (gameOverScreen != null)
                 {
                     gameOverScreen.SetActive(true);
@@ -108,28 +123,38 @@ public class GameOverManager : MonoBehaviour
         dimmerSprite.color = c;
 
         if (!isUiActivated && gameOverScreen != null)
+        {
             gameOverScreen.SetActive(true);
+        }
 
-        // ========================================================
-        // ★ [씬 초기화 및 부활 로직] 3초 대기 후 씬 재로드
-        // ========================================================
-
-        // 1. 지정된 시간(3초) 동안 암전 상태로 대기
+        // 3초 대기
         yield return new WaitForSeconds(respawnDelay);
 
-        // 2. 부활할 위치를 저장하고 씬 전환 시 메인메뉴 스킵 플래그를 켭니다.
-        if (respawnPoint != null)
+        // 체크포인트 탐색
+        Transform targetRespawnTransform = GetNearestUnlockedCheckpointSpawnPoint();
+
+        if (targetRespawnTransform != null)
+        {
+            lastRespawnPosition = targetRespawnTransform.position;
+            Debug.Log($"[GameOverManager] 활성화된 체크포인트 발견! 부활 위치: {lastRespawnPosition}");
+        }
+        else if (respawnPoint != null)
         {
             lastRespawnPosition = respawnPoint.position;
+            Debug.Log($"[GameOverManager] 기본 시작 지점으로 부활합니다. 부활 위치: {lastRespawnPosition}");
         }
-        skipMainMenu = true;
-        shouldFadeIn = true; // 재로드 후 어두운 화면에서 밝아지는 연출 작동용
 
-        // 3. 현재 활성화된 씬을 통째로 재로드하여 보스와 맵 전체를 '순정 상태'로 리셋합니다.
+        // =====================================================
+        // ★ 게임오버로 인한 재로드임을 표시
+        // =====================================================
+        skipMainMenu = true;
+        shouldFadeIn = true;
+        isRespawnFade = true;
+
+        // 씬 재로드
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    // 완전히 어두운 상태에서 원래 밝기로 부드럽게 되돌리는 연출용 코루틴
     private IEnumerator FadeInEffectRoutine()
     {
         dimmerSprite.gameObject.SetActive(true);
@@ -140,8 +165,20 @@ public class GameOverManager : MonoBehaviour
         dimmerSprite.color = c;
 
         float elapsed = 0f;
+
+        // Checkpoint.cs의 private 변수 'isRestingProcess'를 루프 밖에서 미리 한 번만 캐싱합니다 (매 프레임 호출 방지 최적화)
+        var field = typeof(Checkpoint).GetField("isRestingProcess", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
         while (elapsed < fadeDuration)
         {
+            // 🔥 [추가] 페이드인 도중 플레이어가 체크포인트와 상호작용(메뉴 열기 혹은 휴식)을 시도했다면,
+            // 게임오버 매니저의 코루틴을 즉각 종료(yield break)하여 겹침 현상을 원천 차단합니다.
+            if (IsPlayerInteractingWithCheckpoint(field))
+            {
+                Debug.Log("[GameOverManager] 페이드인 도중 체크포인트 상호작용 감지! 코루틴을 양보하고 종료합니다.");
+                yield break;
+            }
+
             elapsed += Time.deltaTime;
             c.a = Mathf.Lerp(1.0f, 0f, elapsed / fadeDuration);
             dimmerSprite.color = c;
@@ -150,6 +187,85 @@ public class GameOverManager : MonoBehaviour
 
         c.a = 0f;
         dimmerSprite.color = c;
-        dimmerSprite.gameObject.SetActive(false);
+
+        // 페이드 아웃이 완전히 끝난 시점에도 체크포인트 조작 중이 아닐 때만 디머를 비활성화합니다.
+        if (!IsPlayerInteractingWithCheckpoint(field))
+        {
+            dimmerSprite.gameObject.SetActive(false);
+        }
+    }
+
+    // 🔥 [새로 추가된 도우미 함수] 플레이어가 현재 체크포인트와 상호작용 중인지 실시간 검사
+    private bool IsPlayerInteractingWithCheckpoint(System.Reflection.FieldInfo field)
+    {
+        Checkpoint[] checkpoints = FindObjectsByType<Checkpoint>(FindObjectsSortMode.None);
+        foreach (var cp in checkpoints)
+        {
+            if (cp == null) continue;
+
+            // 1. 체크포인트 메뉴 UI 혹은 텔레포트 메뉴 UI가 켜져 있는지 확인
+            if ((cp.menuUI != null && cp.menuUI.activeSelf) ||
+                (cp.teleportMenuUI != null && cp.teleportMenuUI.activeSelf))
+            {
+                return true;
+            }
+
+            // 2. 체크포인트에서 휴식 혹은 텔레포트 동작이 실행 중인지 확인 (isRestingProcess 변수 값 확인)
+            if (field != null)
+            {
+                bool isResting = (bool)field.GetValue(cp);
+                if (isResting)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // ========================================================
+    // ★ [새로 추가된 도우미 함수] 체크포인트 자동 검색
+    // ========================================================
+    private Transform GetNearestUnlockedCheckpointSpawnPoint()
+    {
+        if (playerStats == null) return null;
+
+        Checkpoint[] checkpoints = FindObjectsByType<Checkpoint>(FindObjectsSortMode.None);
+        Checkpoint nearestCheckpoint = null;
+        float minDistance = float.MaxValue;
+
+        var field = typeof(Checkpoint).GetField("isUnlocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        foreach (var cp in checkpoints)
+        {
+            bool unlocked = false;
+            if (field != null)
+            {
+                unlocked = (bool)field.GetValue(cp);
+            }
+
+            if (unlocked)
+            {
+                float dist = Vector3.Distance(playerStats.transform.position, cp.transform.position);
+                if (dist < minDistance)
+                {
+                    minDistance = dist;
+                    nearestCheckpoint = cp;
+                }
+            }
+        }
+
+        if (nearestCheckpoint != null)
+        {
+            return nearestCheckpoint.spawnPoint != null ? nearestCheckpoint.spawnPoint : nearestCheckpoint.transform;
+        }
+
+        return null;
+    }
+
+    private IEnumerator DelayedFadeIn(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        StartCoroutine(FadeInEffectRoutine());
     }
 }

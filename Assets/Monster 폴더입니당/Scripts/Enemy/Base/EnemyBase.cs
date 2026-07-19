@@ -1,5 +1,4 @@
 using UnityEngine;
-
 // =====================================================
 // EnemyBase.cs
 // =====================================================
@@ -72,16 +71,25 @@ public abstract class EnemyBase : MonoBehaviour
         return (player.position - transform.position).normalized;
     }
 
-    protected void FlipTowardsPlayer()
+    // [수정됨] 방향이 실제로 바뀔 때만 OnFacingChanged 훅을 호출하도록 변경
+    protected virtual void FlipTowardsPlayer()
     {
         if (player == null) FindPlayer();
         if (player == null) return;
         SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
         if (sr != null)
         {
-            sr.flipX = player.position.x < transform.position.x;
+            bool shouldFaceLeft = player.position.x < transform.position.x;
+            if (sr.flipX != shouldFaceLeft)
+            {
+                sr.flipX = shouldFaceLeft;
+                OnFacingChanged(shouldFaceLeft);
+            }
         }
     }
+
+    // [추가됨] 방향이 실제로 바뀔 때 호출되는 훅. 자식 클래스에서 히트박스 위치 조정 등에 사용.
+    protected virtual void OnFacingChanged(bool facingLeft) { }
 
     protected void SetCollisionWithPlayer(bool enable)
     {
