@@ -33,14 +33,14 @@ public class PlayerLightningReadyState : PlayerState
     {
         base.LogicUpdate();
 
-        // ★ [핵심 수정] LightningHeld 대신 통합 유지 변수인 HeavyAttackHeld를 검사합니다!
+        // 1. 키를 떼는 순간: 무조건 즉발 공격 실행! (Idle로 가지 말고 Attack으로 가세요)
         if (!player.inputReader.HeavyAttackHeld)
         {
-            stateMachine.ChangeState(player.IdleState);
+            stateMachine.ChangeState(player.LightningAttackState);
             return;
         }
 
-        // 0.15초 이상 꾹 누르고 있으면 본격적인 차지 상태로 진입
+        // 2. 키를 누르고 있는데 0.15초가 지나면: 기 모으기 상태로 진입
         if (stateTimer >= waitTime)
         {
             stateMachine.ChangeState(player.LightningChargeState);
