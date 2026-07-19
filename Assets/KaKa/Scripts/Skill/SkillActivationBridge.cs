@@ -148,7 +148,7 @@ public class SkillActivationBridge : MonoBehaviour
             case SkillType.Heal:
                 if (equipped.healData != null && playerController.playerStats.currentMp >= equipped.mpCost)
                 {
-                    playerController.healAmount = equipped.healData.healAmount;
+                    //playerController.healAmount = equipped.healData.healAmount;
 
                     pendingHealSkill = equipped;
                     healMpConsumed = false;
@@ -213,6 +213,7 @@ public class SkillActivationBridge : MonoBehaviour
                 {
                     healMpConsumed = true;
                     playerController.playerStats.TryConsumeMp(pendingHealSkill.mpCost);
+                    playerController.playerStats.Heal(pendingHealSkill.healData.healAmount);
                 }
             }
         }

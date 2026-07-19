@@ -44,11 +44,11 @@ public class PlayerHealState : PlayerState
             hasHealed = true;
 
             // PlayerController에 연결해둔 스탯 스크립트의 Heal 함수를 부릅니다. (예: 50 회복)
-            if (player.playerStats != null)
-            {
-                player.playerStats.Heal(player.healAmount); 
+            //if (player.playerStats != null)
+            //{
+            //    player.playerStats.Heal(player.healAmount); 
                
-            }
+            //}
         }
 
         if (GetNormalizedTime() >= 1.0f)
