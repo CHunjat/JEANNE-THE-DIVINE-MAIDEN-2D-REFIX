@@ -5383,6 +5383,8 @@ MonoBehaviour:
   - event:/BGM/Boss/BossBGM_003
   - event:/BGM/Boss/BossBGM_001
   - event:/BGM/Boss/BossBGM_002
+  - event:/FinalBoss/BGM/Boss_Intro_001_]Are_You_Ready
+  - event:/FinalBoss/BGM/Boss_Intro_002_JohnCena
 --- !u!4 &1758708670
 Transform:
   m_ObjectHideFlags: 0

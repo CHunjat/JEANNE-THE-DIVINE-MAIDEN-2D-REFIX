@@ -16,13 +16,14 @@ MonoBehaviour:
   attackCategory: 1
   size: {x: 3.76, y: 2.59}
   offset: {x: 1, y: 0.8}
-  damageMultiplier: 1.5
+  damageMultiplier: 7.5
   hitStopDuration: 0
-  lightAttackGroggyRatio: 0
-  heavyAttackGroggyRatio: 0
-  heavyChargeGroggyRatio: 3
-  jumpLightGroggyRatio: 0
-  jumpHeavyGroggyRatio: 0
-  parryCounterSpeedRatio: 0
-  parryCounterLightGroggyRatio: 0
-  parryCounterHeavyGroggyRatio: 0
+  mpRecoveryRatio: 0.3
+  lightAttackGroggyRatio: 1
+  heavyAttackGroggyRatio: 1.5
+  heavyChargeGroggyRatio: 2
+  jumpLightGroggyRatio: 1.2
+  jumpHeavyGroggyRatio: 1.8
+  parryCounterSpeedRatio: 1.2
+  parryCounterLightGroggyRatio: 2.5
+  parryCounterHeavyGroggyRatio: 3.5

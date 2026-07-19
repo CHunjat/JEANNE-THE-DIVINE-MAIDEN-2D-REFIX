@@ -13,7 +13,17 @@ MonoBehaviour:
   m_Name: AirUpAtk
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   attackName: AirUpAtk
+  attackCategory: 0
   size: {x: 2.39, y: 1.63}
   offset: {x: -0.75, y: 1.16}
-  damage: 3
+  damageMultiplier: 0
   hitStopDuration: 0.1
+  mpRecoveryRatio: 0.3
+  lightAttackGroggyRatio: 1
+  heavyAttackGroggyRatio: 1.5
+  heavyChargeGroggyRatio: 2
+  jumpLightGroggyRatio: 1.2
+  jumpHeavyGroggyRatio: 1.8
+  parryCounterSpeedRatio: 1.2
+  parryCounterLightGroggyRatio: 2.5
+  parryCounterHeavyGroggyRatio: 3.5

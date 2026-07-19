@@ -21,12 +21,12 @@ MonoBehaviour:
   Banks:
   - {fileID: 858878391108560638}
   IsStream: 1
-  Is3D: 1
+  Is3D: 0
   IsOneShot: 1
   Parameters: []
   MinDistance: 1
   MaxDistance: 20
-  Length: 19256
+  Length: 10434
 --- !u!114 &-8589154509672233122
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -150,10 +150,10 @@ MonoBehaviour:
   Path: Assets/StreamingAssets/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639200961659762050
+  lastModified: 639200982260735080
   FileSizes:
   - Name: 
-    Value: 3450
+    Value: 3564
   Exists: 1
 --- !u!114 &-7416544577720656592
 MonoBehaviour:
@@ -614,6 +614,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 800
+--- !u!114 &-931704493517254448
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Interaction_Function/Player_Rest
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Interaction_Function/Player_Rest
+  Guid:
+    Data1: 1975436707
+    Data2: 1153228669
+    Data3: 3637668
+    Data4: -104350514
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1000
 --- !u!114 &-524272433687435053
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -762,13 +789,15 @@ MonoBehaviour:
   - {fileID: 1343899593308027300}
   - {fileID: -1455118689089542434}
   - {fileID: 1910129633478194347}
+  - {fileID: 7857970835376940776}
+  - {fileID: -931704493517254448}
   EditorParameters: []
   MasterBanks:
   - {fileID: 858878391108560638}
   StringsBanks:
   - {fileID: -8124024757644268347}
   cacheVersion: 131860
-  cacheTime: 639200961659762050
+  cacheTime: 639200982260735080
   SerializableEventsDict:
   - key: event:/Player/Player_Foot_Step_Sprint
     index: 0
@@ -872,6 +901,10 @@ MonoBehaviour:
     index: 49
   - key: event:/BGM/Forest/ForestBGM_001
     index: 50
+  - key: event:/Player/Interaction_Function/Player_Teleport
+    index: 51
+  - key: event:/Player/Interaction_Function/Player_Rest
+    index: 52
 --- !u!114 &538423973531881020
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -941,7 +974,7 @@ MonoBehaviour:
   Path: Assets/StreamingAssets/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639200961659678816
+  lastModified: 639200982260725015
   FileSizes: []
   Exists: 1
 --- !u!114 &1343899593308027300
@@ -1046,7 +1079,7 @@ MonoBehaviour:
   Banks:
   - {fileID: 858878391108560638}
   IsStream: 1
-  Is3D: 1
+  Is3D: 0
   IsOneShot: 1
   Parameters: []
   MinDistance: 1
@@ -1073,7 +1106,7 @@ MonoBehaviour:
   Banks:
   - {fileID: 858878391108560638}
   IsStream: 1
-  Is3D: 1
+  Is3D: 0
   IsOneShot: 1
   Parameters: []
   MinDistance: 1
@@ -1511,6 +1544,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 3900
+--- !u!114 &7857970835376940776
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Interaction_Function/Player_Teleport
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Interaction_Function/Player_Teleport
+  Guid:
+    Data1: -1752572558
+    Data2: 1268485301
+    Data3: -823761754
+    Data4: -1890981232
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1600
 --- !u!114 &8350997889046110479
 MonoBehaviour:
   m_ObjectHideFlags: 0

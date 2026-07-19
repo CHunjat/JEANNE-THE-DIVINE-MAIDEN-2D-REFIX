@@ -25,6 +25,16 @@ public class BGMManager : MonoBehaviour
     [Tooltip("인덱스 0 = Phase 1, 1 = Phase 2 ...")]
     [SerializeField] private string[] bossBattleEventPaths;
 
+
+    [Header("메뉴 화면 억제")]
+    private bool isMenuOpen = false;
+
+    public void SetMenuOpen(bool isOpen)
+    {
+        isMenuOpen = isOpen;
+        RecalculateBGM();
+    }
+
     // 재생된 적 있는 곡들을 Pause 상태로 보관 (이벤트 경로 → 인스턴스)
     private readonly Dictionary<string, EventInstance> pausedInstances = new();
 
@@ -127,6 +137,9 @@ public class BGMManager : MonoBehaviour
 
     private string DetermineTargetEventPath()
     {
+        // 0. 메뉴 화면이 떠 있으면 무조건 무음 (Zone이든 전투든 다 무시)
+        if (isMenuOpen) return null;
+
         // 1. 전투 중이면 무조건 보스 BGM이 우선
         if (isBattleStart && bossBattleEventPaths != null && bossBattleEventPaths.Length > 0)
         {

@@ -224,6 +224,9 @@ public class PlayerSFXController : MonoBehaviour
         }
         activeInstances.Clear();
     }
+    // ── 상호작용 기능 (휴식/텔레포트) ────────────────────────────
+    public void OnPlayerRest() => Play("event:/Player/Interaction_Function/Player_Rest");
+    public void OnPlayerTeleport() => Play("event:/Player/Interaction_Function/Player_Teleport");
 
     // ── 유휴 인스턴스 정리 ────────────────────
     public void PruneInactiveInstances()
