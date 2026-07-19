@@ -132,7 +132,7 @@ public class PlayerMoveState : PlayerState
 
                 if (stateInfo.IsName(player.anim_SprintBreak))
                 {
-                    if (stateInfo.normalizedTime < 0.98f) return;
+                    if (stateInfo.normalizedTime < 0.5f) return;
                 }
                 else { return; }
 
