@@ -78,17 +78,38 @@ public class SkillActivationBridge : MonoBehaviour
             playerController.StateMachine.CurrentState == playerController.LightningAttackState ||
             playerController.StateMachine.CurrentState == playerController.HealState;
 
+        // ==========================================
+        // [수정된 부분] 스킬이 없을 때의 강력한 예외 처리
         if (equipped == null)
         {
-            return;
-        }
+            // 1. E키 입력 무효화
+            playerController.inputReader.HAttackPressed = false;
 
-        // 2. 스킬은 있지만 시전 불가능한 상태(달리기, 공중, 이미 시전 중)일 때만 입력을 가로채어 무시합니다.
+            // 2. 혹시나 E를 누르면서 스프린트가 켜지는 현상 방지
+            playerController.isSprinting = false;
+
+            // 3. 기 모으기 홀드 상태(HeavyAttackHeld)가 켜져 있다면 강제 OFF
+            playerController.inputReader.HeavyAttackHeld = false;
+
+            return; // 강제 전이(ChangeState) 없이 여기서 로직 종료
+        }
+        // ==========================================
+
+        // 스킬이 존재하지만 시전할 수 없는 상태일 때만 입력을 무시합니다.
         if (playerController.isSprinting || !playerController.IsGrounded() || isBusyWithSkill)
         {
             playerController.inputReader.HAttackPressed = false;
             return;
         }
+        // ==========================================
+
+        // 스킬이 존재하지만 시전할 수 없는 상태(달리기, 공중, 이미 시전 중)일 때만 입력을 무시합니다.
+        if (playerController.isSprinting || !playerController.IsGrounded() || isBusyWithSkill)
+        {
+            playerController.inputReader.HAttackPressed = false;
+            return;
+        }
+
 
         switch (equipped.skilltype)
         {
