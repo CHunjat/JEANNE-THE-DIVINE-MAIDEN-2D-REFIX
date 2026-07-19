@@ -78,7 +78,13 @@ public class SkillActivationBridge : MonoBehaviour
             playerController.StateMachine.CurrentState == playerController.LightningAttackState ||
             playerController.StateMachine.CurrentState == playerController.HealState;
 
-        if (equipped == null || playerController.isSprinting || !playerController.IsGrounded() || isBusyWithSkill)
+        if (equipped == null)
+        {
+            return;
+        }
+
+        // 2. 스킬은 있지만 시전 불가능한 상태(달리기, 공중, 이미 시전 중)일 때만 입력을 가로채어 무시합니다.
+        if (playerController.isSprinting || !playerController.IsGrounded() || isBusyWithSkill)
         {
             playerController.inputReader.HAttackPressed = false;
             return;
