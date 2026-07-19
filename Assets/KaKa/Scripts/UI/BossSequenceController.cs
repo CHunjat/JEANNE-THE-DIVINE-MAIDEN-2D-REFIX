@@ -156,15 +156,22 @@ public class BossSequenceController : MonoBehaviour
             // 1. 플레이어 고정
             GameObject playerObj = collision.gameObject;
             cachedPlayerController = playerObj.GetComponent<PlayerController>();
-            if (cachedPlayerController != null)
+
+            // ★ 스크립트를 끄기 전에 먼저 Idle 상태로 강제 전환 (달리기 등 애니메이션이 멈추지 않고 계속 나가는 것 방지)
+            if (cachedPlayerController != null && cachedPlayerController.StateMachine != null)
             {
-                cachedPlayerController.enabled = false; // 이동 및 입력 스크립트 해제
+                cachedPlayerController.StateMachine.ChangeState(cachedPlayerController.IdleState);
             }
 
             Rigidbody2D playerRb = playerObj.GetComponent<Rigidbody2D>();
             if (playerRb != null)
             {
                 playerRb.linearVelocity = Vector2.zero; // 물리적 관성 제거
+            }
+
+            if (cachedPlayerController != null)
+            {
+                cachedPlayerController.enabled = false; // 이동 및 입력 스크립트 해제
             }
 
             // 2. 보스 고정
