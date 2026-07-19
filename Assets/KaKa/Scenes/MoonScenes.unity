@@ -7482,6 +7482,7 @@ MonoBehaviour:
   parryKnockbackForce: 15
   parryCounterWindow: 0.3
   guardStartTime: 0
+  maxChargeTime: 1.5
   currentChargeLevel: 1
   attackPoint: {fileID: 2001587534}
   attackLibrary:
