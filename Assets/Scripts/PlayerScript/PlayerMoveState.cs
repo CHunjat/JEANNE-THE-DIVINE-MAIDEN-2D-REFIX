@@ -119,13 +119,9 @@ public class PlayerMoveState : PlayerState
         // [정지 로직]
         if (xInput == 0)
         {
+            // 삭제됨: if (player.inputReader.HeavyAttackHeld...) return; 
+            // 이유: 스킬 발동 불가 시 MoveState에 갇히는 버그 방지
 
-
-            if (player.inputReader.HAttackPressed || player.inputReader.HeavyAttackHeld ||
-            player.inputReader.ThrustAttackHeld || player.inputReader.LightningPressed)
-            {
-                return; // 입력 중이니 Idle 전환 스킵하고 버틴다!
-            }
             if (player.isSprinting)
             {
                 if (!player.wasSprinting)
