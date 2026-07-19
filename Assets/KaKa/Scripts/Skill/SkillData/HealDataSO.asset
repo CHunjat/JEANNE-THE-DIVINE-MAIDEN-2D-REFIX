@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: HealDataSO
   m_EditorClassIdentifier: Assembly-CSharp::HealDataSO
   healName: "\uCE58\uC720"
-  healAmount: 50
-  healMpCost: 100
+  healAmount: 400
+  healMpCost: 200
