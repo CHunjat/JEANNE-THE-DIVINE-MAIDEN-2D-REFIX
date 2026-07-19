@@ -5,8 +5,6 @@ public class PlayerDashState : PlayerState
 {
     private float dashTime;
     private float dashDirection;
-    private bool startedGrounded; // 🔥 대쉬 시작 시점의 접지 상태 저장
-
     public PlayerDashState(PlayerController player, PlayerStateMachine stateMachine, string animName)
         : base(player, stateMachine, animName) { }
 

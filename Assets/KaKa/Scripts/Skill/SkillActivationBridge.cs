@@ -85,7 +85,7 @@ public class SkillActivationBridge : MonoBehaviour
             playerController.StateMachine.CurrentState == playerController.LightningReadyState ||
             playerController.StateMachine.CurrentState == playerController.LightningChargeState ||
             playerController.StateMachine.CurrentState == playerController.LightningAttackState ||
-            playerController.StateMachine.CurrentState == playerController.DashState ||
+            playerController.StateMachine.CurrentState == playerController.DashState||
             playerController.StateMachine.CurrentState == playerController.HealState;
 
         // 2. [수정] 중복된 if 문을 하나로 통합했습니다.
