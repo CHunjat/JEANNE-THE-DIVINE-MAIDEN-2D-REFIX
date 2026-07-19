@@ -150,7 +150,7 @@ MonoBehaviour:
   Path: Assets/StreamingAssets/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639200982260735080
+  lastModified: 639201000704142904
   FileSizes:
   - Name: 
     Value: 3564
@@ -797,7 +797,7 @@ MonoBehaviour:
   StringsBanks:
   - {fileID: -8124024757644268347}
   cacheVersion: 131860
-  cacheTime: 639200982260735080
+  cacheTime: 639201000704142904
   SerializableEventsDict:
   - key: event:/Player/Player_Foot_Step_Sprint
     index: 0
@@ -974,7 +974,7 @@ MonoBehaviour:
   Path: Assets/StreamingAssets/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639200982260725015
+  lastModified: 639201000704142904
   FileSizes: []
   Exists: 1
 --- !u!114 &1343899593308027300
