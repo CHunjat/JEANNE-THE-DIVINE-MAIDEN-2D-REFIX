@@ -17,7 +17,7 @@ public class PlayerStats : MonoBehaviour
     [Header("체력 (Health)")]
     public float baseMaxHp = 100f;
     public float currentHp;
-    public float baseMaxMp = 100f;
+    public float baseMaxMp = 500f;
     public float currentMp;
 
     [Header("가드 리게인 (내상 HP) 시스템")]
@@ -41,16 +41,13 @@ public class PlayerStats : MonoBehaviour
 
     private PlayerController playerController;
 
-    // =========================================================
-    // [핵심 추가] 기획서 패시브 스탯 공식 적용기
-    // =========================================================
+    // 기획서 패시브 스탯 공식 적용기
 
     // 1. 최종 공격력 = 기본공격력 + 기량(70%) + 근력(30%)
     public float GetTotalAttackPower()
     {
         float atk100 = statBalance.baseAttackPerStat;
-
-        // [수정] 스탯 레벨에서 1을 뺀 값으로 계산 (최소 0 보장)
+        // 스탯 레벨에서 1을 뺀 값으로 계산 (최소 0 보장)
         float dexBonus = Mathf.Max(0, statDex - 1) * (atk100 * 0.7f);
         float strBonus = Mathf.Max(0, statStr - 1) * (atk100 * 0.3f);
 
@@ -149,21 +146,30 @@ public class PlayerStats : MonoBehaviour
         }
     }
 
-    public void Heal(float amount, float mpCost)
+    // 마나 통합 결제 함수 (결제 성공 시 true 반환)
+    public bool TryConsumeMp(float cost)
+    {
+        if (currentMp >= cost)
+        {
+            currentMp -= cost;
+            Debug.Log($"<color=cyan>스킬 마나 결제 성공! 소모 MP: {cost} (남은 MP: {currentMp})</color>");
+            return true; // 마나가 충분해서 차감 완료!
+        }
+
+        Debug.Log("<color=red>마나 부족! 스킬 발동 실패</color>");
+        return false; // 마나 부족으로 거부!
+    }
+
+
+
+    public void Heal(float amount)
     {
         if (currentHp <= 0) return;
 
-        if (currentMp < mpCost)
-        {
-            Debug.Log("MP가 부족하여 힐을 사용할 수 없습니다!");
-            return;
-        }
-
-        currentMp -= mpCost;
-        // 힐 할 때도 최대 체력을 GetMaxHp()로 검사
+        // 힐 할 때 최대 체력을 GetMaxHp()로 검사하여 회복
         currentHp = Mathf.Min(currentHp + amount, GetMaxHp());
 
-        Debug.Log($"힐 사용! MP 소모: {mpCost} / 현재 체력: {currentHp} / 남은 MP: {currentMp}");
+        Debug.Log($"힐 발동 완료! 현재 체력: {currentHp}");
     }
 
     private IEnumerator InvincibilityRoutine()

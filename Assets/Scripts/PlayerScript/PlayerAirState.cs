@@ -24,6 +24,12 @@ public class PlayerAirState : PlayerState
     public override void LogicUpdate()
     {
         base.LogicUpdate();
+        if (player.inputReader.JumpPressed && player.CanJump)
+        {
+            player.inputReader.JumpPressed = false;
+            stateMachine.ChangeState(player.JumpState);
+            return; // 착지 판정이고 뭐고 다 씹고 바로 점프!
+        }
         player.HandleAttackInput();
 
         player.HandleGrappleInput();

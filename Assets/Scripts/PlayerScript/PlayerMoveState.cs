@@ -40,13 +40,28 @@ public class PlayerMoveState : PlayerState
         player.HandleGrappleInput();
         if (stateMachine.CurrentState == player.GrappleState) return;
 
+        // =========================================================
+        // 🔥 [개발자님 특제 로직] 거리에 따른 유예시간(GraceTime) 조절
+        // =========================================================
         if (player.IsGrounded())
         {
+            // 땅에 닿아있으면 든든하게 유예시간 충전 (0.8초)
             player.groundedTimer = player.groundedGraceTime;
         }
         else
         {
-            player.groundedTimer -= Time.deltaTime;
+            // 1. 땅에서 벗어났지만 발밑 0.6f 이내에 바닥이 감지된다! (비탈길 스무스 진행 중)
+            if (player.IsNearGround())
+            {
+                // 정상적으로 서서히 타이머를 깎음 (비탈길 물리 유지)
+                player.groundedTimer -= Time.deltaTime;
+            }
+            // 2. 발밑에 아무것도 안 걸린다! (진짜 깊은 낭떠러지)
+            else
+            {
+                // 유예시간 그딴 거 없이 즉시 0으로 압수! (칼같이 추락하게 만듦)
+                player.groundedTimer = 0f;
+            }
         }
 
         // groundedTimer가 0보다 크면 아직 땅에 있는 것과 다름없음 (상태 전환 안 함)
@@ -58,6 +73,7 @@ public class PlayerMoveState : PlayerState
                 return;
             }
         }
+        // =========================================================
 
         float xInput = player.inputReader.MoveValue.x;
         var stateInfo = player.animator.GetCurrentAnimatorStateInfo(0);
@@ -163,6 +179,7 @@ public class PlayerMoveState : PlayerState
         }
 
         if (xInput != 0) player.FlipController(xInput);
+
         float currentSpeed;
         if (player.isSprinting)
         {
@@ -200,7 +217,7 @@ public class PlayerMoveState : PlayerState
                 Vector2 moveDir = new Vector2(xInput, 0f);
                 Vector2 slopeMoveDir = player.GetSlopeMoveDirection(moveDir);
 
-                // ★ [해결책] 모서리 직전 정점(Crest) 감지 및 Y축 벡터 강제 고정
+                // 모서리 직전 정점(Crest) 감지 및 Y축 벡터 강제 고정
                 // 비탈길 콜라이더의 상단 끝(bounds.max.y)까지의 거리를 계산
                 float slopeTopY = player.slopeHit.collider.bounds.max.y;
                 float playerBottomY = player.cd.bounds.min.y;
@@ -237,7 +254,7 @@ public class PlayerMoveState : PlayerState
             // [평지 모드]
             player.rb.gravityScale = 1f;
 
-            // ★ [안착감 보정] 비탈길 이탈 시점의 Y속도 보정
+            // 비탈길 이탈 시점의 Y속도 보정
             // 위로 튀려는 속도가 남아있다면 즉시 0으로 깎아서 툭 떨어지는 느낌 제거
             float velY = player.rb.linearVelocity.y;
             if (velY > 0.1f) velY = 0f;

@@ -124,12 +124,25 @@ public class PlayerController : MonoBehaviour
 
   
 
-    [Header("힐 스킬(Heal) 데이터")]
+    [Header("스킬 데이터")]
     public float healAmount = 50f;  // 체력 회복량
     public float healMpCost = 30f;  // 마나 소모량
-
+    public float HolySlashmp = 30;
+    public float lightningMpCost = 30;
     [Header("히트 애니메이션 변수값")]
     public string anim_Hit = "Hit";
+
+    [Header("히트 역경직 수치(기획자가 만지기)")]
+    public float hitStopDuration = 0.1f;
+    public float guardHitStopDuration = 0.05f;
+    public float parryHitStopDuration = 0.15f;
+
+    public void TriggerHitStop(float hitStopDuration = 0.05f)
+    {
+        StartCoroutine(HitStopRoutine(hitStopDuration));
+    }
+
+
 
 
     [Header("방어 및 패리 애니메이션 관리")]
@@ -179,6 +192,7 @@ public class PlayerController : MonoBehaviour
                 // 상태 전환 없이 GuardState 내부에서 애니메이션만 재생
                 ((PlayerGuardState)GuardState).SetKnockbackLock(0.2f);
                 ((PlayerGuardState)GuardState).TriggerParryAnimation();
+                TriggerHitStop(parryHitStopDuration);
                 return;
             }
             else
@@ -196,6 +210,7 @@ public class PlayerController : MonoBehaviour
                 // 넉백 보호 Lock 적용
                 ((PlayerGuardState)GuardState).SetKnockbackLock(0.2f);
                 animator.Play(anim_BlockHit, 0, 0f);
+                TriggerHitStop(guardHitStopDuration);
                 return;
             }
         }
@@ -213,6 +228,8 @@ public class PlayerController : MonoBehaviour
         if (playerStats.currentHp > 0)
         {
             StateMachine.ChangeState(HitState);
+
+            TriggerHitStop(hitStopDuration); //히트스톱 트리거
         }
     }
 
@@ -421,7 +438,7 @@ public class PlayerController : MonoBehaviour
     public bool IsActionLocked => StateMachine.CurrentState == HealState;
     [HideInInspector]
     public bool isThrustCharged = false;
-
+    public bool isDashGracePeriod = false; // 대쉬 후 물리 튐 방지 유예 시간
     [Header("스킬 데이터 (SO)")]
     public AttackDataSO diveDropData; // 유니티 에디터에서 방금 만든 SO를 할당할 곳 오직 공중 강공격을 위한 선언;;
 
@@ -438,6 +455,13 @@ public class PlayerController : MonoBehaviour
     [Header("사망 애니메이션")]
     public string anim_DieGround = "Die"; // 땅 사망 모션
     public string anim_DieAir = "AirDie";// 공중 사망 모션
+
+    [Header("코요테 타임")]
+    public float coyoteTime = 0.1f; // 낭떠러지에서 떨어져도 이 시간 동안은 지상으로 판정
+    private float lastGroundedTime; // 클래스 멤버 변수로 반드시 선언되어 있어야 함
+
+    // 1. 순수 물리 판독기
+   
 
 
     public PlayerAttack1State Attack1State { get; private set; }
@@ -618,16 +642,7 @@ public class PlayerController : MonoBehaviour
             ResetAirActions(); // 바닥에 닿으면 공중 공격 횟수 초기화
         }
 
-        // [추가 테스트용] 키보드 Tab 키를 누르면 스킬 슬롯이 실시간으로 교체됨                    
-        if (Input.GetKeyDown(KeyCode.Tab))
-        {
-            if (currentSkillSlot == SkillSlot.HeavyAttack) currentSkillSlot = SkillSlot.LightningCut;
-            else if (currentSkillSlot == SkillSlot.LightningCut) currentSkillSlot = SkillSlot.Heal;
-            else currentSkillSlot = SkillSlot.HeavyAttack;
-
-            Debug.Log($"스킬 슬롯 전환됨: {currentSkillSlot}");
-        }
-
+     
         if (gizmoDisplayTimer > 0)
         {
             gizmoDisplayTimer -= Time.deltaTime;
@@ -640,8 +655,12 @@ public class PlayerController : MonoBehaviour
         //딱 idle, move에서만 가능
         //키보드 버튼은 하나인데, 땅이냐 공중이냐에 따라 다른 스킬을 나가게 해주는 분배기" 역할이 필요
         //평타는 콤보가 꼬이면 안 되니까 State 안에서만 부르고, 저건 언제든 튀어나가야 하는 스킬이니까 밖으로 뺌
+        HandleGuardInput(); //가드입력을 최상단 감시하여 모든 공격상태를 캔슬
         HandleThrustAttackInput(); //강공찌르기 판독기 추가
         HandleActiveSkillInput();  // [수정] E키(OnSkill) 하나로 슬롯에 따라 스킬을 분배하는 통합 판독기
+
+
+
 
         StateMachine.CurrentState.HandleInput();
         StateMachine.CurrentState.LogicUpdate();
@@ -652,7 +671,6 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         StateMachine.CurrentState.PhysicsUpdate();
-
 
         #region 중력 안받는 스테이트들
         // 그래플훅일땐 제외 / 미들찌르기/스킬제외 /공중공격제외
@@ -674,14 +692,14 @@ public class PlayerController : MonoBehaviour
                         StateMachine.CurrentState == DropState ||
                         StateMachine.CurrentState == DashState;
         #endregion
+
         bool isAttacking = StateMachine.CurrentState is PlayerAttackState;
         bool isSprintLanding = StateMachine.CurrentState == LandState && isSprinting;
 
         if (!isAttacking)
         {
-            if (Mathf.Abs(inputReader.MoveValue.x) < 0.1f && IsGrounded() && !isMidAir && !isSprintLanding 
+            if (Mathf.Abs(inputReader.MoveValue.x) < 0.1f && IsGrounded() && !isMidAir && !isSprintLanding
                 && StateMachine.CurrentState != HitState && StateMachine.CurrentState != GuardState)
-
             {
                 if (OnSlope())
                 {
@@ -700,7 +718,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // [핵심 추가] 내리막길 스프린트 시 튀어오름 방지
+        // [내리막길 스프린트 시 튀어오름 방지]
         if (isSprinting && OnSlope() && !isMidAir && Mathf.Abs(inputReader.MoveValue.x) >= 0.1f)
         {
             Vector2 slopeDir = GetSlopeMoveDirection(rb.linearVelocity.normalized);
@@ -712,47 +730,73 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-
-        if (IsPureGrounded() && !OnSlope())
+        // 🔥 [궁극의 수정] 기하학적 높이 비교를 통한 갈림길 완벽 분기
+        if (StateMachine.CurrentState == DropState)
         {
+            ToggleStairsCollision(false); // 밑점프는 묻지도 따지지도 않고 무조건 통과
+        }
+        else if (StateMachine.CurrentState == DashState && !IsGrounded())
+        {
+            // 🔥 [원상복구] 공중(점프) 대쉬일 때는 비탈길에 안착하지 않고 유령처럼 뚫고 지나가게 켭니다!
             ToggleStairsCollision(false);
         }
-        else if (StateMachine.CurrentState == DropState)
+        else if (StateMachine.CurrentState == AirState || StateMachine.CurrentState == JumpState)
         {
-            ToggleStairsCollision(false);
-        }
-        // 수정 3: AirState(낙하) 시 안착 로직 (겹침 방지)
-        else if (StateMachine.CurrentState == AirState)
-        {
-            // 캐릭터 몸통이 계단과 겹쳐있는지 간단히 확인 (0.95f로 약간 작게 해서 오작동 방지)
+            // 공중 상태
             bool isBodyInside = Physics2D.OverlapBox(cd.bounds.center, cd.bounds.size * 0.9f, 0f, stairsLayer) != null;
+            bool isStairUnder = Physics2D.BoxCast(new Vector2(cd.bounds.center.x, cd.bounds.min.y),
+                new Vector2(cd.bounds.size.x * 0.7f, 0.1f), 0f, Vector2.down, 1.0f, stairsLayer).collider != null;
 
-            // 2. 발밑에 계단이 있는지 확인 (안착할 땅이 있는가?)
-            bool isStairUnder = Physics2D.BoxCast(new Vector2(cd.bounds.center.x, cd.bounds.min.y), new Vector2(cd.bounds.size.x * 0.7f, 0.1f), 0f, Vector2.down, 3.0f, stairsLayer).collider != null;
+            if (isBodyInside) ToggleStairsCollision(false); // 머리가 박혀있으면 통과 (올라가는 중)
+            else if (isStairUnder && rb.linearVelocity.y <= 0.1f) ToggleStairsCollision(true); // 하강 중엔 켜서 안착
+            else ToggleStairsCollision(false);
+        }
+        else
+        {
+            // 지상 상태 (Idle, Move, Land, Dash/구르기 등)
+            // OnSlope()의 사각지대를 없애기 위해 플레이어 발바닥 주변 비탈길을 물리 엔진 무시 여부와 상관없이 강제로 긁어옵니다.
+            Vector2 boxCenter = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.3f);
+            Vector2 boxSize = new Vector2(cd.bounds.size.x * 0.8f, 0.6f);
+            RaycastHit2D stairHit = Physics2D.BoxCast(boxCenter, boxSize, 0f, Vector2.down, 0.2f, stairsLayer);
 
-            // [순위 1] 대시 중일 때 -> 무조건 통과 (대시가 최우선)
-            if (StateMachine.CurrentState == DashState)
+            bool pureGround = IsPureGrounded();
+
+            if (stairHit.collider != null && pureGround)
             {
-                ToggleStairsCollision(false);
+                // 🚨 [핵심] 평지와 비탈길이 겹치는 "갈림길" 구역입니다!
+                // 현재 닿은 비탈길의 '절반(Center Y)' 높이를 기준으로 내 발의 위치를 비교합니다.
+                float slopeCenterY = stairHit.collider.bounds.center.y;
+                float myFootY = cd.bounds.min.y;
+
+                if (myFootY < slopeCenterY)
+                {
+                    // 1. 내 발이 비탈길 절반보다 아래에 있다 = "아랫길에서 비탈길 입구를 만남"
+                    // 기획 의도: 점프하지 않았으므로 비탈길을 유령처럼 무시하고 통과해야 함!
+                    ToggleStairsCollision(false);
+                }
+                else
+                {
+                    // 2. 내 발이 비탈길 절반보다 위에 있다 = "윗평지에서 내리막길을 만남"
+                    // 기획 의도: 바닥이 끝날 때 스르륵 비탈길로 내려가야 하므로 켜둬야 함! (추락 방지)
+                    ToggleStairsCollision(true);
+                }
             }
-            // [순위 2] 몸통이 계단 안에 겹쳐 있을 때 -> 무조건 통과 (밑점프든, 점프 중이든 끼임 방지)
-            else if (isBodyInside)
+            else if (stairHit.collider != null)
             {
-                ToggleStairsCollision(false);
-            }
-            // [순위 3] 몸통은 밖으로 나왔는데, 발밑에 계단이 있을 때 -> 안착! (계단 위 착지 성공)
-            else if (isStairUnder)
-            {
+                // 주변에 평지 없이 순수 비탈길만 밟고 있음 -> 당연히 타야 함
                 ToggleStairsCollision(true);
             }
-            // [순위 4] 그 외 허공
+            else if (pureGround)
+            {
+                // 주변에 비탈길 없이 순수 평지만 밟고 있음 -> 통과 모드 대기
+                ToggleStairsCollision(false);
+            }
             else
             {
+                // 허공 (예외 처리)
                 ToggleStairsCollision(false);
             }
         }
-
-
     }
 
     // 2D 리지드바디이므로 Vector2를 사용
@@ -910,27 +954,40 @@ public class PlayerController : MonoBehaviour
             StateMachine.CurrentState != LightningReadyState && StateMachine.CurrentState != LightningChargeState && StateMachine.CurrentState != LightningAttackState &&
             StateMachine.CurrentState != HealState)
         {
+            bool isSuccess = false;
+
             // 현재 활성화된 슬롯에 따라 전이할 상태 결정
-            if (currentSkillSlot == SkillSlot.HeavyAttack)
+            switch (currentSkillSlot)
             {
-                StateMachine.ChangeState(HeavyReadyState);
+                case SkillSlot.HeavyAttack:
+                    if (playerStats.TryConsumeMp(HolySlashmp))
+                    {
+                        StateMachine.ChangeState(HeavyReadyState);
+                        isSuccess = true;
+                    }
+                    break;
+
+                case SkillSlot.LightningCut:
+                    if (playerStats.TryConsumeMp(lightningMpCost))
+                    {
+                        StateMachine.ChangeState(LightningReadyState);
+                        isSuccess = true;
+                    }
+                    break;
+
+                case SkillSlot.Heal:
+                    if (playerStats.TryConsumeMp(healMpCost))
+                    {
+                        StateMachine.ChangeState(HealState);
+                        isSuccess = true;
+                    }
+                    break;
             }
-            else if (currentSkillSlot == SkillSlot.LightningCut)
+
+            // 4. 결제 실패(마나 부족) 시 입력 강제 초기화
+            if (!isSuccess)
             {
-                StateMachine.ChangeState(LightningReadyState);
-            }
-            else if (currentSkillSlot == SkillSlot.Heal)
-            {
-                if (playerStats.currentMp >= healMpCost)
-                {
-                    StateMachine.ChangeState(HealState);
-                }
-                else
-                {
-                    // 마나가 부족하면 상태를 넘기지 않고 입력을 무시합니다. (애니메이션 절대 안 나감)
-                    Debug.Log("마나가 부족하여 힐 스킬을 사용할 수 없습니다!");
-                    inputReader.HAttackPressed = false;
-                }
+                inputReader.HAttackPressed = false;
             }
         }
     }
@@ -1017,6 +1074,38 @@ public class PlayerController : MonoBehaviour
 
     public void HandleGuardInput()
     {
+        if (StateMachine.CurrentState == GuardState ||
+            StateMachine.CurrentState == DieState ||
+            StateMachine.CurrentState == HitState ||
+            StateMachine.CurrentState == JumpState ||
+            StateMachine.CurrentState == AirState ||
+            StateMachine.CurrentState == DropState ||
+            StateMachine.CurrentState == DiveDropState ||
+            StateMachine.CurrentState == DiveLandState ||
+            StateMachine.CurrentState == DashState || // 대시 중 가드 불가
+            StateMachine.CurrentState == HealState || // 힐 중 가드 불가
+            StateMachine.CurrentState == HeavyReadyState || StateMachine.CurrentState == HeavyChargeState || StateMachine.CurrentState == HeavyAttackState || // 해비 스킬 불가
+            StateMachine.CurrentState == LightningReadyState || StateMachine.CurrentState == LightningChargeState || StateMachine.CurrentState == LightningAttackState) // 라이트닝 스킬 불가
+        {
+            return;
+        }
+
+        // 패리 카운터 상태일 때 즉시 씹힘 방지 쉴드 로직 헤비랑 라이트 둘이 나눠서 관리
+        // =========================================================
+        if (StateMachine.CurrentState == ParryLightCounterState)
+        {
+            float nTime = animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+            // LIGHT 카운터: 모션의 50%(0.5)가 지날 때까지 가드 캔슬 차단 (확정 타격 보장)
+            if (nTime < 0.5f) return;
+        }
+        else if (StateMachine.CurrentState == ParryHeavyCounterState)
+        {
+            float nTime = animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+            // HEAVY 카운터: 모션의 30%(0.3)가 지날 때까지 가드 캔슬 차단 (빠른 캔슬 허용)
+            if (nTime < 0.3f) return;
+        }
+
+
         // 방어 키(S)가 눌려있으면
         if (inputReader.GuardHeld && IsGrounded())
         {
@@ -1214,7 +1303,6 @@ public class PlayerController : MonoBehaviour
     //프로퍼티
     public bool CanSprintJump => sprintJumpCooldownTimer <= 0;
 
-    private float lastGroundedTime; // 클래스 멤버 변수로 반드시 선언되어 있어야 함
     public bool IsGrounded()
     {
         if (cd == null) return false;
@@ -1255,7 +1343,7 @@ public class PlayerController : MonoBehaviour
             return true;
         }
 
-        // 4. [핵심 수정] Coyote Time 적용
+        // 4. Coyote Time 
         // 만약 밑점프 중(ignoredDropCollider != null)이라면 버퍼를 무시하고 바로 false를 리턴!
         // 이게 밑점프를 뚫어주는 열쇠야.
         if (ignoredDropCollider == null && Time.time < lastGroundedTime + 0.1f)
@@ -1313,6 +1401,24 @@ public class PlayerController : MonoBehaviour
             }
         }
 
+
+
+    }
+
+    public bool IsGroundAttacking()
+    {
+        if (StateMachine == null || StateMachine.CurrentState == null) return false;
+
+        var currentState = StateMachine.CurrentState;
+
+        // 순수 평타, 대시/스프린트 공격, 강공 찌르기까지만 가드 캔슬 허용!
+        return currentState == Attack1State ||
+               currentState == Attack2State ||
+               currentState == Attack3State ||
+               currentState == DashAndSprintATK ||
+               currentState == ThrustReadyState ||
+               currentState == ParryLightCounterState||
+               currentState == ParryHeavyCounterState;
 
 
     }
@@ -1378,5 +1484,18 @@ public class PlayerController : MonoBehaviour
             }
         }
         return false;
+    }
+
+    public bool IsNearGround()
+    {
+        if (cd == null) return false;
+
+        Vector2 rayStartPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
+
+        // 0.6f 정도 거리 확인 (비탈길을 스무스하게 내려가고 있을 때는 무조건 이 안에 걸림)
+        RaycastHit2D hit = Physics2D.BoxCast(rayStartPos, groundCheckSize, 0f, Vector2.down, 0.6f, GetCurrentGroundMask());
+
+        // 밑점프 무시 콜라이더면 안 닿은 걸로 처리!
+        return hit.collider != null && hit.collider != ignoredDropCollider;
     }
 }
