@@ -55,7 +55,10 @@ public class BGMManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (Instance != this) return;
+        if (Instance == this)
+        {
+            Instance = null;
+        }
 
         if (currentInstance.isValid())
         {

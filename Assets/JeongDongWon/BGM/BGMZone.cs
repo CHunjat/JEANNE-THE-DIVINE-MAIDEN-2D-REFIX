@@ -21,12 +21,21 @@ public class BGMZone : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (!other.CompareTag("Player")) return;
-        BGMManager.Instance?.RegisterZone(this);
+
+        // ?. 대신 명시적 null 체크 (Unity가 파괴한 오브젝트를 확실히 걸러내기 위함)
+        if (BGMManager.Instance != null)
+        {
+            BGMManager.Instance.RegisterZone(this);
+        }
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
         if (!other.CompareTag("Player")) return;
-        BGMManager.Instance?.UnregisterZone(this);
+
+        if (BGMManager.Instance != null)
+        {
+            BGMManager.Instance.UnregisterZone(this);
+        }
     }
 }
