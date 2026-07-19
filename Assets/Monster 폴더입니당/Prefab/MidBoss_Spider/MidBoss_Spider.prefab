@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1715139335864007623}
   - component: {fileID: 2707820844834777167}
+  - component: {fileID: 1303263235556886870}
   m_Layer: 12
   m_Name: Hurtbox_Body
   m_TagString: Untagged
@@ -69,6 +70,25 @@ CapsuleCollider2D:
   m_Offset: {x: -1.5, y: 1.38}
   m_Size: {x: 8.2, y: 4.92}
   m_Direction: 1
+--- !u!114 &1303263235556886870
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 415669578595818735}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67e7cb4e299604248b8c63255a1cc3f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyHitboxRelay
+  maxHp: 100
+  currentHp: 0
+  moveSpeed: 3
+  attackDamage: 10
+  detectRange: 10
+  attackRange: 2.5
+  currentState: 0
 --- !u!1 &664767348250161357
 GameObject:
   m_ObjectHideFlags: 0
@@ -80,7 +100,7 @@ GameObject:
   - component: {fileID: 9059265861085555662}
   - component: {fileID: 3746359268979658637}
   - component: {fileID: 5644885836432651869}
-  m_Layer: 12
+  m_Layer: 17
   m_Name: Hitbox_Landing
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -114,8 +134,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4d49fdeb34f6d0438ce4e301d6bd80e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHitbox
-  ownerDamage: 20
-  damageRatio: 1
+  ownerDamage: 100
+  damageRatio: 2
   destroyOnHit: 0
 --- !u!61 &5644885836432651869
 BoxCollider2D:
@@ -174,7 +194,7 @@ GameObject:
   - component: {fileID: 1635709444993881001}
   - component: {fileID: 6457070799411734426}
   - component: {fileID: 6336373510405001901}
-  m_Layer: 12
+  m_Layer: 17
   m_Name: Hitbox_BackKick
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -208,8 +228,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4d49fdeb34f6d0438ce4e301d6bd80e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHitbox
-  ownerDamage: 20
-  damageRatio: 1
+  ownerDamage: 100
+  damageRatio: 0.6
   destroyOnHit: 0
 --- !u!61 &6336373510405001901
 BoxCollider2D:
@@ -241,7 +261,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -277,7 +297,8 @@ GameObject:
   - component: {fileID: 6799756993731638914}
   - component: {fileID: 4925484290603104269}
   - component: {fileID: 176479052352664105}
-  m_Layer: 12
+  - component: {fileID: 7437579554341549722}
+  m_Layer: 0
   m_Name: MidBoss_Spider
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -304,6 +325,7 @@ Transform:
   - {fileID: 1635709444993881001}
   - {fileID: 5235956993873760103}
   - {fileID: 1715139335864007623}
+  - {fileID: 5848707389915906152}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!50 &1311316006323749533
@@ -367,8 +389,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.99, y: 2.62}
-  m_Size: {x: 8.18, y: 5.06}
+  m_Offset: {x: -0.8, y: 0.86}
+  m_Size: {x: 8.18, y: 1.74}
   m_Direction: 1
 --- !u!114 &5656119948597351064
 MonoBehaviour:
@@ -382,9 +404,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edcfbb182945e7c488beebb4e8e25e3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBoss
-  maxHp: 2500
+  maxHp: 3000
   currentHp: 0
-  moveSpeed: 2
+  moveSpeed: 4
   attackDamage: 400
   detectRange: 8
   attackRange: 5.2
@@ -399,14 +421,14 @@ MonoBehaviour:
   spriteRenderer: {fileID: 9048727077953290674}
   flashMaterial: {fileID: 2100000, guid: b6adf41d5d8d57e478fee5210526b32f, type: 2}
   flashDuration: 0.05
-  hitBox_Stamp: {fileID: 9125756724598772400}
+  hitBox_Stamp: {fileID: 7114147065876900842}
   hitBox_Landing: {fileID: 664767348250161357}
   hitBox_Clearing: {fileID: 8682717951201376092}
-  hitBox_Slash: {fileID: 7114147065876900842}
+  hitBox_Slash: {fileID: 9125756724598772400}
   hitBox_BackKick: {fileID: 1239616574114665858}
-  webFirePoint: {fileID: 0}
-  mouthRightPos: {x: 0.34, y: 2.58}
-  mouthLeftPos: {x: -3.5, y: 2.58}
+  webFirePoint: {fileID: 7293935277597671176}
+  mouthRightPos: {x: 0.34, y: -5}
+  mouthLeftPos: {x: -3, y: -4.5}
   chaseOffset: 5
   overlapDistance: 2
   flipDeadzoneX: 0.3
@@ -458,14 +480,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern3
   cooldown: 6
   priority: 3
-  distanceType: 1
+  distanceType: 2
   canUseInChase: 0
   webSpeed: 6
   webRange: 12
   bindDuration: 3
-  playerYOffset: 1.5
+  playerYOffset: -5
   webPrefab: {fileID: 4332850933932333369, guid: 5ad71483f8e9a5246a0c0ae9a4733d43, type: 3}
-  webSpawnPoint: {fileID: 0}
+  webSpawnPoint: {fileID: 5848707389915906152}
 --- !u!114 &3012287259468978372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -520,8 +542,8 @@ MonoBehaviour:
   priority: 5
   distanceType: 1
   canUseInChase: 0
-  moveDistance: 2
-  moveSpeed: 3.5
+  moveDistance: 1
+  moveSpeed: 1.5
   stampHitboxDuration: 0.5
   backKickHitboxDuration: 0.5
   maxExecutionTime: 5
@@ -562,18 +584,36 @@ MonoBehaviour:
   priority: 2
   distanceType: 3
   canUseInChase: 0
-  clearingRange: 10
+  clearingRange: 3
   knockbackDistance: 10
   clearingDuration: 0.5
-  webSpeed: 6
+  webSpeed: 3
   webRange: 12
   bindDuration: 3
   airTime: 3
   landingHitboxDuration: 0.4
-  webPrefab: {fileID: 0}
-  mouthSpawnPoint: {fileID: 0}
+  webPrefab: {fileID: 4332850933932333369, guid: 5ad71483f8e9a5246a0c0ae9a4733d43, type: 3}
+  mouthSpawnPoint: {fileID: 5848707389915906152}
   playerYOffset: -5
   maxExecutionTime: 8
+--- !u!114 &7437579554341549722
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5145147845001952587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86a1c2e011514314ba221bd104b0cde3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyGroggy
+  maxGauge: 100
+  groggyDuration: 7
+  recoverPerSecond: 2
+  recoverDelayAfterHit: 2
+  damageMultiplier: 2.5
+  groggyTriggerName: doKnockDown
 --- !u!1 &7114147065876900842
 GameObject:
   m_ObjectHideFlags: 0
@@ -584,7 +624,8 @@ GameObject:
   m_Component:
   - component: {fileID: 5235956993873760103}
   - component: {fileID: 3577488209630876407}
-  m_Layer: 12
+  - component: {fileID: 2265535091747254779}
+  m_Layer: 17
   m_Name: HitBox_Slash
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -600,8 +641,8 @@ Transform:
   m_GameObject: {fileID: 7114147065876900842}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.59, y: 3.66, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 5.21, y: 3.66, z: 0}
+  m_LocalScale: {x: 0.69, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4040915573474769236}
@@ -652,6 +693,52 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 6.37, y: 7.28}
   m_EdgeRadius: 0
+--- !u!114 &2265535091747254779
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7114147065876900842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4d49fdeb34f6d0438ce4e301d6bd80e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyHitbox
+  ownerDamage: 100
+  damageRatio: 0.8
+  destroyOnHit: 0
+--- !u!1 &7293935277597671176
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5848707389915906152}
+  m_Layer: 0
+  m_Name: MouthSpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5848707389915906152
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7293935277597671176}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.34, y: 2.58, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4040915573474769236}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8682717951201376092
 GameObject:
   m_ObjectHideFlags: 0
@@ -663,7 +750,7 @@ GameObject:
   - component: {fileID: 5017100076092921432}
   - component: {fileID: 9208634869621675309}
   - component: {fileID: 1872169411897046296}
-  m_Layer: 12
+  m_Layer: 17
   m_Name: Hitbox_Clearing
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -697,8 +784,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4d49fdeb34f6d0438ce4e301d6bd80e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHitbox
-  ownerDamage: 0
-  damageRatio: 1
+  ownerDamage: 100
+  damageRatio: 0.3
   destroyOnHit: 0
 --- !u!61 &1872169411897046296
 BoxCollider2D:
@@ -758,7 +845,7 @@ GameObject:
   - component: {fileID: 5657985745739050364}
   - component: {fileID: 4955032158290105240}
   - component: {fileID: 6541097352673568587}
-  m_Layer: 12
+  m_Layer: 17
   m_Name: Hitbox_Stamp
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -774,8 +861,8 @@ Transform:
   m_GameObject: {fileID: 9125756724598772400}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.9, y: 1.83, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 3.57, y: 1.83, z: 0}
+  m_LocalScale: {x: 1.42, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4040915573474769236}
@@ -828,7 +915,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4d49fdeb34f6d0438ce4e301d6bd80e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHitbox
-  ownerDamage: 20
+  ownerDamage: 100
   damageRatio: 1
   destroyOnHit: 0
 --- !u!61 &6541097352673568587
@@ -944,6 +1031,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -2253911629886400664, guid: 2041a89f54b9b4b45ab1c04d6bfcfa4b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5937383679357207483}
+    - targetCorrespondingSourceObject: {fileID: -2253911629886400664, guid: 2041a89f54b9b4b45ab1c04d6bfcfa4b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6768278962493017496}
   m_SourcePrefab: {fileID: 100100000, guid: 2041a89f54b9b4b45ab1c04d6bfcfa4b, type: 3}
 --- !u!4 &2491451246839737947 stripped
 Transform:
@@ -967,6 +1057,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32cc860085f5d884cbd557747ec2db78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossAnimRelay
+--- !u!114 &6768278962493017496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3422334648348411454}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51672afd06cb27c49aab89e2f7cac534, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossSFXController
 --- !u!212 &9048727077953290674 stripped
 SpriteRenderer:
   m_CorrespondingSourceObject: {fileID: 3626916397498700004, guid: 2041a89f54b9b4b45ab1c04d6bfcfa4b, type: 3}
