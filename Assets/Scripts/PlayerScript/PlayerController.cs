@@ -1,3 +1,4 @@
+using FMODUnity;
 using NUnit.Framework;
 using System;
 using System.Collections;
@@ -373,6 +374,9 @@ public class PlayerController : MonoBehaviour
         // [기존 동일] 적을 한 명이라도 맞췄을 때 한 번만 실행되는 '타격감' 연출
         if (hasHitEnemy)
         {
+            //히트 소리 재생
+            RuntimeManager.PlayOneShot("event:/Player/Interaction_Battle/Player_Attack_Hit", transform.position);
+            
             // 고정값이 아니라, (누적 최종데미지, SO에 적힌 흡수비율) 2개를 넘겨줍니다!
             playerStats.RestoreMpByDamage(totalDealtDamage, data.mpRecoveryRatio);
 
