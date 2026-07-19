@@ -200,6 +200,9 @@ public class BossSequenceController : MonoBehaviour
 
     private IEnumerator PlayBossIntroSequence()
     {
+        // 존시나 BGM 재생 시작
+        if (BGMManager.Instance != null) BGMManager.Instance.EnterBattle(4);
+
         if (bossRoomTilemap != null) bossRoomTilemap.SetActive(true);
         foreach (GameObject barrier in sideBarriers) if (barrier != null) barrier.SetActive(true);
 
@@ -260,6 +263,9 @@ public class BossSequenceController : MonoBehaviour
 
         isBattleStarted = true;
         Debug.Log("모든 연출 종료! 데이터 실시간 동기화 및 전투 시작!");
+
+        // 1페이즈 전투 보스브금 시작
+        if (BGMManager.Instance != null) BGMManager.Instance.SetBattlePhase(1);
     }
 
     public void UpdateBossHP(float currentHp, float maxHp)
