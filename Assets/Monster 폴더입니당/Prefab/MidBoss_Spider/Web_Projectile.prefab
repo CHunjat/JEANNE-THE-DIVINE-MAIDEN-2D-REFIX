@@ -113,9 +113,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MidBossWebProjectile
   enableHoming: 0
   homingSensitivity: 5
-  playerYOffset: 1.5
-  rotateToDirection: 0
+  playerYOffset: -5
+  rotateToDirection: 1
   rotationAngleOffset: 0
+  colliderOffsetRight: {x: 0, y: 0}
+  colliderOffsetLeft: {x: 0, y: 0}
 --- !u!114 &249854211461864793
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -3,7 +3,7 @@ using System.Collections;
 
 // =====================================================
 // MidBossPattern8.cs
-// (거미줄 스폰 위치 인스펙터 미세조정 기능 추가)
+// 수정: 엉뚱한 시작 위치 조절 변수 삭제, 패턴 3과 동일한 타겟 조준점(playerYOffset) 방식 적용
 // =====================================================
 public class MidBossPattern8 : BossPatternBase
 {
@@ -19,12 +19,11 @@ public class MidBossPattern8 : BossPatternBase
 
     [SerializeField] private GameObject webPrefab;
 
-    [Header("거미줄 발사 위치")]
+    [Header("거미줄 발사 위치 및 조준")]
     [SerializeField] private Transform mouthSpawnPoint;
 
-    [Header("발사 위치 미세 조정 (인스펙터에서 눈으로 맞추기)")]
-    [SerializeField] private float manualXOffset = 0f;
-    [SerializeField] private float manualYOffset = 0f;
+    [Tooltip("거미줄이 향할 플레이어의 높이 오프셋 (패턴 3처럼 -5 추천)")]
+    [SerializeField] private float playerYOffset = -5f;
 
     [Header("안전장치")]
     [SerializeField] private float maxExecutionTime = 8f;
@@ -89,16 +88,23 @@ public class MidBossPattern8 : BossPatternBase
         {
             SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
             bool isFacingLeft = (sr != null && sr.flipX);
+
+            // 미세조정(Offset) 다 날리고 우리가 잡아둔 입 위치 100% 신뢰
+            Vector3 spawnPos = mouthSpawnPoint != null ? mouthSpawnPoint.position : transform.position;
+
+            // 패턴 3과 완벽하게 동일한 조준 로직 적용
             GameObject playerObj = GameObject.FindWithTag("Player");
-
-            // [수정됨] mouthSpawnPoint 위치에 manualXOffset/manualYOffset을 더해서 미세 조정
-            Vector3 basePos = mouthSpawnPoint != null ? mouthSpawnPoint.position : transform.position;
-            float offsetX = isFacingLeft ? -manualXOffset : manualXOffset; // 방향에 따라 좌우 오프셋도 뒤집힘
-            Vector3 spawnPos = new Vector3(basePos.x + offsetX, basePos.y + manualYOffset, basePos.z);
-
-            Vector2 dir = playerObj != null
-                ? ((Vector2)(playerObj.transform.position - spawnPos)).normalized
-                : new Vector2(isFacingLeft ? -1f : 1f, 0f);
+            Vector2 dir;
+            if (playerObj != null)
+            {
+                // 플레이어의 위치에 playerYOffset(-5)을 더해서 조준점을 끌어내림
+                Vector3 targetPos = playerObj.transform.position + new Vector3(0, playerYOffset, 0);
+                dir = ((Vector2)(targetPos - spawnPos)).normalized;
+            }
+            else
+            {
+                dir = new Vector2(isFacingLeft ? -1f : 1f, 0f);
+            }
 
             GameObject web = Instantiate(webPrefab, spawnPos, Quaternion.identity);
             MidBossWebProjectile webScript = web.GetComponent<MidBossWebProjectile>();
