@@ -16,8 +16,9 @@ MonoBehaviour:
   attackCategory: 0
   size: {x: 1.85, y: 0.84}
   offset: {x: 0.52, y: 0.04}
-  damageMultiplier: 1
+  damageMultiplier: 1.8
   hitStopDuration: 0.04
+  mpRecoveryRatio: 0.75
   lightAttackGroggyRatio: 1
   heavyAttackGroggyRatio: 1.5
   heavyChargeGroggyRatio: 2

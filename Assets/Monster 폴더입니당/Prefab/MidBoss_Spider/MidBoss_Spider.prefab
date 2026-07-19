@@ -117,7 +117,6 @@ MonoBehaviour:
   ownerDamage: 20
   damageRatio: 1
   destroyOnHit: 0
-  hitCooldown: 0.5
 --- !u!61 &5644885836432651869
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -212,7 +211,6 @@ MonoBehaviour:
   ownerDamage: 20
   damageRatio: 1
   destroyOnHit: 0
-  hitCooldown: 0.5
 --- !u!61 &6336373510405001901
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -384,26 +382,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edcfbb182945e7c488beebb4e8e25e3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBoss
-  maxHp: 300
+  maxHp: 2500
   currentHp: 0
   moveSpeed: 2
-  attackDamage: 0
+  attackDamage: 400
   detectRange: 8
-  attackRange: 2
+  attackRange: 5.2
   currentState: 0
   currentPhase: 1
-  phase2Threshold: 0.5
-  attackCooldown: 2.5
+  phase2Threshold: 0.7
+  attackCooldown: 3
+  basicAttackLockDuration: 0.8
   closeRangeMax: 5
   midRangeMax: 10
   farRangeMax: 20
   spriteRenderer: {fileID: 9048727077953290674}
   flashMaterial: {fileID: 2100000, guid: b6adf41d5d8d57e478fee5210526b32f, type: 2}
+  flashDuration: 0.05
   hitBox_Stamp: {fileID: 9125756724598772400}
   hitBox_Landing: {fileID: 664767348250161357}
   hitBox_Clearing: {fileID: 8682717951201376092}
   hitBox_Slash: {fileID: 7114147065876900842}
   hitBox_BackKick: {fileID: 1239616574114665858}
+  webFirePoint: {fileID: 0}
+  mouthRightPos: {x: 0.34, y: 2.58}
+  mouthLeftPos: {x: -3.5, y: 2.58}
+  chaseOffset: 5
+  overlapDistance: 2
+  flipDeadzoneX: 0.3
+  behindClearingRange: 4
 --- !u!114 &7507116261981487563
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -416,8 +423,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72f7208789d753640b52d8f646d89493, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern1
-  cooldown: 3
-  priority: 3
+  cooldown: 0
+  priority: 5
   distanceType: 1
   canUseInChase: 0
   hitboxActiveDuration: 1
@@ -433,8 +440,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5b61fb6fe87bd348ad819fb39394a11, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern2
-  cooldown: 3
-  priority: 3
+  cooldown: 7
+  priority: 4
   distanceType: 1
   canUseInChase: 0
 --- !u!114 &8657742522092995938
@@ -449,7 +456,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d48694976d828ee4f9a34a3832412a4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern3
-  cooldown: 3
+  cooldown: 6
   priority: 3
   distanceType: 1
   canUseInChase: 0
@@ -457,7 +464,7 @@ MonoBehaviour:
   webRange: 12
   bindDuration: 3
   playerYOffset: 1.5
-  webPrefab: {fileID: 0}
+  webPrefab: {fileID: 4332850933932333369, guid: 5ad71483f8e9a5246a0c0ae9a4733d43, type: 3}
   webSpawnPoint: {fileID: 0}
 --- !u!114 &3012287259468978372
 MonoBehaviour:
@@ -471,13 +478,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2d3f6ed1cc575a4bb62bb84174b4dd3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern4
-  cooldown: 3
-  priority: 3
-  distanceType: 1
+  cooldown: 20
+  priority: 2
+  distanceType: 3
   canUseInChase: 0
   trackTime: 2.7
   dropDelay: 0.3
-  hitboxActiveDuration: 1
 --- !u!114 &3832418321723928890
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -490,11 +496,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 314efdef1fb26144f9891aae36d67fea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern5
-  cooldown: 3
-  priority: 3
-  distanceType: 1
+  cooldown: 5
+  priority: 1
+  distanceType: 0
   canUseInChase: 0
-  clearingRange: 7
+  clearingRange: 10
   knockbackDistance: 10
   knockbackDuration: 0.3
   hitboxActiveDuration: 0.5
@@ -510,15 +516,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2af55ad6a5c307e429092acebaeb4c33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern6
-  cooldown: 3
-  priority: 3
+  cooldown: 0
+  priority: 5
   distanceType: 1
   canUseInChase: 0
-  moveDistance: 3
-  moveSpeed: 5
-  stampHitboxDuration: 0.2
-  backKickRange: 3
-  backKickHitboxDuration: 0.3
+  moveDistance: 2
+  moveSpeed: 3.5
+  stampHitboxDuration: 0.5
+  backKickHitboxDuration: 0.5
+  maxExecutionTime: 5
 --- !u!114 &4925484290603104269
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -531,14 +537,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f08a5de1eef1b04c9bcf0fb0d4f30ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern7
-  cooldown: 3
-  priority: 3
+  cooldown: 7
+  priority: 4
   distanceType: 1
   canUseInChase: 0
   slashHitboxDuration: 0.25
   returnHitboxDuration: 0.25
-  conditionStampRange: 2
+  stampHitboxDuration: 0.2
   returnHitbox: {fileID: 0}
+  maxExecutionTime: 5
 --- !u!114 &176479052352664105
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -551,11 +558,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 000e39e765292aa4e8c7ec4b46ac518f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossPattern8
-  cooldown: 3
-  priority: 3
-  distanceType: 1
+  cooldown: 20
+  priority: 2
+  distanceType: 3
   canUseInChase: 0
-  clearingRange: 3
+  clearingRange: 10
   knockbackDistance: 10
   clearingDuration: 0.5
   webSpeed: 6
@@ -563,8 +570,10 @@ MonoBehaviour:
   bindDuration: 3
   airTime: 2
   landingHitboxDuration: 0.4
-  boundDamageMultiplier: 2
   webPrefab: {fileID: 0}
+  mouthSpawnPoint: {fileID: 0}
+  playerYOffset: -5
+  maxExecutionTime: 8
 --- !u!1 &7114147065876900842
 GameObject:
   m_ObjectHideFlags: 0
@@ -691,7 +700,6 @@ MonoBehaviour:
   ownerDamage: 0
   damageRatio: 1
   destroyOnHit: 0
-  hitCooldown: 0.5
 --- !u!61 &1872169411897046296
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -823,7 +831,6 @@ MonoBehaviour:
   ownerDamage: 20
   damageRatio: 1
   destroyOnHit: 0
-  hitCooldown: 0.5
 --- !u!61 &6541097352673568587
 BoxCollider2D:
   m_ObjectHideFlags: 0
