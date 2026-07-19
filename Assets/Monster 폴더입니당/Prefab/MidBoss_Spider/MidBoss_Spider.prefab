@@ -568,7 +568,7 @@ MonoBehaviour:
   webSpeed: 6
   webRange: 12
   bindDuration: 3
-  airTime: 2
+  airTime: 3
   landingHitboxDuration: 0.4
   webPrefab: {fileID: 0}
   mouthSpawnPoint: {fileID: 0}

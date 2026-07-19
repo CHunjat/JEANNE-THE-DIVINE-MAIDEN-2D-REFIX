@@ -18,7 +18,7 @@ MonoBehaviour:
   offset: {x: -0.42, y: 0.03}
   damageMultiplier: 1.2
   hitStopDuration: 0.05
-  mpRecoveryRatio: 0.75
+  mpRecoveryRatio: 0.3
   lightAttackGroggyRatio: 1
   heavyAttackGroggyRatio: 1.5
   heavyChargeGroggyRatio: 2
