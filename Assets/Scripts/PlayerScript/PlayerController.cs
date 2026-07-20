@@ -512,6 +512,7 @@ public class PlayerController : MonoBehaviour
     [Header("코요테 타임")]
     public float coyoteTime = 0.1f; // 낭떠러지에서 떨어져도 이 시간 동안은 지상으로 판정
     private float lastGroundedTime; // 클래스 멤버 변수로 반드시 선언되어 있어야 함
+    public bool lastGroundedWasSlope;
 
     // 1. 순수 물리 판독기
 
@@ -725,10 +726,63 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // 1. 바닥 상태 기록 (안전하게 보존)
+        if (IsGrounded() &&
+            StateMachine.CurrentState != JumpState &&
+            StateMachine.CurrentState != AirState &&
+            StateMachine.CurrentState != DropState &&
+            StateMachine.CurrentState != DashState)
+        {
+            lastGroundedWasSlope = OnSlope() || IsOnStairs();
+        }
+
+        // 2. 🔥 [가장 중요] 물리 충돌 세팅을 PhysicsUpdate보다 "먼저" 실행합니다!
+        if (StateMachine.CurrentState == DropState)
+        {
+            lastGroundedWasSlope = false;
+            ToggleStairsCollision(false);
+        }
+        else if (StateMachine.CurrentState == DashState)
+        {
+            ToggleStairsCollision(lastGroundedWasSlope);
+        }
+        else if (StateMachine.CurrentState == AirState || StateMachine.CurrentState == JumpState)
+        {
+            bool isBodyInside = Physics2D.OverlapBox(cd.bounds.center, cd.bounds.size * 0.9f, 0f, stairsLayer) != null;
+            bool isStairUnder = Physics2D.BoxCast(new Vector2(cd.bounds.center.x, cd.bounds.min.y),
+                new Vector2(cd.bounds.size.x * 0.7f, 0.1f), 0f, Vector2.down, 1.0f, stairsLayer).collider != null;
+
+            if (isBodyInside) ToggleStairsCollision(false);
+            else if (isStairUnder && rb.linearVelocity.y <= 0.1f) ToggleStairsCollision(true);
+            else ToggleStairsCollision(false);
+        }
+        else
+        {
+            // 지상 판정
+            Vector2 boxCenter = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.3f);
+            Vector2 boxSize = new Vector2(cd.bounds.size.x * 0.8f, 0.6f);
+            RaycastHit2D stairHit = Physics2D.BoxCast(boxCenter, boxSize, 0f, Vector2.down, 0.2f, stairsLayer);
+            bool pureGround = IsPureGrounded();
+
+            if (stairHit.collider != null && pureGround)
+            {
+                float slopeCenterY = stairHit.collider.bounds.center.y;
+                float myFootY = cd.bounds.min.y;
+                if (myFootY < slopeCenterY) ToggleStairsCollision(false);
+                else ToggleStairsCollision(true);
+            }
+            else if (stairHit.collider != null) ToggleStairsCollision(true);
+            else if (pureGround) ToggleStairsCollision(false);
+            else ToggleStairsCollision(false);
+        }
+
+        // 3. 상태 머신의 물리 업데이트 실행
         StateMachine.CurrentState.PhysicsUpdate();
 
+        // =====================================================================
+        // 스킬 사용 중일 때는 아래의 중력/이동 로직을 타지 못하게 여기서 끊어버립니다.
+        // =====================================================================
         #region 중력 안받는 스테이트들
-        // 그래플훅일땐 제외 / 미들찌르기/스킬제외 /공중공격제외
         if (StateMachine.CurrentState == GrappleState) return;
         if (StateMachine.CurrentState == ThrustReadyState) return;
         if (StateMachine.CurrentState == HeavyReadyState) return;
@@ -736,17 +790,19 @@ public class PlayerController : MonoBehaviour
         if (StateMachine.CurrentState == HeavyAttackState) return;
         if (StateMachine.CurrentState == AirAttack1State) return;
         if (StateMachine.CurrentState == AirAttack2State) return;
-        if (StateMachine.CurrentState == LightningReadyState) return;
+        if (StateMachine.CurrentState == LightningReadyState) return; // 미끄러짐 방어!
         if (StateMachine.CurrentState == LightningChargeState) return;
         if (StateMachine.CurrentState == LightningAttackState) return;
         if (StateMachine.CurrentState == HealState) return;
         if (StateMachine.CurrentState == HitState) return;
+        #endregion
+        // =====================================================================
 
+        // 4. 중력 등 기타 보정 로직
         bool isMidAir = StateMachine.CurrentState == JumpState ||
                         StateMachine.CurrentState == AirState ||
                         StateMachine.CurrentState == DropState ||
                         StateMachine.CurrentState == DashState;
-        #endregion
 
         bool isAttacking = StateMachine.CurrentState is PlayerAttackState;
         bool isSprintLanding = StateMachine.CurrentState == LandState && isSprinting;
@@ -782,74 +838,6 @@ public class PlayerController : MonoBehaviour
             {
                 rb.linearVelocity = slopeDir * currentSpeed;
                 rb.AddForce(Vector2.down * 50f, ForceMode2D.Force);
-            }
-        }
-
-        //  기하학적 높이 비교를 통한 갈림길 완벽 분기
-        if (StateMachine.CurrentState == DropState)
-        {
-            ToggleStairsCollision(false); // 밑점프는 묻지도 따지지도 않고 무조건 통과
-        }
-        else if (StateMachine.CurrentState == DashState && !IsGrounded())
-        {
-            // 공중(점프) 대쉬일 때는 비탈길에 안착하지 않고 유령처럼
-            ToggleStairsCollision(false);
-        }
-        else if (StateMachine.CurrentState == AirState || StateMachine.CurrentState == JumpState)
-        {
-            // 공중 상태
-            bool isBodyInside = Physics2D.OverlapBox(cd.bounds.center, cd.bounds.size * 0.9f, 0f, stairsLayer) != null;
-            bool isStairUnder = Physics2D.BoxCast(new Vector2(cd.bounds.center.x, cd.bounds.min.y),
-                new Vector2(cd.bounds.size.x * 0.7f, 0.1f), 0f, Vector2.down, 1.0f, stairsLayer).collider != null;
-
-            if (isBodyInside) ToggleStairsCollision(false); // 머리가 박혀있으면 통과 (올라가는 중)
-            else if (isStairUnder && rb.linearVelocity.y <= 0.1f) ToggleStairsCollision(true); // 하강 중엔 켜서 안착
-            else ToggleStairsCollision(false);
-        }
-        else
-        {
-            // 지상 상태 (Idle, Move, Land, Dash/구르기 등)
-            // OnSlope()의 사각지대를 없애기 위해 플레이어 발바닥 주변 비탈길을 물리 엔진 무시 여부와 상관없이 강제로 긁어옵니다.
-            Vector2 boxCenter = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.3f);
-            Vector2 boxSize = new Vector2(cd.bounds.size.x * 0.8f, 0.6f);
-            RaycastHit2D stairHit = Physics2D.BoxCast(boxCenter, boxSize, 0f, Vector2.down, 0.2f, stairsLayer);
-
-            bool pureGround = IsPureGrounded();
-
-            if (stairHit.collider != null && pureGround)
-            {
-                // 🚨 [핵심] 평지와 비탈길이 겹치는 "갈림길" 구역입니다!
-                // 현재 닿은 비탈길의 '절반(Center Y)' 높이를 기준으로 내 발의 위치를 비교합니다.
-                float slopeCenterY = stairHit.collider.bounds.center.y;
-                float myFootY = cd.bounds.min.y;
-
-                if (myFootY < slopeCenterY)
-                {
-                    // 1. 내 발이 비탈길 절반보다 아래에 있다 = "아랫길에서 비탈길 입구를 만남"
-                    // 기획 의도: 점프하지 않았으므로 비탈길을 유령처럼 무시하고 통과해야 함!
-                    ToggleStairsCollision(false);
-                }
-                else
-                {
-                    // 2. 내 발이 비탈길 절반보다 위에 있다 = "윗평지에서 내리막길을 만남"
-                    // 기획 의도: 바닥이 끝날 때 스르륵 비탈길로 내려가야 하므로 켜둬야 함! (추락 방지)
-                    ToggleStairsCollision(true);
-                }
-            }
-            else if (stairHit.collider != null)
-            {
-                // 주변에 평지 없이 순수 비탈길만 밟고 있음 -> 당연히 타야 함
-                ToggleStairsCollision(true);
-            }
-            else if (pureGround)
-            {
-                // 주변에 비탈길 없이 순수 평지만 밟고 있음 -> 통과 모드 대기
-                ToggleStairsCollision(false);
-            }
-            else
-            {
-                // 허공 (예외 처리)
-                ToggleStairsCollision(false);
             }
         }
     }
