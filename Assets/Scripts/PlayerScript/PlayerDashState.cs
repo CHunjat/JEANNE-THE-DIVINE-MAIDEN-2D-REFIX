@@ -43,36 +43,27 @@ public class PlayerDashState : PlayerState
     {
         base.PhysicsUpdate();
 
-         //=====================================================================
-         //🔥 [추가된 핵심 방어막] 에어 대쉬 중 모서리에 박히는 현상(Clipping) 방지
-         //물리 엔진이 멘붕해서 바닥을 통과시키기 전에, 강제로 바닥 위로 끄집어 올립니다!
-         //=====================================================================
-        //if (player.IsGrounded())
-        //{
-        //    //발밑을 향해 레이를 쏴서 현재 파고든 바닥의 높이를 찾습니다.
-        //   RaycastHit2D snapHit = Physics2D.BoxCast(player.cd.bounds.center, player.cd.bounds.size * 0.9f, 0f, Vector2.down, 0.5f, player.GetCurrentGroundMask());
-
-        //    if (snapHit.collider != null && snapHit.collider != player.ignoredDropCollider)
-        //    {
-        //        float surfaceY = snapHit.point.y;
-        //        float footY = player.cd.bounds.min.y;
-
-        //        // 캐릭터의 발(footY)이 실제 바닥 표면(surfaceY)보다 아래에 있다면? = 파고들었다!
-        //        if (footY < surfaceY && (surfaceY - footY) < 0.5f)
-        //        {
-        //            //파고든 만큼(surfaceY -footY) 더하기 약간의 여유(0.05f)를 줘서 위로 텔포시킵니다.
-        //            player.transform.position += new Vector3(0f, (surfaceY - footY) + 0.05f, 0f);
-        //        }
-        //    }
-        //}
-
+        // 🔥 [핵심 수정: 순수 에어 대쉬 판독기]
+        // 현재 땅에 있지도 않고(IsGrounded == false), 비탈길을 타는 대쉬(lastGroundedWasSlope)도 아니라면?
+        // 이건 밑점프 대쉬거나 평지 점프 대쉬인 '100% 순수 에어 대쉬'입니다.
+        bool isPureAirDash = !player.IsGrounded() && !player.lastGroundedWasSlope;
 
         Vector2 dashVec = new Vector2(dashDirection, 0f);
         float finalDashSpeed = player.dashSpeed;
 
-        // 1. 발 밑을 넓게 스캔해서 '평지(각도 0)'가 있는지 독자적으로 찾습니다.
-        bool detectedFlatGround = false;
+        // 1. 순수 공중 대쉬일 경우 -> 바닥 밀착 로직 다 무시하고 완벽한 수평 직진!
+        if (isPureAirDash)
+        {
+            player.SetVelocity(dashVec.x * finalDashSpeed, 0f);
+            return; // 여기서 함수를 끝내서, 아래의 바닥 찍어누르기 로직이 절대 실행되지 못하게 막습니다!
+        }
 
+        // =========================================================================
+        // 아래는 오직 [지상 대쉬] 거나 [비탈길 위 점프 대쉬(스르륵 타기)] 일 때만 실행됩니다.
+        // =========================================================================
+
+        // 발 밑을 넓게 스캔해서 '평지(각도 0)'가 있는지 찾습니다.
+        bool detectedFlatGround = false;
         RaycastHit2D[] hits = Physics2D.BoxCastAll(player.cd.bounds.center, player.cd.bounds.size * 0.9f, 0f, Vector2.down, 0.3f, player.GetCurrentGroundMask());
 
         foreach (var hit in hits)
@@ -87,8 +78,8 @@ public class PlayerDashState : PlayerState
             }
         }
 
-        // 2. 비탈길 로직 처리 (기존 코드 완벽하게 유지)
-        if (player.OnSlope(isDashing: true))
+        // 비탈길 로직 처리 (lastGroundedWasSlope 권한이 있을 때만 각도 꺾임)
+        if (player.lastGroundedWasSlope && player.OnSlope(isDashing: true))
         {
             Vector2 slopeDir = player.GetSlopeMoveDirection(dashVec);
             bool isDownhill = slopeDir.y < -0.01f;
@@ -101,7 +92,6 @@ public class PlayerDashState : PlayerState
             else
             {
                 dashVec = slopeDir;
-
                 if (dashVec.y > 0.05f)
                 {
                     finalDashSpeed *= 0.9f;
@@ -112,12 +102,13 @@ public class PlayerDashState : PlayerState
                 }
             }
         }
+        // 지상 대쉬일 때 평지 바닥에 밀착시키는 힘
         else if (detectedFlatGround)
         {
             dashVec.y = -0.05f;
         }
 
-        // 3. 최종 속도 적용
+        // 최종 속도 적용
         player.SetVelocity(dashVec.x * finalDashSpeed, dashVec.y * finalDashSpeed);
     }
 

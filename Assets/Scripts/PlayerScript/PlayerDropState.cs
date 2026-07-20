@@ -9,6 +9,8 @@ public class PlayerDropState : PlayerState
     public override void Enter()
     {
         base.Enter();
+        player.lastGroundedWasSlope = false;
+        player.ToggleStairsCollision(false);
         player.rb.linearVelocity = new Vector2(player.rb.linearVelocity.x * 0.9f, -10f);
         Collider2D dropCol = player.GetDropThroughCollider();
 
