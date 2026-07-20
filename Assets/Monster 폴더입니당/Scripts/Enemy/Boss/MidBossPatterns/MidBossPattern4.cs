@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+
 // =============================================================
 // MidBossPattern4.cs  기본 점프 공격
 // =============================================================
@@ -16,6 +17,9 @@ public class MidBossPattern4 : BossPatternBase
     public override bool IsBusy => isJumping;
 
     private Animator visualAnimator;
+
+    // 점프 시작 시 바닥 높이를 저장할 변수
+    private float startY;
 
     private void Awake()
     {
@@ -34,6 +38,10 @@ public class MidBossPattern4 : BossPatternBase
     {
         if (isJumping) return;
         isJumping = true;
+
+        // 점프를 시작할 때 현재 땅의 Y좌표를 저장
+        startY = transform.position.y;
+
         if (visualAnimator != null) visualAnimator.SetTrigger("doJump");
     }
 
@@ -61,7 +69,9 @@ public class MidBossPattern4 : BossPatternBase
         while (timer < trackTime)
         {
             if (playerObj != null)
-                transform.position = new Vector2(playerObj.transform.position.x, transform.position.y);
+                // X좌표는 플레이어를 따라가고 Y좌표는 처음에 저장한 바닥 높이로 고정
+                transform.position = new Vector2(playerObj.transform.position.x, startY);
+
             timer += Time.deltaTime;
             yield return null;
         }

@@ -35,6 +35,9 @@ public class MidBossPattern8 : BossPatternBase
     private bool hasFiredWeb = false;
     private Coroutine failsafeCoroutine;
 
+    // 점프 시작 시 바닥 높이를 저장할 변수
+    private float startY;
+
     public override bool IsBusy => isExecuting;
 
     private void Awake()
@@ -61,6 +64,9 @@ public class MidBossPattern8 : BossPatternBase
         if (isExecuting) return;
         isExecuting = true;
         hasFiredWeb = false;
+
+        // 점프를 시작할 때 현재 땅의 Y좌표를 저장
+        startY = transform.position.y;
 
         if (visualAnimator != null) visualAnimator.SetTrigger("doSpit");
 
@@ -89,15 +95,12 @@ public class MidBossPattern8 : BossPatternBase
             SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
             bool isFacingLeft = (sr != null && sr.flipX);
 
-            // 미세조정(Offset) 다 날리고 우리가 잡아둔 입 위치 100% 신뢰
             Vector3 spawnPos = mouthSpawnPoint != null ? mouthSpawnPoint.position : transform.position;
 
-            // 패턴 3과 완벽하게 동일한 조준 로직 적용
             GameObject playerObj = GameObject.FindWithTag("Player");
             Vector2 dir;
             if (playerObj != null)
             {
-                // 플레이어의 위치에 playerYOffset(-5)을 더해서 조준점을 끌어내림
                 Vector3 targetPos = playerObj.transform.position + new Vector3(0, playerYOffset, 0);
                 dir = ((Vector2)(targetPos - spawnPos)).normalized;
             }
@@ -135,7 +138,9 @@ public class MidBossPattern8 : BossPatternBase
         yield return new WaitForSeconds(airTime);
 
         GameObject playerObj = GameObject.FindWithTag("Player");
-        if (playerObj != null) transform.position = playerObj.transform.position;
+        if (playerObj != null)
+            // X좌표는 플레이어를 따라가고 Y좌표는 처음에 저장한 바닥 높이로 고정
+            transform.position = new Vector2(playerObj.transform.position.x, startY);
 
         Transform visual = transform.Find("Visual");
         if (visual != null) visual.gameObject.SetActive(true);
