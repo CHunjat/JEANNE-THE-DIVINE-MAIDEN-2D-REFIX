@@ -721,6 +721,8 @@ public class PlayerController : MonoBehaviour
     }
     public void ResetDashCooldown() => dashCooltimer = dashcooltime;
     public void ResetLandTimer() => landTimer = landDashDelay;
+
+
     private void FixedUpdate()
     {
         StateMachine.CurrentState.PhysicsUpdate();

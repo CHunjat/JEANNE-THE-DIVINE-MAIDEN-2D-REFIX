@@ -36,7 +36,7 @@ public class PlayerLightningReadyState : PlayerState
         // ★ [핵심 수정] LightningHeld 대신 통합 유지 변수인 HeavyAttackHeld를 검사합니다!
         if (!player.inputReader.HeavyAttackHeld)
         {
-            stateMachine.ChangeState(player.IdleState);
+            stateMachine.ChangeState(player.LightningChargeState);
             return;
         }
 
