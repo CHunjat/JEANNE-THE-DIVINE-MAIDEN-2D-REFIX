@@ -40,6 +40,14 @@ public class PlayerLandState : PlayerState
     public override void PhysicsUpdate()
     {
         base.PhysicsUpdate();
+
+        // 🔥 [1번 문제 해결] 랜딩 직후 모서리/경계면 턱에 부딪혀 위로 튀어오르려 할 때(반발력 차단)
+        if (player.rb.linearVelocity.y > 0.05f)
+        {
+            // 위로 튀는 속도를 즉시 죽여서 점프대 현상을 원천 차단합니다.
+            player.rb.linearVelocity = new Vector2(player.rb.linearVelocity.x, 0f);
+        }
+
         if (player.isSprinting)
         {
             float dir = player.isFacingRight ? 1f : -1f;
@@ -51,8 +59,6 @@ public class PlayerLandState : PlayerState
                 Vector2 moveDir = new Vector2(dir, 0f);
                 Vector2 slopeMoveDir = player.GetSlopeMoveDirection(moveDir);
 
-
-                // 경사면 방향구르기 예외처리
                 float rollSpeed = currentSpeed;
                 if (slopeMoveDir.y > 0)
                 {
@@ -60,21 +66,15 @@ public class PlayerLandState : PlayerState
                 }
                 else
                 {
-                    rollSpeed = player.sprintSpeed; // 내리막은 그대로 풀스피드
+                    rollSpeed = player.sprintSpeed;
                 }
 
-                // 제한된 속도(rollSpeed)로 적용
                 player.rb.linearVelocity = slopeMoveDir * rollSpeed;
-
-                // 🔥 [수정 2: 잃어버린 50f 접착제 부활!] 
-                // 컨트롤러에서 꺼져버린 50f의 다운포스를 여기서 직접 꽂아버립니다.
-                // 이제 구르는 내내 50f의 힘이 캐릭터 멱살을 잡고 내리막길에 찰싹 붙여줍니다!
                 player.rb.AddForce(Vector2.down * 50f, ForceMode2D.Force);
             }
             else
             {
                 player.rb.gravityScale = 1f;
-                // 평지에서도 Y를 0으로 고정하지 않고 중력을 받게 둡니다.
                 player.SetVelocity(dir * currentSpeed, player.rb.linearVelocity.y);
             }
         }

@@ -1165,6 +1165,8 @@ public class PlayerController : MonoBehaviour
     // 통과 가능한 계단이나 원웨이 플랫폼의 콜라이더를 찾아 반환합니다.
     public Collider2D GetDropThroughCollider()
     {
+
+
         // 1. 발판 타겟 찾기 (가장 가까운 통과 가능한 발판 탐색)
         Vector2 rayOrigin = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
         RaycastHit2D[] hits = Physics2D.BoxCastAll(rayOrigin, groundCheckSize, 0f, Vector2.down, 0.5f, groundLayer | stairsLayer);
