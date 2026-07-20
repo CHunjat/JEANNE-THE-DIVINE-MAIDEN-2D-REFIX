@@ -726,17 +726,9 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // 1. 바닥 상태 기록 (안전하게 보존)
-        if (IsGrounded() &&
-            StateMachine.CurrentState != JumpState &&
-            StateMachine.CurrentState != AirState &&
-            StateMachine.CurrentState != DropState &&
-            StateMachine.CurrentState != DashState)
-        {
-            lastGroundedWasSlope = OnSlope() || IsOnStairs();
-        }
+        // 🔥 [삭제됨] 맨 위에 있던 너무 예민한 lastGroundedWasSlope 녹화 코드를 없앴습니다!
 
-        // 2. 🔥 [가장 중요] 물리 충돌 세팅을 PhysicsUpdate보다 "먼저" 실행합니다!
+        // 1. 물리 충돌 세팅을 PhysicsUpdate보다 "먼저" 실행
         if (StateMachine.CurrentState == DropState)
         {
             lastGroundedWasSlope = false;
@@ -758,29 +750,45 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            // 지상 판정
+            // =========================================================================
+            // 2. 🔥 [가장 핵심] 정교한 지상 판정 & 바닥 상태 완벽 녹화
+            // =========================================================================
             Vector2 boxCenter = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.3f);
             Vector2 boxSize = new Vector2(cd.bounds.size.x * 0.8f, 0.6f);
             RaycastHit2D stairHit = Physics2D.BoxCast(boxCenter, boxSize, 0f, Vector2.down, 0.2f, stairsLayer);
             bool pureGround = IsPureGrounded();
 
+            bool shouldRideSlope = false; // 현재 비탈길을 타야 하는 상태인지 판별
+
             if (stairHit.collider != null && pureGround)
             {
                 float slopeCenterY = stairHit.collider.bounds.center.y;
                 float myFootY = cd.bounds.min.y;
-                if (myFootY < slopeCenterY) ToggleStairsCollision(false);
-                else ToggleStairsCollision(true);
+
+                if (myFootY < slopeCenterY)
+                    shouldRideSlope = false; // 밑길에서 만난 경계면 -> 무조건 평지 취급!
+                else
+                    shouldRideSlope = true;  // 윗길에서 만난 내리막 경계면 -> 비탈길 취급!
             }
-            else if (stairHit.collider != null) ToggleStairsCollision(true);
-            else if (pureGround) ToggleStairsCollision(false);
-            else ToggleStairsCollision(false);
+            else if (stairHit.collider != null)
+            {
+                shouldRideSlope = true; // 순수 비탈길 한가운데
+            }
+            else if (pureGround)
+            {
+                shouldRideSlope = false; // 순수 평지
+            }
+
+            // 판별된 결과를 물리벽에 바로 적용하고, 다음 대쉬를 위해 확실하게 녹화합니다.
+            ToggleStairsCollision(shouldRideSlope);
+            lastGroundedWasSlope = shouldRideSlope;
         }
 
         // 3. 상태 머신의 물리 업데이트 실행
         StateMachine.CurrentState.PhysicsUpdate();
 
         // =====================================================================
-        // 스킬 사용 중일 때는 아래의 중력/이동 로직을 타지 못하게 여기서 끊어버립니다.
+        // 4. 스킬 중 미끄러짐 방어막 (중력/이동 로직 무시)
         // =====================================================================
         #region 중력 안받는 스테이트들
         if (StateMachine.CurrentState == GrappleState) return;
@@ -790,7 +798,7 @@ public class PlayerController : MonoBehaviour
         if (StateMachine.CurrentState == HeavyAttackState) return;
         if (StateMachine.CurrentState == AirAttack1State) return;
         if (StateMachine.CurrentState == AirAttack2State) return;
-        if (StateMachine.CurrentState == LightningReadyState) return; // 미끄러짐 방어!
+        if (StateMachine.CurrentState == LightningReadyState) return;
         if (StateMachine.CurrentState == LightningChargeState) return;
         if (StateMachine.CurrentState == LightningAttackState) return;
         if (StateMachine.CurrentState == HealState) return;
@@ -798,7 +806,7 @@ public class PlayerController : MonoBehaviour
         #endregion
         // =====================================================================
 
-        // 4. 중력 등 기타 보정 로직
+        // 5. 중력 등 기타 보정 로직
         bool isMidAir = StateMachine.CurrentState == JumpState ||
                         StateMachine.CurrentState == AirState ||
                         StateMachine.CurrentState == DropState ||
