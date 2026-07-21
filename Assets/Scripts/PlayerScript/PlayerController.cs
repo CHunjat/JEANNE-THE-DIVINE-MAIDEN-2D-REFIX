@@ -1275,7 +1275,7 @@ public class PlayerController : MonoBehaviour
                 // 모서리 제외 필터 (Edge Detection)
                 // 콜라이더의 좌우 끝단(min.x, max.x)으로부터 margin 만큼은 경사로 판정에서 제외합니다.
                 // 이렇게 하면 모서리 끝에 도달했을 때 OnSlope가 false를 반환하여 평지로 전환됩니다.
-                float margin = isDashing ? 0.05f : 0.5f;
+                float margin = isDashing ? 0.01f : 0.1f;
 
                 if (bestHit.point.x <= bestHit.collider.bounds.min.x + margin ||
                     bestHit.point.x >= bestHit.collider.bounds.max.x - margin)

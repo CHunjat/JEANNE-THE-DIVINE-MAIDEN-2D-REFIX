@@ -12,9 +12,8 @@ public class PlayerDropState : PlayerState
     {
         base.Enter();
         player.lastGroundedWasSlope = false;
-        player.ToggleStairsCollision(false);
         player.ignoreSlopeDetection = true; // 비탈길 자석 강제 종료
-
+        player.slopeHit = default;
         dropTimer = 0.15f; // 유령 상태 유지 시간
 
         // 1. 기존의 안전장치(좁은 공간 밑점프 금지 등)를 살리기 위해 순정 함수 그대로 호출
@@ -32,8 +31,8 @@ public class PlayerDropState : PlayerState
            
             // 스프린트 속도 때문에 앞으로 날아가서 비탈길에 처박히는 걸 막기 위해 X 속도를 60%로 줄이고,
             // 억지로 내리꽂지 않는 스무스한 하강 속도(-5f)를 줍니다.
-            float dropSpeedX = player.rb.linearVelocity.x * 0.6f;
-            player.SetVelocity(dropSpeedX, -3f);
+            float dropSpeedX = player.rb.linearVelocity.x * 0.3f;
+            player.SetVelocity(dropSpeedX, -5f);
 
             if (player.isSprinting)
             {
