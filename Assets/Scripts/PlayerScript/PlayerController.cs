@@ -1454,26 +1454,27 @@ public class PlayerController : MonoBehaviour
     {
         hitCollider = null;
 
-        // 1. 플레이어 발바닥 기준점
         Vector2 footPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y);
         Vector2 checkSize = new Vector2(cd.bounds.size.x * 0.7f, 0.1f);
-
-        // 2. 밑점프 시에는 현재 밟고 있는 콜라이더(ignoredDropCollider)를 무시해야 함
-        // 레이어 마스크를 이용해 Ground와 Stairs를 한 번에 검사
         LayerMask landingMask = groundLayer | stairsLayer;
 
         RaycastHit2D[] hits = Physics2D.BoxCastAll(footPos, checkSize, 0f, Vector2.down, 0.6f, landingMask);
 
         foreach (var hit in hits)
         {
-            // 내 몸뚱이(Player)랑 겹친 건 제외
             if (hit.collider == cd) continue;
 
-            // 밑점프 중이라면, 지금 통과 중인 계단(ignoredDropCollider)은 무시!
-            if (StateMachine.CurrentState == DropState && hit.collider == ignoredDropCollider)
-                continue;
+            if (StateMachine.CurrentState == DropState)
+            {
+                // 1. 내가 타겟으로 잡고 뚫고 있는 바닥 무시
+                if (hit.collider == ignoredDropCollider) continue;
 
-            // 위에 조건 다 통과했으면 이게 진짜 착지할 바닥!
+                
+                // 밑점프 중일 때, 발끝에 미세하게 걸쳐있는(거리가 0.15f 미만인) 다른 바닥은
+                // 윗평지랑 겹쳐있는 비탈길 껍데기로 간주하고 착지 레이더에서 지워버립니다.
+                if (hit.distance < 0.15f) continue;
+            }
+
             hitCollider = hit.collider;
             return true;
         }
