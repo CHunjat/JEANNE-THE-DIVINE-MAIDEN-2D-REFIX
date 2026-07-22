@@ -803,6 +803,8 @@ public class PlayerController : MonoBehaviour
         if (StateMachine.CurrentState == LightningAttackState) return;
         if (StateMachine.CurrentState == HealState) return;
         if (StateMachine.CurrentState == HitState) return;
+        if (StateMachine.CurrentState == GuardState) return;
+        if (StateMachine.CurrentState == GuardOffState) return;
         #endregion
         // =====================================================================
 

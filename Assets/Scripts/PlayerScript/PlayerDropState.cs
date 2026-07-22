@@ -31,8 +31,8 @@ public class PlayerDropState : PlayerState
            
             // 스프린트 속도 때문에 앞으로 날아가서 비탈길에 처박히는 걸 막기 위해 X 속도를 60%로 줄이고,
             // 억지로 내리꽂지 않는 스무스한 하강 속도(-5f)를 줍니다.
-            float dropSpeedX = player.rb.linearVelocity.x * 0.3f;
-            player.SetVelocity(dropSpeedX, -5f);
+            float dropSpeedX = player.rb.linearVelocity.x * 0.4f;
+            player.SetVelocity(dropSpeedX, -4f);
 
             if (player.isSprinting)
             {
