@@ -43,43 +43,31 @@ public class PlayerDashState : PlayerState
     {
         base.PhysicsUpdate();
 
-         //=====================================================================
-         //🔥 [추가된 핵심 방어막] 에어 대쉬 중 모서리에 박히는 현상(Clipping) 방지
-         //물리 엔진이 멘붕해서 바닥을 통과시키기 전에, 강제로 바닥 위로 끄집어 올립니다!
-         //=====================================================================
-        //if (player.IsGrounded())
-        //{
-        //    //발밑을 향해 레이를 쏴서 현재 파고든 바닥의 높이를 찾습니다.
-        //   RaycastHit2D snapHit = Physics2D.BoxCast(player.cd.bounds.center, player.cd.bounds.size * 0.9f, 0f, Vector2.down, 0.5f, player.GetCurrentGroundMask());
-
-        //    if (snapHit.collider != null && snapHit.collider != player.ignoredDropCollider)
-        //    {
-        //        float surfaceY = snapHit.point.y;
-        //        float footY = player.cd.bounds.min.y;
-
-        //        // 캐릭터의 발(footY)이 실제 바닥 표면(surfaceY)보다 아래에 있다면? = 파고들었다!
-        //        if (footY < surfaceY && (surfaceY - footY) < 0.5f)
-        //        {
-        //            //파고든 만큼(surfaceY -footY) 더하기 약간의 여유(0.05f)를 줘서 위로 텔포시킵니다.
-        //            player.transform.position += new Vector3(0f, (surfaceY - footY) + 0.05f, 0f);
-        //        }
-        //    }
-        //}
-
-
+        // 🔥 [1. 순수 에어 대쉬 판독기]
+        // 땅도 아니고, 비탈길도 아니면 이건 100% 공중 대쉬 (밑점프 관통 포함)
+        bool isPureAirDash = !player.IsGrounded() && !player.lastGroundedWasSlope;
         Vector2 dashVec = new Vector2(dashDirection, 0f);
         float finalDashSpeed = player.dashSpeed;
 
-        // 1. 발 밑을 넓게 스캔해서 '평지(각도 0)'가 있는지 독자적으로 찾습니다.
+        if (isPureAirDash)
+        {
+            // 바닥 계산 다 쌩까고 완벽하게 수평 직진 (밑에서 올라올 때 100% 관통 보장)
+            player.SetVelocity(dashVec.x * finalDashSpeed, 0f);
+            return; 
+        }
+
+        // =========================================================
+        // 🔥 [2. 지상 대쉬 & 비탈길 대쉬 로직]
+        // =========================================================
+        
         bool detectedFlatGround = false;
-
         RaycastHit2D[] hits = Physics2D.BoxCastAll(player.cd.bounds.center, player.cd.bounds.size * 0.9f, 0f, Vector2.down, 0.3f, player.GetCurrentGroundMask());
-
+        
         foreach (var hit in hits)
         {
             if (hit.collider != null && hit.collider != player.ignoredDropCollider)
             {
-                if (Vector2.Angle(Vector2.up, hit.normal) <= 0.1f) // 완전 평지 발견!
+                if (Vector2.Angle(Vector2.up, hit.normal) <= 0.1f)
                 {
                     detectedFlatGround = true;
                     break;
@@ -87,29 +75,57 @@ public class PlayerDashState : PlayerState
             }
         }
 
-        // 2. 비탈길 로직 처리 (기존 코드 완벽하게 유지)
-        if (player.OnSlope(isDashing: true))
+        // 🚨 [가장 중요한 핵심 마법] 
+        // 대쉬 속도(20f) 때문에 틱이 씹혀서 바닥을 잃어버리는 현상 방지!
+        // 평지가 안 잡히는 찰나에 밑으로 1.5f 짜리 초장거리 레이더를 쏴서 앞의 내리막을 낚아챕니다.
+        if (!detectedFlatGround && !player.lastGroundedWasSlope && player.rb.linearVelocity.y <= 0.1f)
         {
-            Vector2 slopeDir = player.GetSlopeMoveDirection(dashVec);
-            bool isDownhill = slopeDir.y < -0.01f;
-
-            if (detectedFlatGround && !isDownhill)
+            RaycastHit2D deepSlopeHit = Physics2D.Raycast(player.cd.bounds.center, Vector2.down, 1.5f, player.stairsLayer);
+            if (deepSlopeHit.collider != null)
             {
-                dashVec.y = -0.1f;
-                finalDashSpeed = player.dashSpeed;
+                // 내 발 아래 깊숙한 곳에 비탈길이 감지되었다면 즉시 썰매 스위치 ON & 물리벽 생성!
+                player.lastGroundedWasSlope = true;
+                player.ToggleStairsCollision(true);
             }
-            else
-            {
-                dashVec = slopeDir;
+        }
 
-                if (dashVec.y > 0.05f)
+        // 비탈길 썰매 탑승 로직
+        if (player.lastGroundedWasSlope)
+        {
+            // 기존 OnSlope()는 레이더가 짧아 틱이 씹히므로, 대쉬 전용 긴 레이더(1.5f)로 각도를 계산합니다.
+            RaycastHit2D slopeHit = Physics2D.Raycast(player.cd.bounds.center, Vector2.down, 1.5f, player.stairsLayer);
+            
+            if (slopeHit.collider != null)
+            {
+                Vector2 slopeDir = Vector2.Perpendicular(slopeHit.normal).normalized;
+                if (slopeDir.x * dashVec.x < 0) slopeDir = -slopeDir;
+
+                bool isDownhill = slopeDir.y < -0.01f;
+
+                if (detectedFlatGround && !isDownhill)
                 {
-                    finalDashSpeed *= 0.9f;
+                    dashVec.y = -0.1f;
                 }
                 else
                 {
-                    finalDashSpeed = player.dashSpeed;
+                    dashVec = slopeDir;
+                    
+                    if (isDownhill)
+                    {
+                        // [핵심] 내리막길에서 대쉬 속도 때문에 허공으로 날아가지 않도록,
+                        // 벡터 밑으로 힘을 강하게 찍어누르면서 달립니다! (절대 붕 뜨지 않음)
+                        dashVec.y -= 0.15f; 
+                    }
+                    else if (dashVec.y > 0.05f)
+                    {
+                        finalDashSpeed *= 0.9f;
+                    }
                 }
+            }
+            else
+            {
+                // 롱 레이더로도 비탈길을 잃어버렸다면 평지 판정으로
+                if (detectedFlatGround) dashVec.y = -0.05f;
             }
         }
         else if (detectedFlatGround)
@@ -117,7 +133,7 @@ public class PlayerDashState : PlayerState
             dashVec.y = -0.05f;
         }
 
-        // 3. 최종 속도 적용
+        // 최종 속도 적용
         player.SetVelocity(dashVec.x * finalDashSpeed, dashVec.y * finalDashSpeed);
     }
 

@@ -23,4 +23,18 @@ public class PlayerGuardOffState : PlayerState
             stateMachine.ChangeState(player.IdleState);
         }
     }
+
+    public override void PhysicsUpdate()
+    {
+        base.PhysicsUpdate();
+
+        // 1. 방향키를 누르고 있어도 이동하지 못하게 속도를 0으로 강제 고정
+        player.SetVelocity(0f, 0f);
+
+        // 2. 비탈길 위에 있다면 중력을 0으로 만들어서 유니티 물리 엔진이 밑으로 끌어내리지 못하게 차단
+        if (player.OnSlope())
+        {
+            player.rb.gravityScale = 0f;
+        }
+    }
 }

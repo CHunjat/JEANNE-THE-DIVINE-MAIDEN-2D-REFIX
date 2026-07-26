@@ -235,6 +235,23 @@ public class PlayerMoveState : PlayerState
                     }
                 }
 
+                float finalVelX = slopeMoveDir.x * currentSpeed;
+                float finalVelY = slopeMoveDir.y * currentSpeed;
+
+                // 내리막길을 타고 내려가는 중(Y가 음수)이고, 전력질주(스프린트) 중일 때
+                if (slopeMoveDir.y < 0 && player.isSprinting)
+                {
+                    float hitY = player.slopeHit.point.y;
+                    float gap = playerBottomY - hitY; // 발바닥과 경사면 표면 사이의 미세한 틈새
+
+                    // 빠른 관성 때문에 허공에 미세하게(0.05f 이상) 붕 떠버렸다면?
+                    if (gap > 0.05f)
+                    {
+                        // 바닥에 곧바로 착지하도록 순식간에 내리누르는 하강 속도(-15f) 추가!
+                        finalVelY -= 15f;
+                    }
+                }
+
                 player.SetVelocity(slopeMoveDir.x * currentSpeed, slopeMoveDir.y * currentSpeed);
             }
             else
