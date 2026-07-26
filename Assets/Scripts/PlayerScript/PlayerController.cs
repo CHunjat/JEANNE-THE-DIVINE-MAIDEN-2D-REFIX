@@ -803,6 +803,8 @@ public class PlayerController : MonoBehaviour
         if (StateMachine.CurrentState == LightningAttackState) return;
         if (StateMachine.CurrentState == HealState) return;
         if (StateMachine.CurrentState == HitState) return;
+        if (StateMachine.CurrentState == GuardState) return;
+        if (StateMachine.CurrentState == GuardOffState) return;
         #endregion
         // =====================================================================
 
@@ -896,7 +898,7 @@ public class PlayerController : MonoBehaviour
         float targetY = isFacingRight ? 0f : 180f;
         transform.rotation = Quaternion.Euler(0, targetY, 0);
 
-        if (xInput < 0) Debug.Log("왼쪽 바라보기 성공!");
+        if (xInput < 0) ;
     }
 
     public void SetDashJumpVelocity(float dashDir)
@@ -985,7 +987,6 @@ public class PlayerController : MonoBehaviour
 
         if (StateMachine.CurrentState is PlayerAttackState)
         {
-            Debug.Log("현재 공격 중이라 스킬 입력을 무시합니다.");
             inputReader.HAttackPressed = false;
             return;
         }
@@ -1165,6 +1166,8 @@ public class PlayerController : MonoBehaviour
     // 통과 가능한 계단이나 원웨이 플랫폼의 콜라이더를 찾아 반환합니다.
     public Collider2D GetDropThroughCollider()
     {
+
+
         // 1. 발판 타겟 찾기 (가장 가까운 통과 가능한 발판 탐색)
         Vector2 rayOrigin = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
         RaycastHit2D[] hits = Physics2D.BoxCastAll(rayOrigin, groundCheckSize, 0f, Vector2.down, 0.5f, groundLayer | stairsLayer);
@@ -1200,8 +1203,8 @@ public class PlayerController : MonoBehaviour
             // --- 스프린트 상태에 따른 판정 수치 구분 ---
             // 스프린트면: 더 넓고(1.5f) 깊게(1.5f) 검사해서 깐깐하게 막음
             // 일반이면: 조금 좁고(0.95f) 얕게(0.9f) 검사해서 관대하게 허용
-            float widthFactor = isSprinting ? 1.3f : 0.6f;
-            float checkDistance = isSprinting ? 1.3f : 0.6f;
+            float widthFactor = isSprinting ? 1.0f : 0.3f;
+            float checkDistance = isSprinting ? 1.0f : 0.3f;
 
             Vector2 footPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y);
             Vector2 checkSize = new Vector2(cd.bounds.size.x * widthFactor, 0.1f);
@@ -1232,11 +1235,19 @@ public class PlayerController : MonoBehaviour
             (StateMachine != null && StateMachine.CurrentState == DropState))
             return false;
 
-        float rayLength = cd.bounds.extents.y + 0.3f;
         LayerMask currentMask = GetCurrentGroundMask();
 
-        // 기존 hits 로직 그대로 사용하되, 가장 가까운 놈을 잡는 방식을 "약간의 여유"를 둠
-        RaycastHit2D[] hits = Physics2D.RaycastAll(cd.bounds.center, Vector2.down, rayLength, currentMask);
+        // 🔥 [핵심 해결책] 얇은 선(Raycast) 대신 넓은 면(BoxCast)으로 발밑을 스캔합니다.
+        // 길이를 0.3f씩 늘리지 않아도 모서리에 닿은 비탈길을 완벽하게 인식합니다.
+
+        // 발바닥보다 0.1f 위에서 시작 (지형 파고듦 방지)
+        Vector2 origin = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
+        // 캐릭터 너비의 90% 면적, 두께는 아주 얇게 설정
+        Vector2 size = new Vector2(cd.bounds.size.x * 0.9f, 0.02f);
+        // 발 밑으로 최대 0.05f까지만 스캔! (총 길이 0.15f) -> 땅 밑 겹침 버그 완벽 차단
+        float castDistance = isSprinting ? 0.4f : 0.15f;
+
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(origin, size, 0f, Vector2.down, castDistance, currentMask);
 
         RaycastHit2D bestHit = default;
         float minDist = float.MaxValue;
@@ -1245,15 +1256,13 @@ public class PlayerController : MonoBehaviour
         {
             if (hit.collider != null && hit.collider != ignoredDropCollider)
             {
-                // 핵심: 현재 저장된 slopeHit(이전 프레임의 비탈길)이 있다면, 
-                // 거리가 아주 크게 변하지 않는 이상 그대로 유지함 (0.1f 오차 허용)
+                // 이전에 밟고 있던 비탈길 우선권 유지
                 if (slopeHit.collider != null && hit.collider == slopeHit.collider)
                 {
                     bestHit = hit;
-                    break; // 같은 콜라이더라면 고민할 필요도 없이 유지
+                    break;
                 }
 
-                // 새로운 콜라이더라면 거리 비교
                 if (hit.distance < minDist)
                 {
                     minDist = hit.distance;
@@ -1271,17 +1280,22 @@ public class PlayerController : MonoBehaviour
             if (angle > 0.1f && angle <= maxSlopeAngle)
             {
                 // 모서리 제외 필터 (Edge Detection)
-                // 콜라이더의 좌우 끝단(min.x, max.x)으로부터 margin 만큼은 경사로 판정에서 제외합니다.
-                // 이렇게 하면 모서리 끝에 도달했을 때 OnSlope가 false를 반환하여 평지로 전환됩니다.
-                float margin = isDashing ? 0.05f : 0.5f;
-
+                float margin = (isDashing || isSprinting) ? 0.01f : 0.1f;
                 if (bestHit.point.x <= bestHit.collider.bounds.min.x + margin ||
                     bestHit.point.x >= bestHit.collider.bounds.max.x - margin)
                 {
-                    return false; // 모서리이므로 경사로 취급 안 함!
+                    return false;
                 }
 
-                slopeHit = bestHit;
+                // ======================================================================
+                // 🔥 [중요] 기존 코드 호환을 위한 거리 보정
+                // PlayerMoveState의 isHovering 로직이 고장나서 멈추지 않고 미끄러지는 것을 막기 위해,
+                // 박스를 위에서(0.1f) 쏜 만큼 거리를 다시 빼서 순수 발바닥 기준 거리로 맞춰줍니다.
+                // ======================================================================
+                RaycastHit2D adjustedHit = bestHit;
+                adjustedHit.distance = Mathf.Max(0f, bestHit.distance - 0.1f);
+
+                slopeHit = adjustedHit;
                 return true;
             }
         }
@@ -1452,26 +1466,27 @@ public class PlayerController : MonoBehaviour
     {
         hitCollider = null;
 
-        // 1. 플레이어 발바닥 기준점
         Vector2 footPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y);
         Vector2 checkSize = new Vector2(cd.bounds.size.x * 0.7f, 0.1f);
-
-        // 2. 밑점프 시에는 현재 밟고 있는 콜라이더(ignoredDropCollider)를 무시해야 함
-        // 레이어 마스크를 이용해 Ground와 Stairs를 한 번에 검사
         LayerMask landingMask = groundLayer | stairsLayer;
 
         RaycastHit2D[] hits = Physics2D.BoxCastAll(footPos, checkSize, 0f, Vector2.down, 0.6f, landingMask);
 
         foreach (var hit in hits)
         {
-            // 내 몸뚱이(Player)랑 겹친 건 제외
             if (hit.collider == cd) continue;
 
-            // 밑점프 중이라면, 지금 통과 중인 계단(ignoredDropCollider)은 무시!
-            if (StateMachine.CurrentState == DropState && hit.collider == ignoredDropCollider)
-                continue;
+            if (StateMachine.CurrentState == DropState)
+            {
+                // 1. 내가 타겟으로 잡고 뚫고 있는 바닥 무시
+                if (hit.collider == ignoredDropCollider) continue;
 
-            // 위에 조건 다 통과했으면 이게 진짜 착지할 바닥!
+                
+                // 밑점프 중일 때, 발끝에 미세하게 걸쳐있는(거리가 0.15f 미만인) 다른 바닥은
+                // 윗평지랑 겹쳐있는 비탈길 껍데기로 간주하고 착지 레이더에서 지워버립니다.
+                if (hit.distance < 0.15f) continue;
+            }
+
             hitCollider = hit.collider;
             return true;
         }
