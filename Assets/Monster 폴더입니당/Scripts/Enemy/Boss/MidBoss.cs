@@ -2,12 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
-// =====================================================
-// MidBoss.cs
-// 보스 메인 상태 및 패턴 제어
-// 수정: 사운드 연동용 CurrentPhase 프로퍼티 추가
-// 수정: 문워크 방지를 위해 방향 전환 쿨타임(minFlipInterval) 삭제 (데드존만 유지)
-// =====================================================
+// 보스 메인 상태 및 패턴 제어하는 메인 스크립트
+// 루트 모션 끄고 추격 상태에서 미끄러지는 현상 완벽 방지함
 public class MidBoss : EnemyFSM
 {
     [Header("페이즈 설정")]
@@ -36,6 +32,7 @@ public class MidBoss : EnemyFSM
     private Material originalMaterial;
     private Coroutine flashCoroutine;
 
+    // 페이즈별로 쓸 패턴들 모아두는 리스트
     private List<BossPatternBase> phase1Patterns = new List<BossPatternBase>();
     private List<BossPatternBase> phase2Patterns = new List<BossPatternBase>();
 
@@ -52,9 +49,7 @@ public class MidBoss : EnemyFSM
     public GameObject webFirePoint;
 
     [Header("입 위치 수동 보정 (완결판)")]
-    [Tooltip("오른쪽 볼 때 입의 로컬 좌표")]
     public Vector2 mouthRightPos = new Vector2(0.34f, 2.58f);
-    [Tooltip("왼쪽 볼 때 입의 로컬 좌표")]
     public Vector2 mouthLeftPos = new Vector2(-3.5f, 2.58f);
 
     [Header("방향 전환 및 오프셋 설정")]
@@ -62,7 +57,6 @@ public class MidBoss : EnemyFSM
     [SerializeField] private float overlapDistance = 2f;
 
     [Header("방향 전환 - 와이퍼 현상 방지")]
-    [Tooltip("플립 데드존: 플레이어와 너무 가까울 때 덜덜 떠는 것 방지")]
     [SerializeField] private float flipDeadzoneX = 0.3f;
 
     [Header("뒤쪽 클리어링 발동 설정")]
@@ -74,6 +68,10 @@ public class MidBoss : EnemyFSM
     protected override void Awake()
     {
         base.Awake();
+
+        if (animator == null) animator = GetComponentInChildren<Animator>();
+        if (animator != null) animator.applyRootMotion = false;
+
         Collider2D myCollider = GetComponent<Collider2D>();
         GameObject playerObj = GameObject.FindWithTag("Player");
 
@@ -106,6 +104,7 @@ public class MidBoss : EnemyFSM
 
         if (spriteRenderer != null) originalMaterial = spriteRenderer.material;
         groggy = GetComponent<EnemyGroggy>();
+
         AnimEvent_DisableAllHitBox();
         CacheHitboxPositions();
     }
@@ -221,7 +220,6 @@ public class MidBoss : EnemyFSM
     {
         if (player == null) return;
 
-        // 쿨타임 삭제, 데드존(거리) 체크만 남겨서 문워크 완벽 차단
         float diffX = Mathf.Abs(player.position.x - transform.position.x);
         if (diffX < flipDeadzoneX) return;
 
@@ -259,7 +257,27 @@ public class MidBoss : EnemyFSM
     protected override void OnChase()
     {
         if (isPhaseChanging) return;
-        FlipIfGroundLevel();
+
+        if (!IsAnyPatternBusy())
+        {
+            FlipIfGroundLevel();
+        }
+
+        if (IsAnyPatternBusy() || Time.time < attackAnimationLockTime)
+        {
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+            return;
+        }
+
+        // [추가됨] 플레이어가 노란색 원(원거리) 밖으로 나가면 즉시 압박하도록 쿨타임 강제 단축
+        if (GetCurrentDistanceType() == BossPatternBase.DistanceType.Far)
+        {
+            if (nextAttackTime > Time.time + 0.3f)
+            {
+                nextAttackTime = Time.time + 0.3f;
+            }
+        }
+
         if (animator != null) animator.SetBool("isMoving", true);
 
         if (!IsAnyPatternBusy() && Time.time >= attackAnimationLockTime
@@ -313,7 +331,10 @@ public class MidBoss : EnemyFSM
     {
         if (isPhaseChanging || (groggy != null && groggy.IsGroggy)) return;
 
-        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        if (!IsAnyPatternBusy())
+        {
+            FlipIfGroundLevel();
+        }
 
         if (IsAnyPatternBusy() || Time.time < attackAnimationLockTime)
         {
@@ -322,10 +343,9 @@ public class MidBoss : EnemyFSM
 
         if (Time.time < nextAttackTime)
         {
-            if (GetDistanceToPlayer() > attackRange)
-            {
-                ChangeState(EnemyState.Chase);
-            }
+            // [핵심 수정 부분] 
+            // 사거리 안에 있더라도 쿨타임 중이면 멍때리지(return) 말고 무조건 Chase로 넘겨서 스텝을 밟게 만듦
+            ChangeState(EnemyState.Chase);
             return;
         }
 
@@ -403,8 +423,7 @@ public class MidBoss : EnemyFSM
         if (coll != null) coll.enabled = false;
         if (animator != null) animator.SetBool("isDead", true);
 
-        // 보스 죽었으면 배틀 음악 종료!
-        if (BGMManager.Instance != null) BGMManager.Instance.ExitBattle();   // ← 여기 추가
+        if (BGMManager.Instance != null) BGMManager.Instance.ExitBattle();
     }
 
     public void AnimEvent_DisableAllHitBox()
@@ -415,5 +434,6 @@ public class MidBoss : EnemyFSM
         if (hitBox_Slash) hitBox_Slash.SetActive(false);
         if (hitBox_BackKick) hitBox_BackKick.SetActive(false);
     }
+
     public void AnimEvent_Die() { Destroy(gameObject); }
 }

@@ -1,25 +1,22 @@
 using UnityEngine;
-// =====================================================
-// MidBossPattern1.cs
-// 앞발 찍기 - 중거리, 쿨타임 0초, 우선순위 5
-// =====================================================
+using System.Collections;
+
+// 앞발 찍기 패턴
 public class MidBossPattern1 : BossPatternBase
 {
-    [Header("앞발 찍기 설정 (기획자 조절)")]
     [SerializeField] private float hitboxActiveDuration = 0.2f;
 
     private GameObject stampHitbox;
-    private Animator visualAnimator;
+    private Coroutine hitboxCoroutine;
 
-    private void Awake()
+    protected override void Awake()
     {
-        visualAnimator = GetComponentInChildren<Animator>();
-
+        base.Awake();
         MidBoss parent = GetComponent<MidBoss>();
+
         if (parent != null) stampHitbox = parent.hitBox_Stamp;
         if (stampHitbox != null) stampHitbox.SetActive(false);
 
-        // 기획서 반영
         cooldown = 0f;
         priority = 5;
         distanceType = DistanceType.Mid;
@@ -34,13 +31,17 @@ public class MidBossPattern1 : BossPatternBase
     {
         if (stampHitbox != null)
         {
-            stampHitbox.SetActive(true);
-            Invoke(nameof(DeactivateHitbox), hitboxActiveDuration);
+            if (hitboxCoroutine != null) StopCoroutine(hitboxCoroutine);
+            hitboxCoroutine = StartCoroutine(HitboxRoutine(stampHitbox, hitboxActiveDuration));
         }
     }
 
-    private void DeactivateHitbox()
+    private IEnumerator HitboxRoutine(GameObject hitbox, float duration)
     {
-        if (stampHitbox != null) stampHitbox.SetActive(false);
+        hitbox.SetActive(false);
+        hitbox.SetActive(true);
+
+        yield return new WaitForSeconds(duration);
+        hitbox.SetActive(false);
     }
 }

@@ -180,7 +180,7 @@ AnimationClip:
   m_Events:
   - time: 0.5
     functionName: RelayEvent
-    data: AnimEvent_Slash1
+    data: AnimEvent_DoubleHit1
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
@@ -194,7 +194,7 @@ AnimationClip:
     messageOptions: 0
   - time: 0.91
     functionName: RelayEvent
-    data: AnimEvent_Slash1
+    data: AnimEvent_DoubleHit2
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
@@ -206,9 +206,9 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 1.49
+  - time: 1.81
     functionName: RelayEvent
-    data: AnimEvent_Slash1
+    data: AnimEvent_Finish
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0

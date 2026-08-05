@@ -1,25 +1,20 @@
 using System.Collections;
 using UnityEngine;
 
-// =====================================================
-// MidBossPattern5.cs
-// 클리어링 - 넉백 거리 제한 및 히트박스 처리 수정
-// =====================================================
+// 클리어링 패턴
 public class MidBossPattern5 : BossPatternBase
 {
-    [Header("클리어링 설정 (기획자 조절)")]
     [SerializeField] private float clearingRange = 1.8f;
     [SerializeField] private float knockbackDistance = 10f;
     [SerializeField] private float knockbackDuration = 0.3f;
     [SerializeField] private float hitboxActiveDuration = 0.5f;
 
     private GameObject clearingHitbox;
-    private Animator visualAnimator;
     private GameObject targetPlayer;
 
-    private void Awake()
+    protected override void Awake()
     {
-        visualAnimator = GetComponentInChildren<Animator>();
+        base.Awake();
 
         MidBoss parent = GetComponent<MidBoss>();
         if (parent != null) clearingHitbox = parent.hitBox_Clearing;
@@ -59,7 +54,6 @@ public class MidBossPattern5 : BossPatternBase
 
         float xDiff = targetPlayer.transform.position.x - transform.position.x;
 
-        // 클리어링 시점에 플레이어가 이미 범위를 벗어났으면 넉백 생략
         if (Mathf.Abs(xDiff) > clearingRange * 1.5f) return;
 
         float dirX;

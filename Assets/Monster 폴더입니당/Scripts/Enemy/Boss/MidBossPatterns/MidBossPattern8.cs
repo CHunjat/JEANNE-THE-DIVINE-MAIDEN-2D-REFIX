@@ -1,48 +1,36 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// =====================================================
-// MidBossPattern8.cs
-// 수정: 엉뚱한 시작 위치 조절 변수 삭제, 패턴 3과 동일한 타겟 조준점(playerYOffset) 방식 적용
-// =====================================================
+// 필살기 공중 찍기 패턴
 public class MidBossPattern8 : BossPatternBase
 {
-    [Header("필살 패턴 설정")]
     [SerializeField] private float clearingRange = 3f;
     [SerializeField] private float knockbackDistance = 10f;
     [SerializeField] private float clearingDuration = 0.5f;
     [SerializeField] private float webSpeed = 6f;
     [SerializeField] private float webRange = 12f;
     [SerializeField] private float bindDuration = 3f;
+
     [SerializeField] private float airTime = 1.8f;
     [SerializeField] private float landingHitboxDuration = 0.4f;
 
     [SerializeField] private GameObject webPrefab;
-
-    [Header("거미줄 발사 위치 및 조준")]
     [SerializeField] private Transform mouthSpawnPoint;
 
-    [Tooltip("거미줄이 향할 플레이어의 높이 오프셋 (패턴 3처럼 -5 추천)")]
     [SerializeField] private float playerYOffset = -5f;
-
-    [Header("안전장치")]
-    [SerializeField] private float maxExecutionTime = 8f;
+    [SerializeField] private float lockBeforeLandTime = 0.6f;
 
     private GameObject clearingHitbox;
     private GameObject landingHitbox;
-    private Animator visualAnimator;
-    private bool isExecuting = false;
     private bool hasFiredWeb = false;
-    private Coroutine failsafeCoroutine;
-
-    // 점프 시작 시 바닥 높이를 저장할 변수
     private float startY;
 
-    public override bool IsBusy => isExecuting;
-
-    private void Awake()
+    protected override void Awake()
     {
-        visualAnimator = GetComponentInChildren<Animator>();
+        base.Awake(); // 부모 Awake 실행 (visualAnimator, rb 등 초기화)
+
+        maxExecutionTime = 8f; // 8번 패턴 전용으로 안전장치 시간 8초로 늘림
+
         MidBoss parent = GetComponent<MidBoss>();
         if (parent != null)
         {
@@ -61,17 +49,9 @@ public class MidBossPattern8 : BossPatternBase
 
     protected override void OnExecute()
     {
-        if (isExecuting) return;
-        isExecuting = true;
         hasFiredWeb = false;
-
-        // 점프를 시작할 때 현재 땅의 Y좌표를 저장
         startY = transform.position.y;
-
         if (visualAnimator != null) visualAnimator.SetTrigger("doSpit");
-
-        if (failsafeCoroutine != null) StopCoroutine(failsafeCoroutine);
-        failsafeCoroutine = StartCoroutine(FailsafeRoutine());
     }
 
     public void AnimEvent_UltClearing()
@@ -79,7 +59,7 @@ public class MidBossPattern8 : BossPatternBase
         ApplyClearing();
         if (clearingHitbox != null)
         {
-            StartCoroutine(ReactivateHitboxRoutine(clearingHitbox, clearingDuration));
+            StartCoroutine(SmartHitboxRoutine(clearingHitbox, clearingDuration));
         }
     }
 
@@ -135,12 +115,16 @@ public class MidBossPattern8 : BossPatternBase
 
     private IEnumerator UltAirRoutine()
     {
-        yield return new WaitForSeconds(airTime);
+        float waitBeforeLock = Mathf.Max(0f, airTime - lockBeforeLandTime);
+        yield return new WaitForSeconds(waitBeforeLock);
 
         GameObject playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null)
-            // X좌표는 플레이어를 따라가고 Y좌표는 처음에 저장한 바닥 높이로 고정
+        {
             transform.position = new Vector2(playerObj.transform.position.x, startY);
+        }
+
+        yield return new WaitForSeconds(lockBeforeLandTime);
 
         Transform visual = transform.Find("Visual");
         if (visual != null) visual.gameObject.SetActive(true);
@@ -152,8 +136,6 @@ public class MidBossPattern8 : BossPatternBase
         if (col != null) col.enabled = true;
 
         if (visualAnimator != null) visualAnimator.SetTrigger("doLand");
-
-        Invoke(nameof(EndExecution), landingHitboxDuration + 1.0f);
     }
 
     public void AnimEvent_LandImpact()
@@ -162,38 +144,40 @@ public class MidBossPattern8 : BossPatternBase
 
         if (landingHitbox != null)
         {
-            StartCoroutine(ReactivateHitboxRoutine(landingHitbox, landingHitboxDuration));
+            StartCoroutine(SmartHitboxRoutine(landingHitbox, landingHitboxDuration));
         }
     }
 
-    private IEnumerator ReactivateHitboxRoutine(GameObject hitbox, float duration)
+    private IEnumerator SmartHitboxRoutine(GameObject hitbox, float duration)
     {
-        hitbox.SetActive(false);
-        yield return new WaitForFixedUpdate();
-        hitbox.SetActive(true);
+        EnemyHitbox hitComp = hitbox.GetComponent<EnemyHitbox>();
+
+        if (hitbox.activeSelf && hitComp != null)
+        {
+            hitComp.ResetHitRecord();
+        }
+        else
+        {
+            hitbox.SetActive(true);
+        }
 
         yield return new WaitForSeconds(duration);
         hitbox.SetActive(false);
     }
 
-    private void EndExecution()
+    public override void EndExecution()
     {
-        isExecuting = false;
-        if (failsafeCoroutine != null)
-        {
-            StopCoroutine(failsafeCoroutine);
-            failsafeCoroutine = null;
-        }
-    }
+        base.EndExecution();
+        StopAllCoroutines();
 
-    private IEnumerator FailsafeRoutine()
-    {
-        yield return new WaitForSeconds(maxExecutionTime);
-        if (isExecuting)
-        {
-            isExecuting = false;
-        }
-        failsafeCoroutine = null;
+        Transform visual = transform.Find("Visual");
+        if (visual != null) visual.gameObject.SetActive(true);
+
+        Transform hurtbox = transform.Find("Hurtbox_Body");
+        if (hurtbox != null) hurtbox.gameObject.SetActive(true);
+
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = true;
     }
 
     private void ApplyClearing()

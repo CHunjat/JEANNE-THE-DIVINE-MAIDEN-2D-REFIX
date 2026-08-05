@@ -1,33 +1,29 @@
 using UnityEngine;
 
-// =====================================================
-// MidBossPattern3.cs 거미줄 뱉기
-// 수정: 거미줄이 위로 솟구치지 않도록 Y오프셋 기본값 0으로 변경
-// =====================================================
+// 거미줄 뱉기 패턴 (에임봇 및 궤도 꼬임 완벽 방지)
 public class MidBossPattern3 : BossPatternBase
 {
     [Header("거미줄 뱉기 설정")]
     [SerializeField] private float webSpeed = 6f;
     [SerializeField] private float webRange = 12f;
     [SerializeField] private float bindDuration = 3f;
-
-    [Tooltip("거미줄이 향할 플레이어의 높이 오프셋 (승천 버그 방지용)")]
-    [SerializeField] private float playerYOffset = 0f; // 1.5에서 0으로 변경!
+    [SerializeField] private float playerYOffset = 0f;
 
     [SerializeField] private GameObject webPrefab;
     [SerializeField] private Transform webSpawnPoint;
 
     private Transform owner;
-    private Animator visualAnimator;
-    private bool isSpitting = false;
     private bool hasFiredThisTurn = false;
 
-    public override bool IsBusy => isSpitting;
+    // 발사할 '각도'가 아니라, 플레이어의 '목표 좌표'를 락온(Lock)하는 변수
+    private Vector3 lockedTargetPos;
+    private bool isTargetLocked = false;
 
-    private void Awake()
+    protected override void Awake()
     {
-        visualAnimator = GetComponentInChildren<Animator>();
+        base.Awake();
         owner = transform;
+
         cooldown = 6f;
         priority = 3;
         distanceType = DistanceType.Far;
@@ -36,45 +32,59 @@ public class MidBossPattern3 : BossPatternBase
 
     protected override void OnExecute()
     {
-        if (isSpitting) return;
-        isSpitting = true;
         hasFiredThisTurn = false;
-        if (visualAnimator != null) visualAnimator.SetTrigger("doSpit");
-        Invoke(nameof(UnlockSpitting), 2.0f);
-    }
 
-    private void UnlockSpitting() { isSpitting = false; }
+        // 패턴 시작 시, 플레이어의 '현재 위치(좌표)'를 락온! (에임봇 방지)
+        GameObject playerObj = GameObject.FindWithTag("Player");
+        if (playerObj != null)
+        {
+            lockedTargetPos = playerObj.transform.position + new Vector3(0, playerYOffset, 0);
+            isTargetLocked = true;
+        }
+        else
+        {
+            isTargetLocked = false;
+        }
+
+        if (visualAnimator != null) visualAnimator.SetTrigger("doSpit");
+    }
 
     public void AnimEvent_SpitWeb()
     {
-        if (!isSpitting || hasFiredThisTurn) return;
+        if (!isExecuting || hasFiredThisTurn) return;
         hasFiredThisTurn = true;
         if (webPrefab == null) return;
 
+        // 핀을 밟은 현재 시점의 발사구 위치
+        Vector3 spawnPos = webSpawnPoint != null ? webSpawnPoint.position : owner.position;
+
+        // 보스가 현재 바라보고 있는 정면 방향 구하기
         SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
         bool isFacingLeft = (sr != null && sr.flipX);
+        float forwardX = isFacingLeft ? -1f : 1f;
 
-        Vector3 spawnPos;
-        if (webSpawnPoint == null)
+        Vector2 finalDir;
+
+        if (isTargetLocked)
         {
-            Debug.LogError("Web Spawn Point 누락!");
-            spawnPos = owner.position;
+            // 발사구에서 락온된 타겟 좌표를 향하는 방향 계산 (궤도 꼬임 해결)
+            Vector2 dirToTarget = ((Vector2)(lockedTargetPos - spawnPos)).normalized;
+
+            // [핵심] 만약 플레이어가 폼 잡는 동안 등 뒤로 넘어갔다면? (X 방향 부호가 다르면)
+            if (Mathf.Sign(dirToTarget.x) != Mathf.Sign(forwardX))
+            {
+                // 등 뒤(엉덩이)로 어색하게 쏘지 않고, 원래 바라보던 정면으로 헛스윙 발사!
+                finalDir = new Vector2(forwardX, 0f);
+            }
+            else
+            {
+                finalDir = dirToTarget;
+            }
         }
         else
         {
-            spawnPos = webSpawnPoint.position;
-        }
-
-        GameObject playerObj = GameObject.FindWithTag("Player");
-        Vector2 dir;
-        if (playerObj != null)
-        {
-            Vector3 targetPos = playerObj.transform.position + new Vector3(0, playerYOffset, 0);
-            dir = ((Vector2)(targetPos - spawnPos)).normalized;
-        }
-        else
-        {
-            dir = new Vector2(isFacingLeft ? -1f : 1f, 0f);
+            // 타겟을 못 찾았으면 그냥 정면 발사
+            finalDir = new Vector2(forwardX, 0f);
         }
 
         GameObject web = Instantiate(webPrefab, spawnPos, Quaternion.identity);
@@ -82,14 +92,13 @@ public class MidBossPattern3 : BossPatternBase
         MidBossWebProjectile webScript = web.GetComponent<MidBossWebProjectile>();
         if (webScript != null)
         {
-            webScript.Initialize(dir, webSpeed, webRange, bindDuration);
+            webScript.Initialize(finalDir, webSpeed, webRange, bindDuration);
         }
     }
 
-    public void EndExecution()
+    public override void EndExecution()
     {
-        isSpitting = false;
+        base.EndExecution();
         hasFiredThisTurn = false;
-        CancelInvoke(nameof(UnlockSpitting));
     }
 }
