@@ -742,40 +742,47 @@ public class PlayerController : MonoBehaviour
         {
             Vector2 upperBodyCenter = new Vector2(cd.bounds.center.x, cd.bounds.center.y + (cd.bounds.size.y * 0.25f));
             Vector2 upperBodySize = new Vector2(cd.bounds.size.x * 0.5f, cd.bounds.size.y * 0.4f);
+            bool upperBodyHit = Physics2D.OverlapBox(upperBodyCenter, upperBodySize, 0f, stairsLayer) != null;
 
-            if (Physics2D.OverlapBox(upperBodyCenter, upperBodySize, 0f, stairsLayer) != null)
+            // 🔥 [완벽 복구 1] 
+            // 1. 이미 비탈길에 올라탄 상태(lastGroundedWasSlope)에서 대시하면 충돌 켜서 탑승!
+            if (StateMachine.CurrentState == DashState && lastGroundedWasSlope)
             {
-                ToggleStairsCollision(false); // 상체가 묻혔을 때만 끈다 (터널 통과)
+                ToggleStairsCollision(true);
+            }
+            // 2. 평지 윗점프 시 상체 닿으면 터널 통과
+            else if (upperBodyHit && rb.linearVelocity.y > 0.1f)
+            {
+                ToggleStairsCollision(false);
             }
             else
             {
+                // 3. 평지에서 그냥 대시할 때는 기획 의도대로 비탈길 유령 통과!
                 if (StateMachine.CurrentState == DashState)
                 {
-                    ToggleStairsCollision(lastGroundedWasSlope); // 대시는 직전 바닥 상태 유지
+                    ToggleStairsCollision(false);
                 }
                 else
                 {
-                    ToggleStairsCollision(rb.linearVelocity.y <= 0.1f); // 떨어질 땐 켜서 안전하게 착지 유도
+                    ToggleStairsCollision(rb.linearVelocity.y <= 0.1f);
                 }
             }
         }
         else
         {
-            // 🔥 [추가] 속도가 빠를 땐 비탈길을 놓치지 않게 박스 길이를 늘려줌!
-            float extraStairCast = Mathf.Abs(rb.linearVelocity.x) > 5f ? 0.5f : 0.2f;
-
+            // =========================================================================
+            // 2. 정교한 지상 판정 & 바닥 상태 완벽 녹화
+            // =========================================================================
             Vector2 boxCenter = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.3f);
             Vector2 boxSize = new Vector2(cd.bounds.size.x * 0.8f, 0.6f);
-
-            // 🔥 [수정] 0.2f 였던 길이를 extraStairCast 로 변경
-            RaycastHit2D stairHit = Physics2D.BoxCast(boxCenter, boxSize, 0f, Vector2.down, extraStairCast, stairsLayer);
+            RaycastHit2D stairHit = Physics2D.BoxCast(boxCenter, boxSize, 0f, Vector2.down, 0.2f, stairsLayer);
             bool pureGround = IsPureGrounded();
 
             bool shouldRideSlope = false;
 
             if (stairHit.collider != null && pureGround)
             {
-                // 밑점프로 떨어지면서 교차점에 닿았을 땐 무조건 비탈길 탑승!
+                // 🔥 "비탈길은 점프로(Y속도 음수) 떨어져야만 진입 가능!" (유저 기획 완벽 유지)
                 if (rb.linearVelocity.y < -0.1f) shouldRideSlope = true;
                 else shouldRideSlope = lastGroundedWasSlope;
             }
@@ -796,12 +803,11 @@ public class PlayerController : MonoBehaviour
                 shouldRideSlope = false;
             }
 
-            // 가짜 붕뜸 방지 (원래 네가 롤백 전 넣었던 그 코드!)
             if (!shouldRideSlope && lastGroundedWasSlope && StateMachine.CurrentState != JumpState)
             {
                 if (rb.linearVelocity.y > 0.05f)
                 {
-                    rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f); // 위로 뜨는 힘 즉시 소멸
+                    rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
                 }
             }
 
@@ -810,7 +816,7 @@ public class PlayerController : MonoBehaviour
         }
 
         // =========================================================================
-        // 🔎 [디버그 추적기] 툭 걸리거나 속도가 죽는 프레임 포착
+        // 🔎 [디버그 추적기] 생략 없이 유지
         // =========================================================================
         if (Mathf.Abs(inputReader.MoveValue.x) > 0.1f && Mathf.Abs(lastFrameVelocity.x) > 1.5f && Mathf.Abs(rb.linearVelocity.x) < 0.5f)
         {
@@ -818,12 +824,12 @@ public class PlayerController : MonoBehaviour
             Vector2 boxCenterDbg = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.3f);
             RaycastHit2D stairHitDbg = Physics2D.BoxCast(boxCenterDbg, new Vector2(cd.bounds.size.x * 0.8f, 0.6f), 0f, Vector2.down, 0.2f, stairsLayer);
 
-            Debug.Log($"<color=red>🚨 [툭 걸림 1틱 포착!]</color> \n" +
-                      $"▶ 현재 State: <b>{StateMachine.CurrentState.GetType().Name}</b>\n" +
-                      $"▶ 순수 평지 감지 여부: <b>{pureGroundCheck}</b>\n" +
-                      $"▶ 비탈길 감지 여부: <b>{(stairHitDbg.collider != null)}</b>\n" +
-                      $"▶ 마지막 비탈길 상태: <b>{lastGroundedWasSlope}</b>\n" +
-                      $"▶ X속도 급감: {lastFrameVelocity.x:F2} -> {rb.linearVelocity.x:F2}");
+            //Debug.Log($"<color=red>🚨 [툭 걸림 1틱 포착!]</color> \n" +
+            //          $"▶ 현재 State: <b>{StateMachine.CurrentState.GetType().Name}</b>\n" +
+            //          $"▶ 순수 평지 감지 여부: <b>{pureGroundCheck}</b>\n" +
+            //          $"▶ 비탈길 감지 여부: <b>{(stairHitDbg.collider != null)}</b>\n" +
+            //          $"▶ 마지막 비탈길 상태: <b>{lastGroundedWasSlope}</b>\n" +
+            //          $"▶ X속도 급감: {lastFrameVelocity.x:F2} -> {rb.linearVelocity.x:F2}");
         }
 
         // 3. 상태 머신의 물리 업데이트 실행
@@ -877,38 +883,43 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // =====================================================================
-        // 🔥 [절벽 끝 스키점프 완벽 차단]
-        // =====================================================================
-        if ((StateMachine.CurrentState == AirState || StateMachine.CurrentState == DashState) && lastGroundedWasSlope)
-        {
-            // 비탈길을 타다가 허공으로 튀어나갔다면 (점프 제외)
-            if (!OnSlope() && !IsPureGrounded())
-            {
-                // 위로 솟구치는 관성을 즉시 0으로 짓눌러서 스키점프를 막고 깔끔하게 낙하하도록 만듦!
-                if (rb.linearVelocity.y > 0.1f)
-                {
-                    rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
-                }
-
-                // 한 번 짓눌렀으면 다음 프레임부터는 자연 낙하 하도록 기억을 해제함
-                lastGroundedWasSlope = false;
-            }
-        }
-
-        // 🔥 [추가/변경] 모서리 고속 진입 시 착지 억까(초강력 롤러) 방어막
-        if ((IsGrounded() || Time.time < lastGroundedTime + 0.2f) && StateMachine.CurrentState != JumpState && StateMachine.CurrentState != DropState)
+        // 🔥 [완벽 복구 2] 평지 강제 흡수 버그 철거!!
+        // 자석 롤러가 "이미 비탈길에 올라탄 상태(lastGroundedWasSlope)"일 때만 작동하도록 족쇄를 채움!
+        // 평지에서 냅다 대시한다고 억지로 끌려 올라가는 억까 완벽 차단.
+        if (lastGroundedWasSlope && StateMachine.CurrentState != JumpState && StateMachine.CurrentState != DropState)
         {
             float currentVelX = rb.linearVelocity.x;
+
             if (Mathf.Abs(currentVelX) > 0.1f)
             {
-                Vector2 slopeDir = GetSlopeMoveDirection(new Vector2(currentVelX, 0f));
-                if (slopeDir.y < -0.01f)
+                Vector2 rayOrigin = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
+                RaycastHit2D snapHit = Physics2D.BoxCast(rayOrigin, groundCheckSize, 0f, Vector2.down, 0.6f, stairsLayer);
+
+                if (snapHit.collider != null && snapHit.collider != ignoredDropCollider)
                 {
-                    float exactVelY = Mathf.Abs(currentVelX) * (slopeDir.y / Mathf.Abs(slopeDir.x));
-                    if (rb.linearVelocity.y > exactVelY + 0.1f)
+                    float angle = Vector2.Angle(Vector2.up, snapHit.normal);
+
+                    if (angle > 0.1f && angle <= maxSlopeAngle)
                     {
-                        rb.linearVelocity = new Vector2(currentVelX, exactVelY);
+                        Vector2 slopeDir = Vector2.Perpendicular(snapHit.normal).normalized;
+                        if (slopeDir.x * currentVelX < 0) slopeDir = -slopeDir;
+                        float exactVelY = Mathf.Abs(currentVelX) * (slopeDir.y / Mathf.Abs(slopeDir.x));
+
+                        float hoverDist = snapHit.distance - 0.1f;
+
+                        // 비탈길 대시 중 1픽셀이라도 뜨면 강제로 발바닥 꽂기 (쭈르륵 탑승)
+                        if (hoverDist > 0.01f && hoverDist < 0.5f)
+                        {
+                            if (StateMachine.CurrentState == DashState || IsGrounded())
+                            {
+                                rb.position = new Vector2(rb.position.x, rb.position.y - hoverDist);
+                            }
+                        }
+
+                        if (rb.linearVelocity.y > exactVelY + 0.1f || StateMachine.CurrentState == DashState)
+                        {
+                            rb.linearVelocity = new Vector2(currentVelX, exactVelY);
+                        }
                     }
                 }
             }
@@ -1421,7 +1432,6 @@ public class PlayerController : MonoBehaviour
             if (StateMachine.CurrentState == DropState) return false;
         }
 
-        // 🔥 [추가] 속도가 빠를 땐 바닥을 0.4f 더 깊게 찾아냄!
         float extraDist = Mathf.Abs(rb.linearVelocity.x) > 5f ? 0.4f : (lastGroundedWasSlope || OnSlope() ? 0.2f : 0f);
 
         // 2. 바닥 체크 (BoxCast)

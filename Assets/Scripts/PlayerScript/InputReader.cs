@@ -99,7 +99,7 @@ public class InputReader : ScriptableObject, PlayerControls.IPlayerActions
 
     public void OnJump(InputAction.CallbackContext context)
     {
-        Debug.Log("점프누름");
+       
         if (context.started) JumpPressed = true;
     }
 
