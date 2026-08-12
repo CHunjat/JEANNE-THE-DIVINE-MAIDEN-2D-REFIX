@@ -3,9 +3,8 @@ using UnityEngine.SceneManagement; // ★ 씬 관리를 위해 필수 추가
 
 public class UIButtonManager : MonoBehaviour
 {
-    [Header("인게임 HUD")]
     public GameObject GameplayHUD;
-
+    public GameObject IntroScreen;
     public GameObject InGame;
     public GameObject MainScreen;
     public GameObject Pause;
@@ -21,7 +20,11 @@ public class UIButtonManager : MonoBehaviour
         // 사망 후 부활하거나 새 게임을 눌러 씬이 새로 로드된 상태인 경우
         if (GameOverManager.skipMainMenu)
         {
+
             GameOverManager.skipMainMenu = false; // 플래그는 사용 후 즉시 리셋
+
+            if (IntroScreen != null)
+                IntroScreen.SetActive(false);
 
             if (InGame != null)
                 InGame.SetActive(true);
@@ -48,7 +51,7 @@ public class UIButtonManager : MonoBehaviour
                 InGame.SetActive(false);
 
             if (MainScreen != null)
-                MainScreen.SetActive(true);
+                MainScreen.SetActive(false);
 
             if (Pause != null)
                 Pause.SetActive(false);
@@ -58,6 +61,10 @@ public class UIButtonManager : MonoBehaviour
 
             if (GameplayHUD != null)
                 GameplayHUD.SetActive(false);
+
+            // 최초에는 메인 메뉴가 아니라 Intro 표시
+            if (IntroScreen != null)
+                IntroScreen.SetActive(true);
 
             Time.timeScale = 0f;
         }
@@ -152,6 +159,7 @@ public class UIButtonManager : MonoBehaviour
 
     public void NewGameButton()
     {
+
         Time.timeScale = 1f;
 
         // ==========================
