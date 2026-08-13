@@ -323,7 +323,7 @@ public class PlayerController : MonoBehaviour
         }
         float levelMultiplier = data.GetDamageMultiplier(currentLevel);
 
-        Debug.Log($"<color=red>[진짜 파일 확인]</color> 이름: {data.name} | 데미지 배율: {data.damageMultiplier}");
+        Debug.Log($"<color=red>[진짜 파일 확인]</color> 이름: {data.name} | 스킬 레벨: {currentLevel} | 적용된 배율: {levelMultiplier}");
         float dir = isFacingRight ? 1f : -1f;
         Vector2 finalOffset = new Vector2(data.offset.x * dir, data.offset.y);
         Vector2 hitCenter = (Vector2)attackPoint.position + finalOffset;
