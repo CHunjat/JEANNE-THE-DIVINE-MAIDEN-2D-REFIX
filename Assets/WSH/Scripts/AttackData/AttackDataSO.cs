@@ -29,6 +29,9 @@ public class AttackDataSO : ScriptableObject
     [Tooltip("적에게 준 최종 데미지의 몇 %를 마나로 흡수할지 (예: 0.1 입력 시 데미지의 10% 회복)")]
     public float mpRecoveryRatio = 0.1f;
 
+    [Header("레벨별 데미지 배율 (0번칸 = 1레벨)")]
+    public float[] damageMultiplierByLevel;
+
     // =========================================================
     // 그로기 및 패리 카운터 시스템 (기획자 조절 영역)
     // =========================================================
@@ -59,4 +62,17 @@ public class AttackDataSO : ScriptableObject
 
     [Tooltip("패리 카운터 강공격 그로기 반영 비율")]
     public float parryCounterHeavyGroggyRatio = 3.5f;
+
+
+    // 현재 레벨에 맞는 데미지 배율 반환 함수
+    
+    public float GetDamageMultiplier(int currentLevel)
+    {
+        //만약 레벨별 데미지 설정을 추가하지 않을땐 기본 데미지 배율설정한 값을 가져온다, 예를들어 평타나 그런것들 
+        if (damageMultiplierByLevel == null || damageMultiplierByLevel.Length == 0)
+            return damageMultiplier;
+
+        int index = Mathf.Clamp(currentLevel - 1, 0, damageMultiplierByLevel.Length - 1);
+        return damageMultiplierByLevel[index];
+    }
 }

@@ -289,8 +289,9 @@ public class PlayerController : MonoBehaviour
     [Header("전투 세팅")]
     public Transform attackPoint;           // 타격 기준점
     public List<AttackDataSO> attackLibrary; // SO 파일들을 드래그해서 담는 곳
+    public List<SkillData> skillLibrary;     // [추가] attackLibrary와 짝을 맞출 스킬 데이터 목록 2026.8.13.
 
-    
+
     [Header("실시간 기즈모 설정")]
     public bool useLiveGizmoOnly = true;     // true: 공격할 때만 뜸 / false: 기존처럼 에디터에서 항상 뜸
     private AttackDataSO currentActiveData;   // 현재 실행 중인 공격의 데이터 저장용
@@ -313,6 +314,15 @@ public class PlayerController : MonoBehaviour
 
     private void PerformMeleeAttack(AttackDataSO data, float bonusMultiplier = 1f)
     {
+        // [추가] 짝이 맞는 스킬 데이터에서 현재 레벨을 찾아 레벨별 배율을 가져옴
+        int index = attackLibrary.IndexOf(data);
+        int currentLevel = 1;
+        if (index >= 0 && index < skillLibrary.Count && skillLibrary[index] != null)
+        {
+            currentLevel = skillLibrary[index].currentLevel;
+        }
+        float levelMultiplier = data.GetDamageMultiplier(currentLevel);
+
         Debug.Log($"<color=red>[진짜 파일 확인]</color> 이름: {data.name} | 데미지 배율: {data.damageMultiplier}");
         float dir = isFacingRight ? 1f : -1f;
         Vector2 finalOffset = new Vector2(data.offset.x * dir, data.offset.y);
@@ -334,7 +344,7 @@ public class PlayerController : MonoBehaviour
             EnemyFSM enemyFSM = enemy.GetComponent<EnemyFSM>();
             if (enemyFSM != null)
             {
-                float finalDamage = totalAttackPower * data.damageMultiplier * bonusMultiplier;
+                float finalDamage = totalAttackPower * levelMultiplier * bonusMultiplier; //levelmultiplier 추가 26. 8.13. 
                 float finalGroggy = baseGroggy;
                 // Debug.Log($"<color=cyan>[데미지 추적]</color> 기량스탯: {playerStats.statDex} / 근력스탯: {playerStats.statStr} / 기준치(SO): {playerStats.statBalance.baseAttackPerStat} / 캐릭터총공격력: {totalAttackPower} / 모션배율: {data.damageMultiplier}");
                 // [추가] 인스펙터에서 설정한 Enum 카테고리에 맞춰 그로기 배율 곱하기
@@ -378,7 +388,7 @@ public class PlayerController : MonoBehaviour
         {
             //히트 소리 재생
             RuntimeManager.PlayOneShot("event:/Player/Interaction_Battle/Player_Attack_Hit", transform.position);
-            
+
             // 고정값이 아니라, (누적 최종데미지, SO에 적힌 흡수비율) 2개를 넘겨줍니다!
             playerStats.RestoreMpByDamage(totalDealtDamage, data.mpRecoveryRatio);
 
