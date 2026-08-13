@@ -19,6 +19,9 @@ MonoBehaviour:
   damageMultiplier: 7.5
   hitStopDuration: 0
   mpRecoveryRatio: 0.3
+  damageMultiplierByLevel:
+  - 1.3
+  - 1.4
   lightAttackGroggyRatio: 1
   heavyAttackGroggyRatio: 1.5
   heavyChargeGroggyRatio: 2

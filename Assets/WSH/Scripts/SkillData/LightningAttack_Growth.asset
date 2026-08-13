@@ -12,4 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 284bc25f435e02743b2304ebbb0360dc, type: 3}
   m_Name: LightningAttack_Growth
   m_EditorClassIdentifier: Assembly-CSharp::SkillGrowthDataSO
-  growthTable: []
+  growthTable:
+  - level: 1
+    requiredAnima: 1
+    cumulativeAnima: 1
+  - level: 2
+    requiredAnima: 1
+    cumulativeAnima: 2

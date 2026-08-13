@@ -19630,6 +19630,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22374018e76e23e4b85b82a32bdc38b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SkillUIManager
+  totalAnima: 0
+  allSkillDatas: []
   skillGroupTransform: {fileID: 0}
   playerStats: {fileID: 1595899235}
   centerTopText: {fileID: 1698096032}
@@ -51776,6 +51778,7 @@ GameObject:
   - component: {fileID: 1595899234}
   - component: {fileID: 1595899233}
   - component: {fileID: 1595899232}
+  - component: {fileID: 1595899243}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -52167,6 +52170,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8012b6f2619d96f429cb2457067e5d27, type: 2}
   - {fileID: 11400000, guid: 354babe6fd5edc94ba5a228d9045b2b0, type: 2}
   - {fileID: 11400000, guid: 7ea2b2aeb84813249b24c9368d1602cf, type: 2}
+  skillLibrary:
+  - {fileID: 11400000, guid: b4eb3c7023043e549a6038935766d9b8, type: 2}
+  - {fileID: 11400000, guid: 994c43341899d5e41b027a87bccbf3db, type: 2}
   useLiveGizmoOnly: 1
   grappleLine: {fileID: 358541449}
   shieldPoint: {fileID: 1830322340}
@@ -52300,6 +52306,20 @@ Transform:
   - {fileID: 1668997375}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1595899243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1595899231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24cff826ff0e64c4eb6598032f9c4fe7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerCurrency
+  anima: 5000
+  gold: 5000
 --- !u!1 &1596172959
 GameObject:
   m_ObjectHideFlags: 0

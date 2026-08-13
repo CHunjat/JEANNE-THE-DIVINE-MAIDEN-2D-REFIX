@@ -25,3 +25,5 @@ MonoBehaviour:
   healData: {fileID: 0}
   mpCost: 100
   mpCostChargedExtra: 300
+  currentLevel: 1
+  growthData: {fileID: 11400000, guid: 18d6993072444cf44a640224f60b52cb, type: 2}

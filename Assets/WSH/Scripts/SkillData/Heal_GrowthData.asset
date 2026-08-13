@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 284bc25f435e02743b2304ebbb0360dc, type: 3}
-  m_Name: HolySlash_Growth
+  m_Name: Heal_GrowthData
   m_EditorClassIdentifier: Assembly-CSharp::SkillGrowthDataSO
   growthTable:
   - level: 1
-    requiredAnima: 1
-    cumulativeAnima: 1
+    requiredAnima: 100
+    cumulativeAnima: 100
   - level: 2
-    requiredAnima: 1
-    cumulativeAnima: 2
+    requiredAnima: 100
+    cumulativeAnima: 200
