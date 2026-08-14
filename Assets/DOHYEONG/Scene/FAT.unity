@@ -8734,7 +8734,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &290623464
 RectTransform:
   m_ObjectHideFlags: 0
@@ -41745,6 +41745,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1253403091}
+  - component: {fileID: 1253403092}
   m_Layer: 5
   m_Name: Currency
   m_TagString: Untagged
@@ -41773,6 +41774,26 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1253403092
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1253403090}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a29be5229bd05364c9b7b038803f7ed9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CurrencyUI
+  playerCurrency: {fileID: 1595899243}
+  animaText: {fileID: 153026748}
+  goldText: {fileID: 1184319028}
+  animaIcon: {fileID: 1206926723}
+  goldIcon: {fileID: 1933342374}
+  countDuration: 0.35
+  punchScale: 0.12
+  punchDuration: 0.25
 --- !u!1 &1255140303
 GameObject:
   m_ObjectHideFlags: 0
