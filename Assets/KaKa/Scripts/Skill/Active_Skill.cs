@@ -17,6 +17,9 @@ public class Active_Skill : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     [Range(0f, 1f)]
     public float dragAlpha = 0.5f;
 
+    [Header("Drag Visual")]
+    public RectTransform dragVisual;
+
     // 💡 중앙 통제실과 소통하기 위한 변수 (인펙터에 노출 안 됨)
     [HideInInspector] public ActiveSkillManager manager;
     [HideInInspector] public int skillIndex;
@@ -67,45 +70,67 @@ public class Active_Skill : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     // --- 2. 클릭 기능 ---
     public void OnPointerClick(PointerEventData eventData)
     {
-        // 💡 직접 켜지 않고, 매니저에게 "저 클릭됐어요! 다른 애들 끄고 저만 켜주세요"라고 요청합니다.
+        Debug.Log($"[스킬 클릭] {gameObject.name}");
+
         if (manager != null)
         {
             manager.SelectSkill(skillIndex);
+        }
+        else
+        {
+            Debug.LogWarning($"{gameObject.name} : ActiveSkillManager가 아직 연결되지 않았습니다.");
         }
     }
 
     // --- 3. 드래그 앤 드롭 기능 (유지) ---
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (canvasGroup != null) canvasGroup.alpha = dragAlpha;
+        if (canvasGroup != null)
+            canvasGroup.alpha = dragAlpha;
 
-        if (mainCanvas != null) dragClone = Instantiate(gameObject, mainCanvas.transform);
-        else dragClone = Instantiate(gameObject, transform.root);
+        if (dragVisual == null || mainCanvas == null)
+            return;
 
-        dragClone.transform.localScale = Vector3.one;
+        // ★ 원형 프레임 + 아이콘 전체 복제
+        dragClone = Instantiate(dragVisual.gameObject, mainCanvas.transform);
+
+        dragClone.name = "DragSkillIcon";
+
         cloneRect = dragClone.GetComponent<RectTransform>();
 
-        CanvasGroup cloneCanvasGroup = dragClone.GetComponent<CanvasGroup>();
-        if (cloneCanvasGroup != null)
+        // 원본 화면 크기 유지
+        Vector3 originalLossyScale = dragVisual.lossyScale;
+        Vector3 canvasLossyScale = mainCanvas.transform.lossyScale;
+
+        cloneRect.localScale = new Vector3(
+            originalLossyScale.x / canvasLossyScale.x,
+            originalLossyScale.y / canvasLossyScale.y,
+            1f
+        );
+
+        // 복제된 오브젝트의 모든 Graphic이 Raycast를 막지 않도록
+        Graphic[] graphics = dragClone.GetComponentsInChildren<Graphic>(true);
+
+        foreach (Graphic graphic in graphics)
         {
-            cloneCanvasGroup.blocksRaycasts = false;
-            cloneCanvasGroup.alpha = 0.8f;
+            graphic.raycastTarget = false;
         }
 
-        Active_Skill cloneScript = dragClone.GetComponent<Active_Skill>();
-        if (cloneScript != null) Destroy(cloneScript);
+        CanvasGroup cloneCanvasGroup = dragClone.GetComponent<CanvasGroup>();
+
+        if (cloneCanvasGroup == null)
+            cloneCanvasGroup = dragClone.AddComponent<CanvasGroup>();
+
+        cloneCanvasGroup.blocksRaycasts = false;
+        cloneCanvasGroup.interactable = false;
+        cloneCanvasGroup.alpha = 0.85f;
+
+        UpdateDragIconPosition(eventData);
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (dragClone != null && cloneRect != null && mainCanvas != null)
-        {
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                mainCanvas.transform as RectTransform, eventData.position, mainCanvas.worldCamera, out Vector2 localPoint))
-            {
-                cloneRect.anchoredPosition = localPoint;
-            }
-        }
+        UpdateDragIconPosition(eventData);
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -135,5 +160,22 @@ public class Active_Skill : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         }
 
         if (dragClone != null) Destroy(dragClone);
+    }
+
+    private void UpdateDragIconPosition(PointerEventData eventData)
+    {
+        if (dragClone == null || cloneRect == null || mainCanvas == null)
+            return;
+
+        RectTransform canvasRect = mainCanvas.transform as RectTransform;
+
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            canvasRect,
+            eventData.position,
+            mainCanvas.worldCamera,
+            out Vector2 localPoint))
+        {
+            cloneRect.anchoredPosition = localPoint;
+        }
     }
 }
