@@ -9,6 +9,9 @@ public class ActiveSkillManager : MonoBehaviour
     [Tooltip("상단의 스킬 슬롯 매니저(SkillUIManager)를 연결해 주세요.")]
     public SkillUIManager skillUIManager;
 
+    [Header("Detail Panel")]
+    [SerializeField] private SkillDetailPanelUI detailPanelUI;
+
     private int currentSelectedIndex = -1;
     public int CurrentSelectedIndex => currentSelectedIndex;
 
@@ -23,11 +26,15 @@ public class ActiveSkillManager : MonoBehaviour
                 activeSkills[i].SetSelectState(false);
             }
         }
+
+        if (detailPanelUI != null)
+        {
+            detailPanelUI.Clear();
+        }
     }
 
     private void Update()
     {
-        // ⭐ 핵심: 하단 영역 버튼이 선택되어 포커스된 상태일 때만 좌우 입력을 허용합니다.
         if (currentSelectedIndex == -1 || activeSkills.Length == 0) return;
 
         if (Input.GetKeyDown(KeyCode.LeftArrow))
@@ -48,28 +55,47 @@ public class ActiveSkillManager : MonoBehaviour
     {
         if (index < 0 || index >= activeSkills.Length) return;
 
-        // 💡 하단 버튼을 클릭/선택하는 순간 상단 슬롯 영역의 선택을 강제 해제합니다.
+        // 등록 슬롯 선택 해제
         if (skillUIManager != null)
         {
             skillUIManager.ClearSelection();
         }
 
+        // 이전 선택 해제
         if (currentSelectedIndex != -1 && currentSelectedIndex < activeSkills.Length)
         {
-            if (activeSkills[currentSelectedIndex] != null) activeSkills[currentSelectedIndex].SetSelectState(false);
+            if (activeSkills[currentSelectedIndex] != null)
+                activeSkills[currentSelectedIndex].SetSelectState(false);
         }
 
+        // 새 선택
         currentSelectedIndex = index;
-        if (activeSkills[currentSelectedIndex] != null) activeSkills[currentSelectedIndex].SetSelectState(true);
+
+        if (activeSkills[currentSelectedIndex] != null)
+        {
+            activeSkills[currentSelectedIndex].SetSelectState(true);
+
+            // ★ 디테일 패널에 스킬명 표시
+            if (detailPanelUI != null)
+            {
+                detailPanelUI.ShowSkill(activeSkills[currentSelectedIndex].skillData);
+            }
+        }
     }
 
-    // 상단 매니저가 내 영역의 포커스를 꺼버릴 때 호출할 함수
     public void ClearSelection()
     {
         if (currentSelectedIndex != -1 && currentSelectedIndex < activeSkills.Length)
         {
-            if (activeSkills[currentSelectedIndex] != null) activeSkills[currentSelectedIndex].SetSelectState(false);
+            if (activeSkills[currentSelectedIndex] != null)
+                activeSkills[currentSelectedIndex].SetSelectState(false);
         }
+
         currentSelectedIndex = -1;
+
+        if (detailPanelUI != null)
+        {
+            detailPanelUI.Clear();
+        }
     }
 }

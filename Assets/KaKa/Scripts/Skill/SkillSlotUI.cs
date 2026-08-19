@@ -2,88 +2,111 @@
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class SkillSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+public class SkillSlotUI : MonoBehaviour, IPointerClickHandler
 {
-    [Header("UI Elements")]
-    public GameObject tooltipText;  // 스킬 위의 비활성화 되어있는 툴팁 오브젝트
-    public GameObject checkmark;    // Background 하위의 Checkmark
-    public Image skillIconImage;    // 스킬 아이콘 이미지 컴포넌트
-    public Text skillCostText;      // 코스트 텍스트
+    [Header("UI")]
+    [SerializeField] private Image skillIconImage;
+
+    [Tooltip("나중에 선택 연출을 넣을 오브젝트. 지금은 비워둬도 됩니다.")]
+    [SerializeField] private GameObject selectionEffect;
+
+    [Header("Lock")]
+    [SerializeField] private bool isLocked = false;
+    [SerializeField] private GameObject lockObject;
 
     [Header("Data")]
-    public SkillData skillData;     // 인스펙터에서 각 스킬에 맞는 SkillData 할당
+    public SkillData skillData;
 
     private SkillUIManager manager;
-    private Button button;
 
-    // 현재 이 슬롯이 클릭되어 선택된 상태인지 여부
+    private Sprite cachedIconSprite;
     private bool isSelected = false;
 
-    private string cachedTooltipText;
-    private Sprite cachedIconSprite;
+    public bool IsLocked => isLocked;
 
     private void Awake()
     {
         manager = GetComponentInParent<SkillUIManager>();
-        button = GetComponent<Button>();
 
-        if (button != null)
+        if (selectionEffect != null)
         {
-            button.onClick.AddListener(OnSlotClicked);
+            selectionEffect.SetActive(false);
         }
 
-        if (tooltipText != null) tooltipText.SetActive(false);
-        if (checkmark != null) checkmark.SetActive(false);
-
-        if (skillIconImage == null)
-        {
-            skillIconImage = GetComponent<Image>();
-        }
+        UpdateSlotRawUI();
     }
 
-    // 외부에서 스킬을 드래그 앤 드롭 등으로 등록할 때 호출하는 함수
-    public void RegisterSkill(SkillData data, Sprite iconSprite, string tooltipString)
+    // ========================================
+    // 스킬 등록
+    // ========================================
+
+    public void RegisterSkill(SkillData data, Sprite iconSprite)
     {
-        // 💡 [중복 등록 방지 로직 핵심]
-        // 매니저가 관리하는 모든 슬롯을 검사하여, 이미 똑같은 스킬이 등록된 다른 슬롯이 있다면 비워줍니다.
-        if (data != null && manager != null && manager.skillSlots != null)
+        // 잠긴 슬롯이면 등록 불가
+        if (isLocked)
+        {
+            Debug.Log("잠긴 스킬 슬롯입니다.");
+            return;
+        }
+
+        if (data == null)
+            return;
+
+        // 같은 스킬이 다른 슬롯에 이미 등록되어 있다면
+        // 기존 슬롯에서 제거
+        if (manager != null && manager.skillSlots != null)
         {
             foreach (SkillSlotUI slot in manager.skillSlots)
             {
-                // '나 자신이 아닌 다른 슬롯' 중에서 '동일한 스킬 데이터'를 가진 슬롯이 있다면
+                if (slot == null)
+                    continue;
+
                 if (slot != this && slot.skillData == data)
                 {
-                    slot.UnregisterSkill(); // 해당 기존 슬롯을 깨끗하게 해제(초기화)합니다.
+                    slot.UnregisterSkill();
                 }
             }
         }
 
-        // 새 슬롯에 스킬 정보 등록
+        // 새로운 스킬 등록
         skillData = data;
         cachedIconSprite = iconSprite;
-        cachedTooltipText = tooltipString;
 
         UpdateSlotRawUI();
 
-        // 사용 가능한 슬롯 개수 최신화
         if (manager != null)
         {
             manager.UpdateAvailableSlotsCount();
         }
     }
 
-    // 마우스 클릭을 감지하는 이벤트 함수 (우클릭 해제)
-    public void OnPointerClick(PointerEventData eventData)
+    // ========================================
+    // 기존 Active_Skill 코드와 호환용
+    // ========================================
+    // 현재 Active_Skill에서
+    // RegisterSkill(data, icon, tooltip) 형태로 호출하고 있기 때문에
+    // 당장은 이 오버로드를 남겨둡니다.
+    //
+    // tooltipString은 새 UI에서는 사용하지 않습니다.
+    // ========================================
+
+    public void RegisterSkill(
+        SkillData data,
+        Sprite iconSprite,
+        string tooltipString)
     {
-        if (eventData.button == PointerEventData.InputButton.Right && skillData != null)
-        {
-            UnregisterSkill();
-        }
+        RegisterSkill(data, iconSprite);
     }
 
-    // 스킬 등록을 해제하고 초기 상태로 되돌리는 함수
+    // ========================================
+    // 스킬 등록 해제
+    // ========================================
+
     public void UnregisterSkill()
     {
+        if (isLocked)
+            return;
+
         if (isSelected && manager != null)
         {
             manager.ClearSelection();
@@ -91,7 +114,6 @@ public class SkillSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
 
         skillData = null;
         cachedIconSprite = null;
-        cachedTooltipText = "";
         isSelected = false;
 
         UpdateSlotRawUI();
@@ -102,98 +124,122 @@ public class SkillSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
         }
     }
 
-    // 마우스 커서를 올렸을 때 (호버 시작)
-    public void OnPointerEnter(PointerEventData eventData)
+    // ========================================
+    // 슬롯 클릭
+    // ========================================
+
+    public void OnPointerClick(PointerEventData eventData)
     {
-        if (skillData != null && tooltipText != null)
+        if (isLocked)
+            return;
+
+        // 좌클릭
+        // → 해당 슬롯의 스킬 선택
+        if (eventData.button == PointerEventData.InputButton.Left)
         {
-            tooltipText.SetActive(true);
+            if (skillData != null && manager != null)
+            {
+                manager.SelectSlot(this);
+            }
+        }
+
+        // 우클릭
+        // → 등록 해제
+        else if (eventData.button == PointerEventData.InputButton.Right)
+        {
+            if (skillData != null)
+            {
+                UnregisterSkill();
+            }
         }
     }
 
-    // 마우스 커서가 벗어났을 때 (호버 종료)
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        if (!isSelected && tooltipText != null)
-        {
-            tooltipText.SetActive(false);
-        }
-    }
+    // ========================================
+    // 선택 상태
+    // ========================================
 
-    // 버튼이 좌클릭 되었을 때 매니저에게 알림
-    private void OnSlotClicked()
-    {
-        if (skillData != null && manager != null)
-        {
-            manager.SelectSlot(this);
-        }
-    }
-
-    // 매니저(SkillUIManager)가 슬롯을 선택/해제할 때 호출하는 함수
     public void SetSelectState(bool select)
     {
         isSelected = select;
 
-        if (checkmark != null)
+        if (selectionEffect != null)
         {
-            checkmark.SetActive(select);
-        }
-
-        if (tooltipText != null)
-        {
-            tooltipText.SetActive(select);
+            selectionEffect.SetActive(select);
         }
     }
 
-    // UI를 새로고침하는 함수
+    // ========================================
+    // 잠금 상태 변경
+    // 나중에 슬롯 해금할 때 사용 가능
+    // ========================================
+
+    public void SetLocked(bool locked)
+    {
+        isLocked = locked;
+
+        if (isLocked && skillData != null)
+        {
+            skillData = null;
+            cachedIconSprite = null;
+        }
+
+        UpdateSlotRawUI();
+
+        if (manager != null)
+        {
+            manager.UpdateAvailableSlotsCount();
+        }
+    }
+
+    // ========================================
+    // 슬롯 UI 갱신
+    // ========================================
+
     public void UpdateSlotRawUI()
     {
-        if (skillData != null)
+        // 자물쇠 표시
+        if (lockObject != null)
         {
-            // 1. 아이콘 이미지 반영
-            if (skillIconImage != null)
-            {
-                Sprite targetSprite = (cachedIconSprite != null) ? cachedIconSprite : skillData.skillIcon;
-                if (targetSprite != null)
-                {
-                    skillIconImage.sprite = targetSprite;
-                    skillIconImage.enabled = true;
-                    skillIconImage.color = Color.white;
-                }
-            }
-
-            // 2. 코스트 텍스트 반영
-            if (skillCostText != null)
-            {
-                skillCostText.text = skillData.cost;
-                skillCostText.gameObject.SetActive(true);
-            }
-
-            // 3. 툴팁 문구 반영
-            if (tooltipText != null && !string.IsNullOrEmpty(cachedTooltipText))
-            {
-                Text tText = tooltipText.GetComponentInChildren<Text>();
-                if (tText != null)
-                {
-                    tText.text = cachedTooltipText;
-                }
-            }
+            lockObject.SetActive(isLocked);
         }
-        else
+
+        // 잠긴 슬롯
+        if (isLocked)
         {
-            // 빈 슬롯 상태일 때의 초기화 처리
             if (skillIconImage != null)
             {
                 skillIconImage.sprite = null;
                 skillIconImage.enabled = false;
             }
-            if (skillCostText != null)
-            {
-                skillCostText.text = "";
-            }
 
-            cachedTooltipText = "";
-            cachedIconSprite = null;
+            SetSelectState(false);
+            return;
+        }
+
+        // 스킬이 등록된 슬롯
+        if (skillData != null)
+        {
+            if (skillIconImage != null)
+            {
+                Sprite targetSprite =
+                    cachedIconSprite != null
+                    ? cachedIconSprite
+                    : skillData.skillIcon;
+
+                skillIconImage.sprite = targetSprite;
+                skillIconImage.enabled = targetSprite != null;
+                skillIconImage.color = Color.white;
+            }
+        }
+
+        // 빈 슬롯
+        else
+        {
+            if (skillIconImage != null)
+            {
+                skillIconImage.sprite = null;
+                skillIconImage.enabled = false;
+            }
 
             SetSelectState(false);
         }

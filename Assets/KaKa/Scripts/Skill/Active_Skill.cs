@@ -85,20 +85,34 @@ public class Active_Skill : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     // --- 3. 드래그 앤 드롭 기능 (유지) ---
     public void OnBeginDrag(PointerEventData eventData)
     {
+        // ★ 드래그 시작 시에도 해당 스킬 선택
+        if (manager != null)
+        {
+            manager.SelectSkill(skillIndex);
+        }
+
         if (canvasGroup != null)
             canvasGroup.alpha = dragAlpha;
 
         if (dragVisual == null || mainCanvas == null)
             return;
 
-        // ★ 원형 프레임 + 아이콘 전체 복제
-        dragClone = Instantiate(dragVisual.gameObject, mainCanvas.transform);
+        if (canvasGroup != null)
+            canvasGroup.alpha = dragAlpha;
 
-        dragClone.name = "DragSkillIcon";
+        if (dragVisual == null || mainCanvas == null)
+            return;
+
+        // 원형 프레임 + 아이콘 복제
+        dragClone = Instantiate(
+            dragVisual.gameObject,
+            mainCanvas.transform
+        );
+
+        dragClone.name = "DragSkillVisual";
 
         cloneRect = dragClone.GetComponent<RectTransform>();
 
-        // 원본 화면 크기 유지
         Vector3 originalLossyScale = dragVisual.lossyScale;
         Vector3 canvasLossyScale = mainCanvas.transform.lossyScale;
 
@@ -108,21 +122,28 @@ public class Active_Skill : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
             1f
         );
 
-        // 복제된 오브젝트의 모든 Graphic이 Raycast를 막지 않도록
-        Graphic[] graphics = dragClone.GetComponentsInChildren<Graphic>(true);
+        // ★ 복제본 안의 모든 Graphic Raycast 차단
+        Graphic[] graphics =
+            dragClone.GetComponentsInChildren<Graphic>(true);
 
         foreach (Graphic graphic in graphics)
         {
             graphic.raycastTarget = false;
         }
 
-        CanvasGroup cloneCanvasGroup = dragClone.GetComponent<CanvasGroup>();
+        // ★ CanvasGroup으로도 한 번 더 완전히 차단
+        CanvasGroup cloneCanvasGroup =
+            dragClone.GetComponent<CanvasGroup>();
 
         if (cloneCanvasGroup == null)
-            cloneCanvasGroup = dragClone.AddComponent<CanvasGroup>();
+        {
+            cloneCanvasGroup =
+                dragClone.AddComponent<CanvasGroup>();
+        }
 
         cloneCanvasGroup.blocksRaycasts = false;
         cloneCanvasGroup.interactable = false;
+        cloneCanvasGroup.ignoreParentGroups = true;
         cloneCanvasGroup.alpha = 0.85f;
 
         UpdateDragIconPosition(eventData);
@@ -135,31 +156,60 @@ public class Active_Skill : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (canvasGroup != null) canvasGroup.alpha = 1f;
+        if (canvasGroup != null)
+            canvasGroup.alpha = 1f;
 
-        if (eventData.pointerCurrentRaycast.gameObject != null)
+        GameObject hitObject = eventData.pointerCurrentRaycast.gameObject;
+
+        if (hitObject != null)
         {
-            SkillSlotUI targetSlot = eventData.pointerCurrentRaycast.gameObject.GetComponentInParent<SkillSlotUI>();
+            SkillSlotUI targetSlot =
+                hitObject.GetComponentInParent<SkillSlotUI>();
 
-            if (targetSlot != null && targetSlot.skillData == null)
+            if (targetSlot != null)
             {
-                // 1. 툴팁 텍스트 추출
-                string myTooltipString = "";
-                if (tooltipText != null)
+                Debug.Log(
+                    $"[드롭 슬롯] {targetSlot.name} / " +
+                    $"기존 SkillData: {(targetSlot.skillData != null ? targetSlot.skillData.name : "None")} / " +
+                    $"드래그 SkillData: {(skillData != null ? skillData.name : "None")}"
+                );
+
+                if (targetSlot.skillData == null)
                 {
-                    Text tText = tooltipText.GetComponentInChildren<Text>();
-                    if (tText != null) myTooltipString = tText.text;
+                    Sprite myIconSprite =
+                        skillIconImage != null
+                            ? skillIconImage.sprite
+                            : null;
+
+                    Debug.Log($"[등록 호출] {skillData?.name} → {targetSlot.name}");
+
+                    targetSlot.RegisterSkill(
+                        skillData,
+                        myIconSprite
+                    );
+
+                    Debug.Log(
+                        $"[등록 후] {targetSlot.name} SkillData = " +
+                        $"{(targetSlot.skillData != null ? targetSlot.skillData.name : "None")}"
+                    );
                 }
-
-                // 2. ⭐ [핵심 추가] 원본 이미지 아이콘 직접 추출
-                Sprite myIconSprite = (skillIconImage != null) ? skillIconImage.sprite : null;
-
-                // 데이터, 이미지, 텍스트를 삼위일체로 슬롯에 등록합니다.
-                targetSlot.RegisterSkill(this.skillData, myIconSprite, myTooltipString);
+                else
+                {
+                    Debug.LogWarning(
+                        $"[등록 실패] {targetSlot.name}은 이미 스킬이 등록되어 있음"
+                    );
+                }
+            }
+            else
+            {
+                Debug.LogWarning(
+                    $"[등록 실패] {hitObject.name}에서 SkillSlotUI를 찾지 못함"
+                );
             }
         }
 
-        if (dragClone != null) Destroy(dragClone);
+        if (dragClone != null)
+            Destroy(dragClone);
     }
 
     private void UpdateDragIconPosition(PointerEventData eventData)
@@ -177,5 +227,18 @@ public class Active_Skill : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         {
             cloneRect.anchoredPosition = localPoint;
         }
+    }
+
+    private string GetHierarchyPath(Transform target)
+    {
+        string path = target.name;
+
+        while (target.parent != null)
+        {
+            target = target.parent;
+            path = target.name + "/" + path;
+        }
+
+        return path;
     }
 }
