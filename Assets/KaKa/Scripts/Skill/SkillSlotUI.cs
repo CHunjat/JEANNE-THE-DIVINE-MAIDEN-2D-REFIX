@@ -7,8 +7,9 @@ public class SkillSlotUI : MonoBehaviour, IPointerClickHandler
     [Header("UI")]
     [SerializeField] private Image skillIconImage;
 
-    [Tooltip("나중에 선택 연출을 넣을 오브젝트. 지금은 비워둬도 됩니다.")]
+    [Tooltip("선택 연출")]
     [SerializeField] private GameObject selectionEffect;
+    [SerializeField] private SkillSlotRegisterEffect registerEffect;
 
     [Header("Lock")]
     [SerializeField] private bool isLocked = false;
@@ -27,6 +28,8 @@ public class SkillSlotUI : MonoBehaviour, IPointerClickHandler
     private void Awake()
     {
         manager = GetComponentInParent<SkillUIManager>();
+
+        registerEffect = GetComponent<SkillSlotRegisterEffect>();
 
         if (selectionEffect != null)
         {
@@ -74,6 +77,11 @@ public class SkillSlotUI : MonoBehaviour, IPointerClickHandler
 
         UpdateSlotRawUI();
 
+        if (registerEffect != null)
+        {
+            registerEffect.PlayRegisterEffect();
+        }
+
         if (manager != null)
         {
             manager.UpdateAvailableSlotsCount();
@@ -90,10 +98,7 @@ public class SkillSlotUI : MonoBehaviour, IPointerClickHandler
     // tooltipString은 새 UI에서는 사용하지 않습니다.
     // ========================================
 
-    public void RegisterSkill(
-        SkillData data,
-        Sprite iconSprite,
-        string tooltipString)
+    public void RegisterSkill(SkillData data, Sprite iconSprite,string tooltipString)
     {
         RegisterSkill(data, iconSprite);
     }

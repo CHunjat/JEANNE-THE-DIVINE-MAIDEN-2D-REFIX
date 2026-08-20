@@ -20,6 +20,9 @@ public class Active_Skill : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     [Header("Drag Visual")]
     public RectTransform dragVisual;
 
+    [Header("Selection Effect")]
+    [SerializeField] private SkillSelectionEffect selectionEffect;
+
     // 💡 중앙 통제실과 소통하기 위한 변수 (인펙터에 노출 안 됨)
     [HideInInspector] public ActiveSkillManager manager;
     [HideInInspector] public int skillIndex;
@@ -33,7 +36,14 @@ public class Active_Skill : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     {
         canvasGroup = GetComponent<CanvasGroup>();
         mainCanvas = GetComponentInParent<Canvas>();
+
         UpdateSlotUI();
+
+        // 처음에는 선택 연출 숨김
+        if (selectionEffect != null)
+        {
+            selectionEffect.Hide();
+        }
     }
 
     public void UpdateSlotUI()
@@ -48,8 +58,25 @@ public class Active_Skill : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     // ⭐ 매니저가 이 버튼의 선택 상태를 강제로 제어할 때 쓸 함수
     public void SetSelectState(bool isSelected)
     {
-        if (checkmark != null) checkmark.SetActive(isSelected);
-        if (tooltipText != null) tooltipText.SetActive(isSelected);
+        // 새 선택 테두리 연출
+        if (selectionEffect != null)
+        {
+            if (isSelected)
+            {
+                selectionEffect.Show();
+            }
+            else
+            {
+                selectionEffect.Hide();
+            }
+        }
+
+        // 기존 기능은 일단 유지
+        if (checkmark != null)
+            checkmark.SetActive(isSelected);
+
+        if (tooltipText != null)
+            tooltipText.SetActive(isSelected);
     }
 
     // --- 1. 마우스 호버 기능 ---
@@ -90,12 +117,6 @@ public class Active_Skill : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         {
             manager.SelectSkill(skillIndex);
         }
-
-        if (canvasGroup != null)
-            canvasGroup.alpha = dragAlpha;
-
-        if (dragVisual == null || mainCanvas == null)
-            return;
 
         if (canvasGroup != null)
             canvasGroup.alpha = dragAlpha;
