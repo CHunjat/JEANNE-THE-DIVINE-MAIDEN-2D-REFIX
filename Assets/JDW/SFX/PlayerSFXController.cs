@@ -127,7 +127,7 @@ public class PlayerSFXController : MonoBehaviour
     public void OnSkillChargingStartSFX()
     {
         chargingInstance = Play("event:/Player/Player_Skill_Attack_Charging");
-        chargingCompleteCoroutine = StartCoroutine(ChargingCompleteAfterDelay(2f));
+        chargingCompleteCoroutine = StartCoroutine(ChargingCompleteAfterDelay(playerController.maxChargeTime));
     }
 
     public void OnSkillChargingStopSFX()
