@@ -2050,6 +2050,10 @@ PrefabInstance:
       propertyPath: m_SortingLayerID
       value: 1953683477
       objectReference: {fileID: 0}
+    - target: {fileID: 417356167801252293, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: m_RenderAlignment
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 446240065438415285, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -2126,13 +2130,37 @@ PrefabInstance:
       propertyPath: looping
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2364195692557323683, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2364195692557323683, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2948960420457660828, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2948960420457660828, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2948960420457660828, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3073983858372803228, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3073983858372803228, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3073983858372803228, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3216457680986430896, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_IsActive
@@ -2141,6 +2169,14 @@ PrefabInstance:
     - target: {fileID: 3233897199670822182, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3233897199670822182, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3233897199670822182, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3342470395965872158, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_SortingLayer
@@ -2157,6 +2193,14 @@ PrefabInstance:
     - target: {fileID: 3343035630984194426, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343035630984194426, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343035630984194426, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3525875659817886027, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_SortingLayer
@@ -2179,6 +2223,14 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3866257764938518309, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866257764938518309, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: ColorModule.enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866257764938518309, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: InitialModule.startSize.scalar
       value: 1
       objectReference: {fileID: 0}
@@ -2186,9 +2238,33 @@ PrefabInstance:
       propertyPath: InitialModule.startLifetime.scalar
       value: 0.4
       objectReference: {fileID: 0}
+    - target: {fileID: 3866257764938518309, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: ColorModule.gradient.maxGradient.ctime1
+      value: 65535
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866257764938518309, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: ColorModule.gradient.maxGradient.key1.a
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866257764938518309, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: ColorModule.gradient.maxGradient.m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866257764938518309, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: ColorModule.gradient.maxGradient.m_ColorSpace
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4061958770828048147, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4061958770828048147, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4061958770828048147, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4073482671374734898, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_LocalScale.x
@@ -2298,9 +2374,25 @@ PrefabInstance:
       propertyPath: looping
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4428255844125016168, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4428255844125016168, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4428632861154644150, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4428632861154644150, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4428632861154644150, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4428632861154644150, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: ColorModule.gradient.maxGradient.key0.b
@@ -2322,6 +2414,14 @@ PrefabInstance:
       propertyPath: looping
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4429127450329808000, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4429127450329808000, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4466705229251482807, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_SortingLayer
       value: 1
@@ -2333,6 +2433,10 @@ PrefabInstance:
     - target: {fileID: 4466705229251482807, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_SortingLayerID
       value: 1953683477
+      objectReference: {fileID: 0}
+    - target: {fileID: 4466705229251482807, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: m_RenderAlignment
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4589640373904886158, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_IsActive
@@ -2366,25 +2470,53 @@ PrefabInstance:
       propertyPath: m_SortingLayerID
       value: 1953683477
       objectReference: {fileID: 0}
+    - target: {fileID: 4625562538851543188, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: m_RenderAlignment
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4626785295704193608, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4626785295704193608, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4626817834393218006, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4626817834393218006, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4667950167509038973, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_Name
       value: ParryCountLight_1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4667950167509038973, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4735189355845363386, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4735189355845363386, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4785558028722610977, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4785558028722610977, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4785558028722610977, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4823494164436854762, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_IsActive
@@ -2410,17 +2542,49 @@ PrefabInstance:
       propertyPath: looping
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5426478524286972371, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5426478524286972371, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5426478524286972371, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: InitialModule.startRotationY.scalar
+      value: 1.5707963
+      objectReference: {fileID: 0}
     - target: {fileID: 5453800778691074371, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5453800778691074371, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5461216947567407312, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5461216947567407312, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5461216947567407312, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5535183692210639798, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5535183692210639798, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5535183692210639798, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5897856993901039851, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_IsActive
@@ -2429,6 +2593,14 @@ PrefabInstance:
     - target: {fileID: 6006269239248719026, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6006269239248719026, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6006269239248719026, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6156498093416491244, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_SortingLayer
@@ -2466,6 +2638,18 @@ PrefabInstance:
       propertyPath: looping
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7146036906762025177, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7146036906762025177, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7146036906762025177, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: InitialModule.startRotationY.scalar
+      value: 4.712389
+      objectReference: {fileID: 0}
     - target: {fileID: 7227046866023658143, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -2502,6 +2686,14 @@ PrefabInstance:
       propertyPath: looping
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7389528515430605007, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7389528515430605007, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7826317983880374852, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_SortingLayer
       value: 1
@@ -2517,6 +2709,14 @@ PrefabInstance:
     - target: {fileID: 7845272456775575134, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7845272456775575134, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7845272456775575134, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7952164763799514500, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_IsActive
@@ -2534,13 +2734,33 @@ PrefabInstance:
       propertyPath: m_SortingLayerID
       value: 1953683477
       objectReference: {fileID: 0}
+    - target: {fileID: 8081959177238139061, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8203283422290344580, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8203283422290344580, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8203283422290344580, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8241210212041129708, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8241210212041129708, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8241210212041129708, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8241435353575561582, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_SortingLayer
@@ -2557,6 +2777,14 @@ PrefabInstance:
     - target: {fileID: 8445430228954729716, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8445430228954729716, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8445430228954729716, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8451217797062481116, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_SortingLayer
@@ -2601,6 +2829,10 @@ PrefabInstance:
     - target: {fileID: 9073652005438292260, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: looping
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9073652005438292260, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: simulationSpeed
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4550,7 +4782,7 @@ MonoBehaviour:
   parryCountHardVFXDuration: 0.5
   ParryCountLightVFX: {fileID: 641656120}
   parryCountLightVFXPoolSize: 3
-  parryCountLightVFXDuration: 0.5
+  parryCountLightVFXDuration: 0.8
 --- !u!1 &1252207913
 GameObject:
   m_ObjectHideFlags: 0
@@ -5662,7 +5894,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5951627205034898329, guid: ea86927477bf9f04ab218e70b7a80516, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.69
+      value: 1.8
       objectReference: {fileID: 0}
     - target: {fileID: 5951627205034898329, guid: ea86927477bf9f04ab218e70b7a80516, type: 3}
       propertyPath: m_LocalPosition.y
@@ -5670,7 +5902,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5951627205034898329, guid: ea86927477bf9f04ab218e70b7a80516, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -42.178234
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5951627205034898329, guid: ea86927477bf9f04ab218e70b7a80516, type: 3}
       propertyPath: m_LocalRotation.w
