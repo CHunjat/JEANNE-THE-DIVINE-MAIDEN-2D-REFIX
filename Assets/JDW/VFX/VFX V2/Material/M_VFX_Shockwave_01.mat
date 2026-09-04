@@ -14,7 +14,7 @@ Material:
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 0
-  m_EnableInstancingVariants: 0
+  m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
@@ -97,7 +97,7 @@ Material:
     - _ReceiveShadows: 1
     - _Src: 5
     - _ZTest: 2
-    - _ZWrite: 0
+    - _ZWrite: 1
     - __dirty: 0
     m_Colors:
     - _Control: {r: 1, g: 0, b: 1, a: 0}
@@ -113,3 +113,4 @@ Material:
     - _TileControl: {r: 5, g: 5, b: 3, a: 0}
     - _TileUVS: {r: 1, g: 1, b: 0, a: 0}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1
