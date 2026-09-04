@@ -12,6 +12,10 @@ public class SkillCostGemUI : MonoBehaviour
     [Header("Glow 이미지 - Slot1 ~ Slot5")]
     [SerializeField] private Image[] glowImages = new Image[5];
 
+    [Header("완충 반짝임 Material")]
+    [Tooltip("완전히 찬 보석에만 적용할 SkillGemShine Material")]
+    [SerializeField] private Material fullShineMaterial;
+
     [Header("MP 설정")]
     [SerializeField] private float mpPerSlot = 100f;
 
@@ -27,6 +31,10 @@ public class SkillCostGemUI : MonoBehaviour
 
     private bool[] isFull;
 
+    // ★ 원래 Scale 보존
+    private Vector3[] fillBaseScales;
+    private Vector3[] glowBaseScales;
+
     private void Awake()
     {
         if (playerStats == null)
@@ -35,6 +43,29 @@ public class SkillCostGemUI : MonoBehaviour
         }
 
         isFull = new bool[fillImages.Length];
+
+        fillBaseScales = new Vector3[fillImages.Length];
+        glowBaseScales = new Vector3[glowImages.Length];
+
+        // 원래 Fill Scale 저장
+        for (int i = 0; i < fillImages.Length; i++)
+        {
+            if (fillImages[i] != null)
+            {
+                fillBaseScales[i] =
+                    fillImages[i].rectTransform.localScale;
+            }
+        }
+
+        // 원래 Glow Scale 저장
+        for (int i = 0; i < glowImages.Length; i++)
+        {
+            if (glowImages[i] != null)
+            {
+                glowBaseScales[i] =
+                    glowImages[i].rectTransform.localScale;
+            }
+        }
     }
 
     private void Start()
@@ -58,6 +89,15 @@ public class SkillCostGemUI : MonoBehaviour
             glowImages[i].gameObject.SetActive(false);
         }
 
+        // ★ 시작할 때 반짝임 Material 제거
+        for (int i = 0; i < fillImages.Length; i++)
+        {
+            if (fillImages[i] != null)
+            {
+                fillImages[i].material = null;
+            }
+        }
+
         RefreshSlots();
     }
 
@@ -66,10 +106,7 @@ public class SkillCostGemUI : MonoBehaviour
         if (playerStats == null)
             return;
 
-        // MP에 따라 각 슬롯 채우기
         RefreshSlots();
-
-        // 완충된 슬롯 전체를 같은 박자로 움직임
         UpdateGlobalPulse();
     }
 
@@ -87,45 +124,75 @@ public class SkillCostGemUI : MonoBehaviour
             // Slot1 : 0 ~ 100
             // Slot2 : 100 ~ 200
             // Slot3 : 200 ~ 300
-            // ...
+            // Slot4 : 300 ~ 400
+            // Slot5 : 400 ~ 500
             float slotStartMp = i * mpPerSlot;
 
             float progress = Mathf.Clamp01(
                 (currentMp - slotStartMp) / mpPerSlot
             );
 
-            // 보석 차오르는 정도
             fill.fillAmount = progress;
 
-            bool nowFull = progress >= 1f;
+            // ★ 이 보석이 100% 찼는지
+            bool nowFull = progress >= 0.999f;
 
+            // =============================
             // 방금 완충됨
+            // =============================
             if (nowFull && !isFull[i])
             {
                 ActivateGlow(i);
+                ActivateShine(i);
             }
 
-            // MP 사용으로 완충 상태 해제
+            // =============================
+            // MP 사용으로 완충 해제
+            // =============================
             else if (!nowFull && isFull[i])
             {
                 DeactivateGlow(i);
+                DeactivateShine(i);
             }
 
             isFull[i] = nowFull;
         }
     }
 
+    // =========================================
+    // 완충된 보석에만 Shine Material 적용
+    // =========================================
+    private void ActivateShine(int index)
+    {
+        if (index < 0 || index >= fillImages.Length)
+            return;
+
+        if (fillImages[index] == null)
+            return;
+
+        fillImages[index].material = fullShineMaterial;
+    }
+
+    private void DeactivateShine(int index)
+    {
+        if (index < 0 || index >= fillImages.Length)
+            return;
+
+        if (fillImages[index] == null)
+            return;
+
+        // Unity 기본 UI Material로 복귀
+        fillImages[index].material = null;
+    }
+
     private void UpdateGlobalPulse()
     {
-        // 0 ~ 1을 반복하는 공통 값
         float pulse =
             (Mathf.Sin(Time.unscaledTime * pulseSpeed) + 1f) * 0.5f;
 
-        // 모든 완충 슬롯이 똑같은 Scale 사용
         float scale =
             Mathf.Lerp(1f, maxScale, pulse);
 
-        // 모든 완충 슬롯이 똑같은 Alpha 사용
         float glowAlpha =
             Mathf.Lerp(
                 glowMinAlpha,
@@ -138,13 +205,11 @@ public class SkillCostGemUI : MonoBehaviour
             if (fillImages[i] == null)
                 continue;
 
-            // =========================
-            // 완충된 슬롯
-            // =========================
             if (isFull[i])
             {
+                // ★ 원래 Scale 기준으로 확대
                 fillImages[i].rectTransform.localScale =
-                    Vector3.one * scale;
+                    fillBaseScales[i] * scale;
 
                 if (
                     i < glowImages.Length &&
@@ -152,7 +217,7 @@ public class SkillCostGemUI : MonoBehaviour
                 )
                 {
                     glowImages[i].rectTransform.localScale =
-                        Vector3.one * scale;
+                        glowBaseScales[i] * scale;
 
                     SetAlpha(
                         glowImages[i],
@@ -160,14 +225,11 @@ public class SkillCostGemUI : MonoBehaviour
                     );
                 }
             }
-
-            // =========================
-            // 아직 완충되지 않은 슬롯
-            // =========================
             else
             {
+                // ★ Vector3.one이 아니라 원래 Scale 복구
                 fillImages[i].rectTransform.localScale =
-                    Vector3.one;
+                    fillBaseScales[i];
 
                 if (
                     i < glowImages.Length &&
@@ -175,7 +237,7 @@ public class SkillCostGemUI : MonoBehaviour
                 )
                 {
                     glowImages[i].rectTransform.localScale =
-                        Vector3.one;
+                        glowBaseScales[i];
 
                     SetAlpha(
                         glowImages[i],
@@ -219,7 +281,7 @@ public class SkillCostGemUI : MonoBehaviour
         )
         {
             fillImages[index].rectTransform.localScale =
-                Vector3.one;
+                fillBaseScales[index];
         }
     }
 
