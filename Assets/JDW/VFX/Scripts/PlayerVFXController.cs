@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 public class PlayerVFXController : MonoBehaviour
 {
+    [Header("변수 참조용")]
+    private PlayerController playerController;
+
     [Header("스킬 차징 VFX")]
     [SerializeField] private ParticleSystem lightningChargingVFX;
     [SerializeField] private ParticleSystem ChargingCompleteVFX;
@@ -24,26 +27,45 @@ public class PlayerVFXController : MonoBehaviour
     [SerializeField] private int parryVFXPoolSize = 3;
     [SerializeField] private float parryVFXDuration = 0.5f;
 
+    [Header("패링 쇼크웨이브")]
+    [SerializeField] private ParticleSystem ParryShockwaveVFX;
+    [SerializeField] private int parryShockwaveVFXPoolSize = 3;
+    [SerializeField] private float parryShockwaveVFXDuration = 0.5f;
+
     [Header("패링 카운터 하드 (슬래쉬)")]
     [SerializeField] private ParticleSystem ParryCountHardVFX;
     [SerializeField] private int parryCountHardVFXPoolSize = 3;
     [SerializeField] private float parryCountHardVFXDuration = 0.5f;
 
+    [Header("패링 카운터 라이트 (슬래쉬)")]
+    [SerializeField] private ParticleSystem ParryCountLightVFX;
+    [SerializeField] private int parryCountLightVFXPoolSize = 3;
+    [SerializeField] private float parryCountLightVFXDuration = 0.5f;
+
 
     private List<ParticleSystem> parryVFXPool = new List<ParticleSystem>();
     private List<Coroutine> parryVFXCoroutines = new List<Coroutine>();
 
+    private List<ParticleSystem> parryShockwaveVFXPool = new List<ParticleSystem>();
+    private List<Coroutine> parryShockwaveVFXCoroutines = new List<Coroutine>();
+
     private List<ParticleSystem> parryCountHardVFXPool = new List<ParticleSystem>();
     private List<Coroutine> parryCountHardVFXCoroutines = new List<Coroutine>();
+
+    private List<ParticleSystem> parryCountLightVFXPool = new List<ParticleSystem>();
+    private List<Coroutine> parryCountLightVFXCoroutines = new List<Coroutine>();
 
     private List<ParticleSystem> electricVFX_1_Pool = new List<ParticleSystem>();
     private List<Coroutine> electricVFX_1_StopRoutines = new List<Coroutine>();
     private int electricVFX_1_ActiveIndex = -1;
 
+
     private Coroutine chargingCompleteRoutine;
 
     private void Awake()
     {
+        playerController = GetComponent<PlayerController>();
+
         lightningChargingVFX.gameObject.SetActive(false);
         ChargingCompleteVFX.gameObject.SetActive(false);
 
@@ -78,6 +100,20 @@ public class PlayerVFXController : MonoBehaviour
             parryVFXCoroutines.Add(null);
         }
 
+        ParryShockwaveVFX.gameObject.SetActive(false);
+        parryShockwaveVFXPool.Add(ParryShockwaveVFX);
+        parryShockwaveVFXCoroutines.Add(null);
+
+        for (int i = 1; i < parryShockwaveVFXPoolSize; i++)
+        {
+            ParticleSystem clone = Instantiate(ParryShockwaveVFX, ParryShockwaveVFX.transform.parent);
+            clone.transform.localPosition = ParryShockwaveVFX.transform.localPosition;
+            clone.transform.localRotation = ParryShockwaveVFX.transform.localRotation;
+            clone.gameObject.SetActive(false);
+            parryShockwaveVFXPool.Add(clone);
+            parryShockwaveVFXCoroutines.Add(null);
+        }
+
         ParryCountHardVFX.gameObject.SetActive(false);
         parryCountHardVFXPool.Add(ParryCountHardVFX);
         parryCountHardVFXCoroutines.Add(null);
@@ -91,6 +127,20 @@ public class PlayerVFXController : MonoBehaviour
             parryCountHardVFXPool.Add(clone);
             parryCountHardVFXCoroutines.Add(null);
         }
+
+        ParryCountLightVFX.gameObject.SetActive(false);
+        parryCountLightVFXPool.Add(ParryCountLightVFX);
+        parryCountLightVFXCoroutines.Add(null);
+
+        for (int i = 1; i < parryCountLightVFXPoolSize; i++)
+        {
+            ParticleSystem clone = Instantiate(ParryCountLightVFX, ParryCountLightVFX.transform.parent);
+            clone.transform.localPosition = ParryCountLightVFX.transform.localPosition;
+            clone.transform.localRotation = ParryCountLightVFX.transform.localRotation;
+            clone.gameObject.SetActive(false);
+            parryCountLightVFXPool.Add(clone);
+            parryCountLightVFXCoroutines.Add(null);
+        }
     }
 
     // ── 스킬 차징 ────────────────────────────────
@@ -100,7 +150,7 @@ public class PlayerVFXController : MonoBehaviour
         lightningChargingVFX.Clear();
         lightningChargingVFX.Play();
 
-        chargingCompleteRoutine = StartCoroutine(PlayChargingCompleteVFXAfterDelay(1.5f));
+        chargingCompleteRoutine = StartCoroutine(PlayChargingCompleteVFXAfterDelay(playerController.maxChargeTime));
     }
 
     private IEnumerator PlayChargingCompleteVFXAfterDelay(float delay)
@@ -228,6 +278,40 @@ public class PlayerVFXController : MonoBehaviour
         parryVFXCoroutines[index] = null;
     }
 
+    // ── 패링 쇼크웨이브 VFX (풀링, 재생하면 0.5초 뒤 자동 비활성화) ────────────────────
+    public void OnParryShockwaveVFXPlay()
+    {
+        int index = GetAvailableParryShockwaveVFXIndex();
+
+        ParticleSystem ps = parryShockwaveVFXPool[index];
+
+        if (parryShockwaveVFXCoroutines[index] != null)
+            StopCoroutine(parryShockwaveVFXCoroutines[index]);
+
+        ps.gameObject.SetActive(true);
+        ps.Clear();
+        ps.Play();
+
+        parryShockwaveVFXCoroutines[index] = StartCoroutine(DisableParryShockwaveVFXAfterDelay(index, parryShockwaveVFXDuration));
+    }
+
+    private int GetAvailableParryShockwaveVFXIndex()
+    {
+        for (int i = 0; i < parryShockwaveVFXPool.Count; i++)
+        {
+            if (!parryShockwaveVFXPool[i].gameObject.activeSelf)
+                return i;
+        }
+        return 0; // 전부 사용 중이면 첫 슬롯 재활용
+    }
+
+    private IEnumerator DisableParryShockwaveVFXAfterDelay(int index, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        parryShockwaveVFXPool[index].gameObject.SetActive(false);
+        parryShockwaveVFXCoroutines[index] = null;
+    }
+
     // ── 패링 카운터 하드 VFX (슬래쉬, 풀링, 재생하면 0.5초 뒤 자동 비활성화) ────────────
     public void OnParryCountHardVFXPlay()
     {
@@ -260,6 +344,40 @@ public class PlayerVFXController : MonoBehaviour
         yield return new WaitForSeconds(delay);
         parryCountHardVFXPool[index].gameObject.SetActive(false);
         parryCountHardVFXCoroutines[index] = null;
+    }
+
+    // ── 패링 카운터 라이트 VFX (슬래쉬, 풀링, 재생하면 0.5초 뒤 자동 비활성화) ────────
+    public void OnParryCountLightVFXPlay()
+    {
+        int index = GetAvailableParryCountLightVFXIndex();
+
+        ParticleSystem ps = parryCountLightVFXPool[index];
+
+        if (parryCountLightVFXCoroutines[index] != null)
+            StopCoroutine(parryCountLightVFXCoroutines[index]);
+
+        ps.gameObject.SetActive(true);
+        ps.Clear();
+        ps.Play();
+
+        parryCountLightVFXCoroutines[index] = StartCoroutine(DisableParryCountLightVFXAfterDelay(index, parryCountLightVFXDuration));
+    }
+
+    private int GetAvailableParryCountLightVFXIndex()
+    {
+        for (int i = 0; i < parryCountLightVFXPool.Count; i++)
+        {
+            if (!parryCountLightVFXPool[i].gameObject.activeSelf)
+                return i;
+        }
+        return 0; // 전부 사용 중이면 첫 슬롯 재활용
+    }
+
+    private IEnumerator DisableParryCountLightVFXAfterDelay(int index, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        parryCountLightVFXPool[index].gameObject.SetActive(false);
+        parryCountLightVFXCoroutines[index] = null;
     }
 
     // ── VFX 전체 정지 (방어 로직 포함) ────────────────────

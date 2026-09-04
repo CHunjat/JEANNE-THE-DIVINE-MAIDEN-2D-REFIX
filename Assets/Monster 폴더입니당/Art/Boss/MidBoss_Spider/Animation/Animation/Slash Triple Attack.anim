@@ -234,9 +234,9 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 2.45
-    functionName: RelayEvent
-    data: AnimEvent_EndPattern
+  - time: 1.6
+    functionName: OnStampVFXPlay
+    data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
@@ -244,6 +244,13 @@ AnimationClip:
   - time: 1.68
     functionName: OnBossAttackStomp
     data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 2.45
+    functionName: RelayEvent
+    data: AnimEvent_EndPattern
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
