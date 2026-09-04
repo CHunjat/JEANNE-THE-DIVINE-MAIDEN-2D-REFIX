@@ -18479,7 +18479,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 128560288717998885, guid: 334fa4861a02590428381950be735627, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.82
+      value: -0.41
       objectReference: {fileID: 0}
     - target: {fileID: 128560288717998885, guid: 334fa4861a02590428381950be735627, type: 3}
       propertyPath: m_LocalPosition.y
@@ -73661,7 +73661,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6944427238180338096, guid: 81f48fe67fdfc434d96b4dffb6b7fc00, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.82
+      value: -0.44
       objectReference: {fileID: 0}
     - target: {fileID: 6944427238180338096, guid: 81f48fe67fdfc434d96b4dffb6b7fc00, type: 3}
       propertyPath: m_LocalPosition.y
@@ -73706,6 +73706,10 @@ PrefabInstance:
     - target: {fileID: 6944427238180338097, guid: 81f48fe67fdfc434d96b4dffb6b7fc00, type: 3}
       propertyPath: lengthInSec
       value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6944427238180338097, guid: 81f48fe67fdfc434d96b4dffb6b7fc00, type: 3}
+      propertyPath: moveWithTransform
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6944427238180338097, guid: 81f48fe67fdfc434d96b4dffb6b7fc00, type: 3}
       propertyPath: InitialModule.startLifetime.scalar
