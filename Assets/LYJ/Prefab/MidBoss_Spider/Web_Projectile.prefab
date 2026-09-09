@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 8235875506165085885}
   - component: {fileID: 5393336727366202125}
   - component: {fileID: 249854211461864793}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: Web_Projectile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -116,8 +116,6 @@ MonoBehaviour:
   playerYOffset: -5
   rotateToDirection: 1
   rotationAngleOffset: 0
-  colliderOffsetRight: {x: 0, y: 0}
-  colliderOffsetLeft: {x: 0, y: 0}
 --- !u!114 &249854211461864793
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -144,7 +142,7 @@ GameObject:
   - component: {fileID: 1658966222029453393}
   - component: {fileID: 9091273677380416479}
   - component: {fileID: 5297907846578517772}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: Visual
   m_TagString: Untagged
   m_Icon: {fileID: 0}

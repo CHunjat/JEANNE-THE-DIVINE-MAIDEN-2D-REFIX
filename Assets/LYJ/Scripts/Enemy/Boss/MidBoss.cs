@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 // 보스 메인 상태 및 패턴 제어하는 메인 스크립트
-// 루트 모션 끄고 추격 상태에서 미끄러지는 현상 완벽 방지함
+// 루트 모션 끄고 추격 상태에서 미끄러지는 현상 완벽 방지
 public class MidBoss : EnemyFSM
 {
     [Header("페이즈 설정")]
@@ -63,7 +63,10 @@ public class MidBoss : EnemyFSM
     [SerializeField] private float behindClearingRange = 4f;
 
     private bool isDeadProcessed = false;
+
+    // 수정 : 히트박스의 Transform X값과 Collider Offset X값을 따로따로 완벽하게 기억
     private Dictionary<GameObject, float> hitboxBaseX = new Dictionary<GameObject, float>();
+    private Dictionary<Collider2D, float> colliderBaseOffsetX = new Dictionary<Collider2D, float>();
 
     protected override void Awake()
     {
@@ -115,12 +118,23 @@ public class MidBoss : EnemyFSM
         foreach (var hb in hitboxes)
         {
             if (hb != null)
-                hitboxBaseX[hb] = Mathf.Abs(hb.transform.localPosition.x);
+            {
+                // 절대값(Mathf.Abs) 제거: 기획자가 세팅한 고유의 좌우 위치값을 그대로 저장
+                hitboxBaseX[hb] = hb.transform.localPosition.x;
+
+                // 콜라이더 오프셋 값도 캐싱
+                Collider2D col = hb.GetComponent<Collider2D>();
+                if (col != null)
+                {
+                    colliderBaseOffsetX[col] = col.offset.x;
+                }
+            }
         }
     }
 
     protected override void OnFacingChanged(bool facingLeft)
     {
+        // 1. Transform 위치 반전
         foreach (var kvp in hitboxBaseX)
         {
             GameObject hb = kvp.Key;
@@ -128,6 +142,16 @@ public class MidBoss : EnemyFSM
             Vector3 pos = hb.transform.localPosition;
             pos.x = facingLeft ? -baseX : baseX;
             hb.transform.localPosition = pos;
+        }
+
+        // 2. Collider 오프셋 반전 (몸 안쪽에 박히던 문제 해결)
+        foreach (var kvp in colliderBaseOffsetX)
+        {
+            Collider2D col = kvp.Key;
+            float baseOffsetX = kvp.Value;
+            Vector2 offset = col.offset;
+            offset.x = facingLeft ? -baseOffsetX : baseOffsetX;
+            col.offset = offset;
         }
 
         if (webFirePoint != null)
@@ -269,7 +293,6 @@ public class MidBoss : EnemyFSM
             return;
         }
 
-        // [추가됨] 플레이어가 노란색 원(원거리) 밖으로 나가면 즉시 압박하도록 쿨타임 강제 단축
         if (GetCurrentDistanceType() == BossPatternBase.DistanceType.Far)
         {
             if (nextAttackTime > Time.time + 0.3f)
@@ -343,8 +366,6 @@ public class MidBoss : EnemyFSM
 
         if (Time.time < nextAttackTime)
         {
-            // [핵심 수정 부분] 
-            // 사거리 안에 있더라도 쿨타임 중이면 멍때리지(return) 말고 무조건 Chase로 넘겨서 스텝을 밟게 만듦
             ChangeState(EnemyState.Chase);
             return;
         }

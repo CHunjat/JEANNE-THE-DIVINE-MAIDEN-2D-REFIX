@@ -2,7 +2,8 @@ using UnityEngine;
 
 // =====================================================
 // MidBossWebProjectile.cs
-// [수정] 형이 짠 완벽한 각도 제한 로직 유지 + 분리 현상(Collider Offset) 완벽 동기화
+// 레이어 방어 로직 복구 (허공에서 증발하는 버그 완벽 해결)
+// 데미지는 프리팹의 EnemyHitbox가 알아서 처리하도록 간섭 안 함
 // =====================================================
 public class MidBossWebProjectile : MonoBehaviour
 {
@@ -24,7 +25,6 @@ public class MidBossWebProjectile : MonoBehaviour
     private SpriteRenderer visualRenderer;
     private CircleCollider2D myCollider;
 
-    // ★ 분리 현상 방지용 원본 위치 저장 변수
     private Vector2 originalColliderOffset;
     private Vector3 originalVisualLocalPos;
 
@@ -39,7 +39,6 @@ public class MidBossWebProjectile : MonoBehaviour
         visualRenderer = GetComponentInChildren<SpriteRenderer>();
         myCollider = GetComponent<CircleCollider2D>();
 
-        // 1. 발사될 때 맨 처음 맞춰둔 완벽한 원본 위치와 오프셋을 기억해둠!
         if (myCollider != null) originalColliderOffset = myCollider.offset;
         if (visualRenderer != null) originalVisualLocalPos = visualRenderer.transform.localPosition;
 
@@ -68,24 +67,20 @@ public class MidBossWebProjectile : MonoBehaviour
         }
     }
 
-    // 좌우는 flipX(거울 반사)가 전담, 회전은 오직 상하 기울기(-90~90도)만 담당
     private void ApplyRotation()
     {
         if (!rotateToDirection) return;
 
         bool facingLeft = currentDir.x < 0f;
 
-        // 형이 짠 완벽한 각도 제한 로직 (절대 안 건드림!)
         float tiltAngle = Mathf.Atan2(currentDir.y, Mathf.Abs(currentDir.x)) * Mathf.Rad2Deg;
         float rotationZ = facingLeft ? -tiltAngle : tiltAngle;
         transform.rotation = Quaternion.Euler(0f, 0f, rotationZ + rotationAngleOffset);
 
-        // ★ 핵심 해결: flipX로 그림이 휙 뒤집힐 때, 물리적인 위치(Collider, Transform)도 멱살 잡고 같이 뒤집어줌!
         if (visualRenderer != null)
         {
             visualRenderer.flipX = facingLeft;
 
-            // 그림의 로컬 좌표 동기화
             Vector3 localPos = originalVisualLocalPos;
             localPos.x = facingLeft ? -localPos.x : localPos.x;
             visualRenderer.transform.localPosition = localPos;
@@ -93,7 +88,6 @@ public class MidBossWebProjectile : MonoBehaviour
 
         if (myCollider != null)
         {
-            // 콜라이더 타격점 좌표 동기화 (이제 절대 안 찢어짐)
             Vector2 offset = originalColliderOffset;
             offset.x = facingLeft ? -offset.x : offset.x;
             myCollider.offset = offset;
@@ -118,13 +112,19 @@ public class MidBossWebProjectile : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        // 방어 코드 복구
+        // 플레이어의 무기나 감지기 같은 껍데기가 아니라, 진짜 'Player' 레이어(몸통)에만 반응함
         if (other.gameObject.layer != LayerMask.NameToLayer("Player")) return;
+
         PlayerStats playerStats = other.GetComponentInParent<PlayerStats>();
         PlayerController playerCtrl = other.GetComponentInParent<PlayerController>();
+
         if (playerStats != null && playerCtrl != null)
         {
-            // playerCtrl.ApplyBind(bindDuration); 
+            // playerCtrl.ApplyBind(bindDuration);
         }
+
+        // 진짜 몸통에 닿았을 때만 파괴 (이때 EnemyHitbox가 정상적으로 데미지를 줌)
         Destroy(gameObject);
     }
 }
