@@ -227,6 +227,13 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
+  - time: 0.61
+    functionName: OnStampVFXPlay
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
   - time: 0.62
     functionName: OnBossAttackStomp
     data: 
@@ -244,6 +251,13 @@ AnimationClip:
   - time: 1.61
     functionName: RelayEvent
     data: AnimEvent_DoubleStamp
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 1.61
+    functionName: OnStampVFXPlay
+    data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0

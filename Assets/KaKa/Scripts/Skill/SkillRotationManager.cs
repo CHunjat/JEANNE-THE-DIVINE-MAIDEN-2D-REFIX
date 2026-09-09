@@ -4,167 +4,431 @@ using UnityEngine;
 
 public class SkillRotationManager : MonoBehaviour
 {
-    [Header("Skill Data (Logic)")]
+    [Header("Skill Data")]
     public SkillData[] skills = new SkillData[3];
 
-    [Header("Skill Parent Objects (UI)")]
-    [Tooltip("Skill_1, Skill_2, Skill_3 같은 최상위 부모 RectTransform을 순서대로 연결해 주세요.")]
+    [Header("Skill UI")]
+    [Tooltip("Skill_1, Skill_2, Skill_3 순서대로 연결")]
     public RectTransform[] skillSlots = new RectTransform[3];
 
     [Header("Connection")]
-    [Tooltip("씬에 배치된 플레이어(PlayerController)를 연결해 주세요. 원본 코드는 절대 건드리지 않습니다!")]
     public PlayerController playerController;
 
-    [Header("Curve Settings")]
-    public float curveOffset = 80f;
+    [Header("Carousel Position")]
+    [Tooltip("현재 선택된 스킬 위치")]
+    [SerializeField] private Vector2 centerPosition = Vector2.zero;
+
+    [Tooltip("왼쪽 슬롯 위치")]
+    [SerializeField] private Vector2 leftPosition = new Vector2(-65f, 8f);
+
+    [Tooltip("오른쪽 슬롯 위치")]
+    [SerializeField] private Vector2 rightPosition = new Vector2(65f, 8f);
+
+    [Header("Carousel Scale")]
+    [SerializeField] private float centerScale = 1f;
+    [SerializeField] private float sideScale = 0.7f;
+
+    [Header("Carousel Alpha")]
+    [Range(0f, 1f)]
+    [SerializeField] private float centerAlpha = 1f;
+
+    [Range(0f, 1f)]
+    [SerializeField] private float sideAlpha = 0.3f;
+
+    [Header("Animation")]
+    [SerializeField] private float moveDuration = 0.3f;
+    [SerializeField] private Ease moveEase = Ease.OutCubic;
 
     [Header("Fixed UI")]
     public TextMeshProUGUI fixedNeedCountText;
 
-    // 원본 레이아웃의 고정 위치 및 크기를 기억할 배열 (배열을 절대 셔플하지 않고 보존합니다)
-    private Vector2[] baseAnchorPositions = new Vector2[3];
-    private Vector3[] baseScales = new Vector3[3];
-    private SkillSlot[] skillSlotScripts = new SkillSlot[3];
+    private SkillSlot[] skillSlotScripts;
+    private CanvasGroup[] canvasGroups;
 
     private PlayerController.SkillSlot lastKnownSkillSlot;
-    private object lastPlayerState = null;
+
+    private void Awake()
+    {
+        int count = skillSlots.Length;
+
+        skillSlotScripts = new SkillSlot[count];
+        canvasGroups = new CanvasGroup[count];
+
+        for (int i = 0; i < count; i++)
+        {
+            if (skillSlots[i] == null)
+                continue;
+
+            // 기존 SkillSlot 스크립트 찾기
+            skillSlotScripts[i] =
+                skillSlots[i].GetComponentInChildren<SkillSlot>();
+
+            // CanvasGroup이 없으면 자동 생성
+            canvasGroups[i] =
+                skillSlots[i].GetComponent<CanvasGroup>();
+
+            if (canvasGroups[i] == null)
+            {
+                canvasGroups[i] =
+                    skillSlots[i].gameObject.AddComponent<CanvasGroup>();
+            }
+        }
+    }
 
     private void Start()
     {
-        // 1. 초기 인스펙터에 배치된 순서대로 위치와 크기, 스크립트 원본 고정 캐싱
-        for (int i = 0; i < skillSlots.Length; i++)
+        if (playerController == null)
         {
-            if (skillSlots[i] != null)
-            {
-                baseAnchorPositions[i] = skillSlots[i].anchoredPosition;
-                baseScales[i] = skillSlots[i].localScale;
-                skillSlotScripts[i] = skillSlots[i].GetComponentInChildren<SkillSlot>();
-            }
+            Debug.LogError(
+                "SkillRotationManager : PlayerController가 연결되지 않았습니다."
+            );
+
+            return;
         }
 
-        if (playerController != null)
-        {
-            lastKnownSkillSlot = playerController.currentSkillSlot;
-            if (playerController.StateMachine != null)
-            {
-                lastPlayerState = playerController.StateMachine.CurrentState;
-            }
-        }
+        lastKnownSkillSlot =
+            playerController.currentSkillSlot;
 
         UpdateAllSlotsUI();
-        AnimateSlotsToCurrentSlot(true); // 시작할 때 현재 슬롯 위치 정렬
+
+        // 시작할 때는 애니메이션 없이 바로 위치
+        UpdateCarousel(true);
+
         UpdateCostText();
     }
 
     private void Update()
     {
-        if (playerController == null) return;
+        if (playerController == null)
+            return;
 
-        // 2. 플레이어의 슬롯이 변경된 것이 확인되면 UI 카루셀 회전 애니메이션 실행
+        // 선택 슬롯이 변경됨
         if (playerController.currentSkillSlot != lastKnownSkillSlot)
         {
-            AnimateSlotsToCurrentSlot(false);
-            lastKnownSkillSlot = playerController.currentSkillSlot;
+            lastKnownSkillSlot =
+                playerController.currentSkillSlot;
+
+            UpdateCarousel(false);
             UpdateCostText();
         }
     }
 
-    // 스킬 관련 상태 클래스인지 이름을 통해 판별하는 방어 코드
-    private bool IsSkillState(object state)
+    // =========================================
+    // 캐러셀
+    // =========================================
+
+    private void UpdateCarousel(bool instant)
     {
-        if (state == null) return false;
-        string stateName = state.GetType().Name.ToLower();
-        // 플레이어 상태창의 클래스명에 아래 키워드가 들어가면 스킬 시전 중으로 판단
-        return stateName.Contains("heavy") || stateName.Contains("lightning") || stateName.Contains("heal") || stateName.Contains("skill");
+        int currentIndex =
+            (int)playerController.currentSkillSlot;
+
+        int count = skillSlots.Length;
+
+        for (int i = 0; i < count; i++)
+        {
+            RectTransform slot = skillSlots[i];
+
+            if (slot == null)
+                continue;
+
+            /*
+             * relativeIndex
+             *
+             * 0 = 현재 선택 슬롯
+             * 1 = 오른쪽 슬롯
+             * 2 = 왼쪽 슬롯
+             *
+             * 예:
+             *
+             * 현재 Skill1
+             *
+             * Skill3   Skill1   Skill2
+             *  LEFT    CENTER   RIGHT
+             */
+
+            int relativeIndex =
+                (i - currentIndex + count) % count;
+
+            Vector2 targetPosition;
+            float targetScale;
+            float targetAlpha;
+
+            // ================================
+            // CENTER
+            // ================================
+
+            if (relativeIndex == 0)
+            {
+                targetPosition = centerPosition;
+                targetScale = centerScale;
+                targetAlpha = centerAlpha;
+
+                // 선택 슬롯이 항상 가장 앞에 그려짐
+                slot.SetAsLastSibling();
+            }
+
+            // ================================
+            // RIGHT
+            // ================================
+
+            else if (relativeIndex == 1)
+            {
+                targetPosition = rightPosition;
+                targetScale = sideScale;
+                targetAlpha = sideAlpha;
+            }
+
+            // ================================
+            // LEFT
+            // ================================
+
+            else
+            {
+                targetPosition = leftPosition;
+                targetScale = sideScale;
+                targetAlpha = sideAlpha;
+            }
+
+            AnimateSlot(
+                i,
+                targetPosition,
+                targetScale,
+                targetAlpha,
+                instant
+            );
+        }
+
+        // SetAsLastSibling 때문에 Hierarchy 순서가 바뀌더라도
+        // skills 배열 자체는 전혀 변경되지 않음.
     }
 
-    // 플레이어의 실제 타겟 스킬 슬롯을 다음 칸으로 교체하는 함수
-    private void RotatePlayerSkillSlot()
+    private void AnimateSlot(
+        int index,
+        Vector2 targetPosition,
+        float targetScale,
+        float targetAlpha,
+        bool instant)
     {
-        int currentSlotInt = (int)playerController.currentSkillSlot;
-        int nextSlotInt = (currentSlotInt + 1) % 3; // 3개 슬롯 순환 공식을 적용합니다.
-        playerController.currentSkillSlot = (PlayerController.SkillSlot)nextSlotInt;
+        RectTransform slot = skillSlots[index];
+        CanvasGroup canvasGroup = canvasGroups[index];
+
+        if (slot == null)
+            return;
+
+        // 기존 Tween 제거
+        slot.DOKill();
+
+        if (canvasGroup != null)
+            canvasGroup.DOKill();
+
+        if (instant)
+        {
+            slot.anchoredPosition = targetPosition;
+            slot.localScale =
+                Vector3.one * targetScale;
+
+            if (canvasGroup != null)
+                canvasGroup.alpha = targetAlpha;
+
+            return;
+        }
+
+        // 위치 이동
+        slot.DOAnchorPos(
+                targetPosition,
+                moveDuration
+            )
+            .SetEase(moveEase)
+            .SetUpdate(true);
+
+        // 크기 이동
+        slot.DOScale(
+                targetScale,
+                moveDuration
+            )
+            .SetEase(moveEase)
+            .SetUpdate(true);
+
+        // 투명도 이동
+        if (canvasGroup != null)
+        {
+            canvasGroup
+                .DOFade(
+                    targetAlpha,
+                    moveDuration
+                )
+                .SetEase(moveEase)
+                .SetUpdate(true);
+        }
     }
 
-    // 💡 UI 스킬 장착창과 실시간 동기화 데이터 연동
+    // =========================================
+    // 장착 스킬 데이터 동기화
+    // =========================================
+
     public void SyncSkills(SkillData[] newSkills)
     {
-        int count = Mathf.Min(skills.Length, newSkills.Length);
+        if (newSkills == null)
+            return;
+
+        int count =
+            Mathf.Min(
+                skills.Length,
+                newSkills.Length
+            );
+
         for (int i = 0; i < count; i++)
         {
             skills[i] = newSkills[i];
         }
+
         UpdateAllSlotsUI();
         UpdateCostText();
     }
 
-    /// <summary>
-    /// 수학적 공식에 의거하여 각 UI 슬롯들을 현재 활성화된 슬롯 기준으로 재정렬 및 회전 연출합니다.
-    /// </summary>
-    private void AnimateSlotsToCurrentSlot(bool isInstant)
-    {
-        float duration = isInstant ? 0f : 0.35f;
-        int currentSlotIndex = (int)playerController.currentSkillSlot;
-
-        for (int i = 0; i < skillSlots.Length; i++)
-        {
-            if (skillSlots[i] == null) continue;
-
-            // ⭐ 고정 맵핑 공식: (내 인덱스 - 현재 활성화된 슬롯 인덱스 + 3) % 3
-            // 이 공식을 사용하면 배열을 뒤섞지 않고도 활성화된 UI가 항상 중앙(0번 자리)으로 오게 됩니다.
-            int targetPosIndex = (i - currentSlotIndex + 3) % 3;
-
-            Vector2 endPos = baseAnchorPositions[targetPosIndex];
-            Vector3 endScale = baseScales[targetPosIndex];
-
-            RectTransform rect = skillSlots[i];
-            rect.DOKill();
-
-            if (isInstant)
-            {
-                rect.anchoredPosition = endPos;
-                rect.localScale = endScale;
-            }
-            else
-            {
-                Vector2 startPos = rect.anchoredPosition;
-
-                // 유저님의 원본 아름다운 포물선(Sin) 곡선 연출 적용
-                DOTween.To(() => 0f, t => {
-                    Vector2 currentLinearPos = Vector2.Lerp(startPos, endPos, t);
-                    float sinOffset = Mathf.Sin(t * Mathf.PI) * curveOffset;
-                    rect.anchoredPosition = new Vector2(currentLinearPos.x - sinOffset, currentLinearPos.y);
-                }, 1f, duration).SetEase(Ease.OutQuad);
-
-                rect.DOScale(endScale, duration).SetEase(Ease.OutQuad);
-            }
-        }
-    }
-
     public void UpdateAllSlotsUI()
     {
-        int count = Mathf.Min(skillSlots.Length, skills.Length, skillSlotScripts.Length);
+        int count =
+            Mathf.Min(
+                skillSlots.Length,
+                skills.Length,
+                skillSlotScripts.Length
+            );
+
         for (int i = 0; i < count; i++)
         {
             if (skillSlotScripts[i] != null)
             {
-                skillSlotScripts[i].UpdateSlot(skills[i]);
+                skillSlotScripts[i]
+                    .UpdateSlot(skills[i]);
             }
         }
     }
 
+    // =========================================
+    // NeedCount
+    // =========================================
+
     private void UpdateCostText()
     {
-        if (fixedNeedCountText == null) return;
+        if (fixedNeedCountText == null)
+            return;
 
-        int idx = (int)playerController.currentSkillSlot;
-        if (idx >= 0 && idx < skills.Length && skills[idx] != null)
+        if (playerController == null)
+            return;
+
+        int index =
+            (int)playerController.currentSkillSlot;
+
+        if (
+            index >= 0 &&
+            index < skills.Length &&
+            skills[index] != null
+        )
         {
-            fixedNeedCountText.text = skills[idx].cost;
+            fixedNeedCountText.text =
+                skills[index].cost;
         }
         else
         {
             fixedNeedCountText.text = "-";
         }
     }
+
+    private void OnDestroy()
+    {
+        for (int i = 0; i < skillSlots.Length; i++)
+        {
+            if (skillSlots[i] != null)
+            {
+                skillSlots[i].DOKill();
+            }
+
+            if (
+                canvasGroups != null &&
+                i < canvasGroups.Length &&
+                canvasGroups[i] != null
+            )
+            {
+                canvasGroups[i].DOKill();
+            }
+        }
+    }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        // 플레이 중에는 기존 Update/DOTween이 담당
+        if (Application.isPlaying)
+            return;
+
+        PreviewCarouselInEditor();
+    }
+
+    private void PreviewCarouselInEditor()
+    {
+        if (skillSlots == null || skillSlots.Length == 0)
+            return;
+
+        int currentIndex = 0;
+
+        // PlayerController가 연결돼 있으면 현재 선택 슬롯 기준
+        if (playerController != null)
+        {
+            currentIndex = (int)playerController.currentSkillSlot;
+        }
+
+        int count = skillSlots.Length;
+
+        for (int i = 0; i < count; i++)
+        {
+            RectTransform slot = skillSlots[i];
+
+            if (slot == null)
+                continue;
+
+            int relativeIndex =
+                (i - currentIndex + count) % count;
+
+            Vector2 targetPosition;
+            float targetScale;
+            float targetAlpha;
+
+            // 현재 선택 슬롯
+            if (relativeIndex == 0)
+            {
+                targetPosition = centerPosition;
+                targetScale = centerScale;
+                targetAlpha = centerAlpha;
+            }
+
+            // 오른쪽 슬롯
+            else if (relativeIndex == 1)
+            {
+                targetPosition = rightPosition;
+                targetScale = sideScale;
+                targetAlpha = sideAlpha;
+            }
+
+            // 왼쪽 슬롯
+            else
+            {
+                targetPosition = leftPosition;
+                targetScale = sideScale;
+                targetAlpha = sideAlpha;
+            }
+
+            // 에디터에서는 애니메이션 없이 즉시 적용
+            slot.anchoredPosition = targetPosition;
+            slot.localScale = Vector3.one * targetScale;
+
+            CanvasGroup group = slot.GetComponent<CanvasGroup>();
+
+            if (group != null)
+            {
+                group.alpha = targetAlpha;
+            }
+        }
+    }
+#endif
 }

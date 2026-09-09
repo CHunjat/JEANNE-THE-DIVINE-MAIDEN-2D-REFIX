@@ -1,37 +1,37 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 /// <summary>
-/// PlayerController / PlayerHealState / ExecuteAttack / ExecuteChargeAttack ¿øº» ÄÚµå¸¦
-/// ÀüÇô ¼öÁ¤ÇÏÁö ¾Ê°í, ÀåÂøÈ­¸é¿¡¼­ µî·ÏÇÑ SkillData¸¦ ±âÁØÀ¸·Î ½ÇÁ¦ ½ºÅ³À» ¹ßµ¿½ÃÅ°´Â ºê¸´Áö.
+/// PlayerController / PlayerHealState / ExecuteAttack / ExecuteChargeAttack ì›ë³¸ ì½”ë“œë¥¼
+/// ì „í˜€ ìˆ˜ì •í•˜ì§€ ì•Šê³ , ì¥ì°©í™”ë©´ì—ì„œ ë“±ë¡í•œ SkillDataë¥¼ ê¸°ì¤€ìœ¼ë¡œ ì‹¤ì œ ìŠ¤í‚¬ì„ ë°œë™ì‹œí‚¤ëŠ” ë¸Œë¦¿ì§€.
 ///
-/// [ÇÊ¼ö ¼¼ÆÃ]
-/// Edit > Project Settings > Script Execution Order ¿¡¼­
-/// ÀÌ ½ºÅ©¸³Æ®(SkillActivationBridge)¸¦ Default Timeº¸´Ù "À§ÂÊ"¿¡ ¿Àµµ·Ï ¹èÄ¡ÇØÁÖ¼¼¿ä.
-/// ¡æ PlayerController.Update()º¸´Ù ¸ÕÀú ½ÇÇàµÇ¾î¾ß HAttackPressed ÀÔ·ÂÀ» ¸ÕÀú ¼Ò¸ğÇØ¼­
-///    PlayerController.HandleActiveSkillInput()ÀÇ Áßº¹ ¹ßµ¿À» ¸·À» ¼ö ÀÖ½À´Ï´Ù.
+/// [í•„ìˆ˜ ì„¸íŒ…]
+/// Edit > Project Settings > Script Execution Order ì—ì„œ
+/// ì´ ìŠ¤í¬ë¦½íŠ¸(SkillActivationBridge)ë¥¼ Default Timeë³´ë‹¤ "ìœ„ìª½"ì— ì˜¤ë„ë¡ ë°°ì¹˜í•´ì£¼ì„¸ìš”.
+/// â†’ PlayerController.Update()ë³´ë‹¤ ë¨¼ì € ì‹¤í–‰ë˜ì–´ì•¼ HAttackPressed ì…ë ¥ì„ ë¨¼ì € ì†Œëª¨í•´ì„œ
+///    PlayerController.HandleActiveSkillInput()ì˜ ì¤‘ë³µ ë°œë™ì„ ë§‰ì„ ìˆ˜ ìˆìŠµë‹ˆë‹¤.
 ///
-/// [ÇÊ¼ö ¼¼ÆÃ 2]
-/// heavyBaseIndex / lightningIndex °ªÀº ½ÇÁ¦ ¾Ö´Ï¸ŞÀÌ¼Ç ÀÌº¥Æ®¿¡
-/// ExecuteChargeAttack(baseIndex) / ExecuteAttack(index)·Î ¹ÚÁ¦µÈ ¼ıÀÚ¿Í
-/// ¹İµå½Ã µ¿ÀÏÇÏ°Ô ¸ÂÃçÁÖ¼¼¿ä. (Window > Animation ¿¡¼­ ÇØ´ç Å¬¸³ÀÇ ÀÌº¥Æ® È®ÀÎ)
+/// [í•„ìˆ˜ ì„¸íŒ… 2]
+/// heavyBaseIndex / lightningIndex ê°’ì€ ì‹¤ì œ ì• ë‹ˆë©”ì´ì…˜ ì´ë²¤íŠ¸ì—
+/// ExecuteChargeAttack(baseIndex) / ExecuteAttack(index)ë¡œ ë°•ì œëœ ìˆ«ìì™€
+/// ë°˜ë“œì‹œ ë™ì¼í•˜ê²Œ ë§ì¶°ì£¼ì„¸ìš”. (Window > Animation ì—ì„œ í•´ë‹¹ í´ë¦½ì˜ ì´ë²¤íŠ¸ í™•ì¸)
 /// </summary>
 public class SkillActivationBridge : MonoBehaviour
 {
-    [Header("¿¬°á")]
+    [Header("ì—°ê²°")]
     public PlayerController playerController;
     public SkillRotationManager skillRotationManager;
 
-    [Header("½½·Ô ÀüÈ¯ Å°")]
+    [Header("ìŠ¬ë¡¯ ì „í™˜ í‚¤")]
     public KeyCode rotateKey = KeyCode.Tab;
 
-    [Header("attackLibrary ÀÎµ¦½º ¸ÅÇÎ")]
-    [Tooltip("HeavyChargeState ¾Ö´Ï¸ŞÀÌ¼Ç ÀÌº¥Æ®ÀÇ ExecuteChargeAttack(baseIndex) °ª°ú µ¿ÀÏÇÏ°Ô")]
-    public int heavyBaseIndex = 0; // ½ÇÁ¦ »ç¿ë ÀÎµ¦½º = heavyBaseIndex + (chargeLevel - 1)
+    [Header("attackLibrary ì¸ë±ìŠ¤ ë§¤í•‘")]
+    [Tooltip("HeavyChargeState ì• ë‹ˆë©”ì´ì…˜ ì´ë²¤íŠ¸ì˜ ExecuteChargeAttack(baseIndex) ê°’ê³¼ ë™ì¼í•˜ê²Œ")]
+    public int heavyBaseIndex = 0; // ì‹¤ì œ ì‚¬ìš© ì¸ë±ìŠ¤ = heavyBaseIndex + (chargeLevel - 1)
 
-    [Tooltip("LightningAttackState ¾Ö´Ï¸ŞÀÌ¼Ç ÀÌº¥Æ®ÀÇ ExecuteAttack(index) °ª°ú µ¿ÀÏÇÏ°Ô")]
+    [Tooltip("LightningAttackState ì• ë‹ˆë©”ì´ì…˜ ì´ë²¤íŠ¸ì˜ ExecuteAttack(index) ê°’ê³¼ ë™ì¼í•˜ê²Œ")]
     public int lightningIndex = 2;
 
-    private SkillData activeHeavySkill;   // Áö±İ Â÷Â¡ ÁßÀÎ Heavy ½ºÅ³ (TabÀ¸·Î ½½·Ô ¹Ù²î¾îµµ Èçµé¸®Áö ¾Ê°Ô Ä³½Ì)
+    private SkillData activeHeavySkill;   // ì§€ê¸ˆ ì°¨ì§• ì¤‘ì¸ Heavy ìŠ¤í‚¬ (Tabìœ¼ë¡œ ìŠ¬ë¡¯ ë°”ë€Œì–´ë„ í”ë“¤ë¦¬ì§€ ì•Šê²Œ ìºì‹±)
     private bool chargedExtraPaid = false;
 
     private SkillData pendingHeavySkill;
@@ -43,7 +43,8 @@ public class SkillActivationBridge : MonoBehaviour
     private SkillData pendingHealSkill;
     private bool healMpConsumed;
 
-    private object lastObservedState;   // »óÅÂ ÁøÀÔ "¼ø°£"À» °¨ÁöÇÏ±â À§ÇÑ ÀÌÀü ÇÁ·¹ÀÓ »óÅÂ ±â·Ï
+    private object lastObservedState;   // ìƒíƒœ ì§„ì… "ìˆœê°„"ì„ ê°ì§€í•˜ê¸° ìœ„í•œ ì´ì „ í”„ë ˆì„ ìƒíƒœ ê¸°ë¡
+
     private void Update()
     {
         if (playerController == null || skillRotationManager == null) return;
@@ -53,12 +54,12 @@ public class SkillActivationBridge : MonoBehaviour
         HandleDeferredMpConsumption();
     }
 
-    // Tab Å°·Î currentSkillSlot ¼øÈ¯ (UI Ä³·¯¼¿Àº SkillRotationManager.Update()ÀÇ Æú¸µÀÌ ÀÚµ¿ ¹İÀÀ)
+    // Tab í‚¤ë¡œ currentSkillSlot ìˆœí™˜ (UI ìºëŸ¬ì…€ì€ SkillRotationManager.Update()ì˜ í´ë§ì´ ìë™ ë°˜ì‘)
     private void HandleSlotRotation()
     {
         if (Input.GetKeyDown(rotateKey))
         {
-            int next = ((int)playerController.currentSkillSlot - 1 + 3) % 3;   // ¡Ú +1 ¡æ -1·Î º¯°æ
+            int next = ((int)playerController.currentSkillSlot - 1 + 3) % 3;   // â˜… +1 â†’ -1ë¡œ ë³€ê²½
             playerController.currentSkillSlot = (PlayerController.SkillSlot)next;
         }
     }
@@ -69,15 +70,14 @@ public class SkillActivationBridge : MonoBehaviour
 
         SkillData equipped = GetEquippedSkillData();
 
-        // 1. [¼öÁ¤] ½ºÅ³ÀÌ ¾øÀ» ¶§: ºÒÇÊ¿äÇÑ »óÅÂ º¯°æ(isSprinting = false µî)À» ´Ù »°½À´Ï´Ù.
-        // ÀÌ·¸°Ô ÇØ¾ß ½ºÇÁ¸°Æ®³ª ´Ş¸®±â Áß¿¡ E¸¦ ´­·¯µµ »óÅÂ ¸Ó½ÅÀÌ ²¿ÀÌÁö ¾Ê½À´Ï´Ù.
+        // 1. [ìˆ˜ì •] ìŠ¤í‚¬ì´ ì—†ì„ ë•Œ: ë¶ˆí•„ìš”í•œ ìƒíƒœ ë³€ê²½(isSprinting = false ë“±)ì„ ë‹¤ ëºìŠµë‹ˆë‹¤.
         if (equipped == null)
         {
             playerController.inputReader.HAttackPressed = false;
             return;
         }
 
-        // ½ºÅ³ ½ÃÀü ÁßÀÎÁö Ã¼Å©
+        // ìŠ¤í‚¬ ì‹œì „ ì¤‘ì¸ì§€ ì²´í¬
         bool isBusyWithSkill =
             playerController.StateMachine.CurrentState == playerController.HeavyReadyState ||
             playerController.StateMachine.CurrentState == playerController.HeavyChargeState ||
@@ -85,17 +85,17 @@ public class SkillActivationBridge : MonoBehaviour
             playerController.StateMachine.CurrentState == playerController.LightningReadyState ||
             playerController.StateMachine.CurrentState == playerController.LightningChargeState ||
             playerController.StateMachine.CurrentState == playerController.LightningAttackState ||
-            playerController.StateMachine.CurrentState == playerController.DashState||
+            playerController.StateMachine.CurrentState == playerController.DashState ||
             playerController.StateMachine.CurrentState == playerController.HealState;
 
-        // 2. [¼öÁ¤] Áßº¹µÈ if ¹®À» ÇÏ³ª·Î ÅëÇÕÇß½À´Ï´Ù.
+        // 2. [ìˆ˜ì •] ì¤‘ë³µëœ if ë¬¸ì„ í•˜ë‚˜ë¡œ í†µí•©í–ˆìŠµë‹ˆë‹¤.
         if (playerController.isSprinting || !playerController.IsGrounded() || isBusyWithSkill)
         {
             playerController.inputReader.HAttackPressed = false;
             return;
         }
 
-        // ½ºÅ³ ½ÇÇà switch ¹®
+        // ìŠ¤í‚¬ ì‹¤í–‰ switch ë¬¸
         switch (equipped.skilltype)
         {
             case SkillType.Heavy:
@@ -155,7 +155,7 @@ public class SkillActivationBridge : MonoBehaviour
     {
         object current = playerController.StateMachine.CurrentState;
 
-        // Heavy: HeavyAttackState ÁøÀÔ ¼ø°£ °áÁ¦ (±âÁ¸°ú µ¿ÀÏ)
+        // Heavy: HeavyAttackState ì§„ì… ìˆœê°„ ê²°ì œ (ê¸°ì¡´ê³¼ ë™ì¼)
         if (current == playerController.HeavyAttackState && lastObservedState != playerController.HeavyAttackState)
         {
             if (pendingHeavySkill != null && !heavyMpConsumed)
@@ -167,7 +167,7 @@ public class SkillActivationBridge : MonoBehaviour
 
                 if (!playerController.playerStats.TryConsumeMp(finalCost))
                 {
-                    Debug.Log("MP ºÎÁ·À¸·Î µ¥¹ÌÁö°¡ 1´Ü°è ¼öÁØÀ¸·Î ÇÏÇâ Àû¿ëµË´Ï´Ù.");
+                    Debug.Log("MP ë¶€ì¡±ìœ¼ë¡œ ë°ë¯¸ì§€ê°€ 1ë‹¨ê³„ ìˆ˜ì¤€ìœ¼ë¡œ í•˜í–¥ ì ìš©ë©ë‹ˆë‹¤.");
                     if (playerController.attackLibrary != null && heavyBaseIndex + 1 < playerController.attackLibrary.Count)
                     {
                         playerController.attackLibrary[heavyBaseIndex + 1] = pendingHeavySkill.attackData;
@@ -176,7 +176,7 @@ public class SkillActivationBridge : MonoBehaviour
             }
         }
 
-        // Lightning: LightningAttackState ÁøÀÔ ¼ø°£ °áÁ¦ (±âÁ¸°ú µ¿ÀÏ)
+        // Lightning: LightningAttackState ì§„ì… ìˆœê°„ ê²°ì œ (ê¸°ì¡´ê³¼ ë™ì¼)
         if (current == playerController.LightningAttackState && lastObservedState != playerController.LightningAttackState)
         {
             if (pendingLightningSkill != null && !lightningMpConsumed)
@@ -186,7 +186,7 @@ public class SkillActivationBridge : MonoBehaviour
             }
         }
 
-        // ¡Ú Heal: HealState ¾È¿¡¼­, ½ÇÁ¦ È¸º¹ ¾Ö´Ï¸ŞÀÌ¼ÇÀÌ 50% ÁöÁ¡À» Áö³ª´Â ¼ø°£ °áÁ¦
+        // â˜… Heal: HealState ì•ˆì—ì„œ, ì‹¤ì œ íšŒë³µ ì• ë‹ˆë©”ì´ì…˜ì´ 50% ì§€ì ì„ ì§€ë‚˜ëŠ” ìˆœê°„ ê²°ì œ
         if (current == playerController.HealState)
         {
             if (pendingHealSkill != null && !healMpConsumed)
@@ -196,13 +196,16 @@ public class SkillActivationBridge : MonoBehaviour
                 {
                     healMpConsumed = true;
                     playerController.playerStats.TryConsumeMp(pendingHealSkill.mpCost);
-                    playerController.playerStats.Heal(pendingHealSkill.healData.healAmount);
+
+                    // ğŸ”¥ ì—ëŸ¬ ìˆ˜ì • ì™„ë£Œ! (í˜„ì¬ ìŠ¤í‚¬ ë ˆë²¨ì— ë§ëŠ” íëŸ‰ì„ í•¨ìˆ˜ë¡œ ë½‘ì•„ì˜´) ğŸ”¥
+                    float finalHeal = pendingHealSkill.healData.GetHealAmount(pendingHealSkill.currentLevel);
+                    playerController.playerStats.Heal(finalHeal);
                 }
             }
         }
         else
         {
-            // Èú »óÅÂ¸¦ ¹ş¾î³µ´Âµ¥(ÇÇ°İ µîÀ¸·Î Áß°£¿¡ ²÷±è) ¾ÆÁ÷ °áÁ¦ ÀüÀÌ¾ú´Ù¸é ±×³É º¸·ù Ãë¼Ò
+            // í ìƒíƒœë¥¼ ë²—ì–´ë‚¬ëŠ”ë°(í”¼ê²© ë“±ìœ¼ë¡œ ì¤‘ê°„ì— ëŠê¹€) ì•„ì§ ê²°ì œ ì „ì´ì—ˆë‹¤ë©´ ê·¸ëƒ¥ ë³´ë¥˜ ì·¨ì†Œ
             pendingHealSkill = null;
         }
 

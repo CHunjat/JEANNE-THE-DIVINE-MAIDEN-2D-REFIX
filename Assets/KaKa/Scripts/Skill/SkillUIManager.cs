@@ -4,19 +4,14 @@ using TMPro;
 
 public class SkillUIManager : MonoBehaviour
 {
-    [Header("Skill Slots")]
+    [Header("등록 스킬 슬롯")]
     public SkillSlotUI[] skillSlots;
 
-    [Header("Global UI (Legacy Text)")]
-    public Text skillCostText;
-    public Text availableSlotsText;
-
-    [Range(10, 100)]
-    public int costFontSize = 35;
-
-    [Header("Skill Info UI (TextMeshPro)")]
+    [Header("Skill Info UI")]
     public GameObject skillInfoPanel;
+
     public Image infoSkillIconImage;
+
     public TextMeshProUGUI infoSkillNameText;
     public TextMeshProUGUI infoSkillTypeText;
     public TextMeshProUGUI infoSkillDescText;
@@ -31,112 +26,207 @@ public class SkillUIManager : MonoBehaviour
     public ActiveSkillManager activeSkillManager;
     public SkillRotationManager skillRotationManager;
 
-    [Header("Confirm Button Actions")]
-    public GameObject inGameUIPanel;
-    public GameObject skillUIPanel;
-
-    // 유니티 인스펙터에서 3개의 체크포인트를 모두 넣어주세요!
-    public CheckpointSkillHandler[] checkpointSkillHandlers;
-
     private int currentSelectedIndex = -1;
+
+    // 슬롯 변경 감지용
     private SkillData[] lastSyncedSkills;
 
     private void Start()
     {
-        if (skillSlots != null)
-        {
-            lastSyncedSkills = new SkillData[skillSlots.Length];
-        }
+        InitializeSlotCache();
 
         UpdateAvailableSlotsCount();
+
         ClearSelection();
     }
 
-    private void Update()
-    {
-        if (skillSlots != null && lastSyncedSkills != null)
-        {
-            bool isAnySlotChanged = false;
-            for (int i = 0; i < skillSlots.Length; i++)
-            {
-                if (skillSlots[i] != null && skillSlots[i].skillData != lastSyncedSkills[i])
-                {
-                    lastSyncedSkills[i] = skillSlots[i].skillData;
-                    isAnySlotChanged = true;
-                }
-            }
+    // ========================================
+    // 슬롯 캐시 초기화
+    // ========================================
 
-            if (isAnySlotChanged)
-            {
-                UpdateAvailableSlotsCount();
-            }
+    private void InitializeSlotCache()
+    {
+        if (skillSlots == null)
+        {
+            lastSyncedSkills = null;
+            return;
         }
 
-        if (currentSelectedIndex != -1)
-        {
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
-            {
-                int nextIndex = currentSelectedIndex;
-                for (int i = 0; i < skillSlots.Length; i++)
-                {
-                    nextIndex = nextIndex - 1;
-                    if (nextIndex < 0) nextIndex = skillSlots.Length - 1;
-
-                    if (skillSlots[nextIndex].skillData != null)
-                    {
-                        SelectSlotByIndex(nextIndex);
-                        break;
-                    }
-                }
-            }
-            else if (Input.GetKeyDown(KeyCode.RightArrow))
-            {
-                int nextIndex = currentSelectedIndex;
-                for (int i = 0; i < skillSlots.Length; i++)
-                {
-                    nextIndex = nextIndex + 1;
-                    if (nextIndex >= skillSlots.Length) nextIndex = 0;
-
-                    if (skillSlots[nextIndex].skillData != null)
-                    {
-                        SelectSlotByIndex(nextIndex);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    public void UpdateAvailableSlotsCount()
-    {
-        if (availableSlotsText == null) return;
-
-        int emptyCount = 0;
-        SkillData[] currentSlotSkills = new SkillData[skillSlots.Length];
+        lastSyncedSkills = new SkillData[skillSlots.Length];
 
         for (int i = 0; i < skillSlots.Length; i++)
         {
             if (skillSlots[i] != null)
             {
-                currentSlotSkills[i] = skillSlots[i].skillData;
-                if (skillSlots[i].skillData == null)
-                {
-                    emptyCount++;
-                }
+                lastSyncedSkills[i] = skillSlots[i].skillData;
             }
-        }
-
-        availableSlotsText.text = "사용 가능한 슬롯 수 <size=" + costFontSize + ">: " + emptyCount + "</size>";
-
-        if (skillRotationManager != null)
-        {
-            try { skillRotationManager.SyncSkills(currentSlotSkills); }
-            catch { }
         }
     }
 
+    private void Update()
+    {
+        CheckSlotChanges();
+        HandleSlotKeyboardNavigation();
+    }
+
+    // ========================================
+    // 슬롯 변경 감지
+    // ========================================
+
+    private void CheckSlotChanges()
+    {
+        if (skillSlots == null ||
+            lastSyncedSkills == null ||
+            lastSyncedSkills.Length != skillSlots.Length)
+        {
+            InitializeSlotCache();
+            return;
+        }
+
+        bool changed = false;
+
+        for (int i = 0; i < skillSlots.Length; i++)
+        {
+            SkillData currentData = null;
+
+            if (skillSlots[i] != null)
+            {
+                currentData = skillSlots[i].skillData;
+            }
+
+            if (lastSyncedSkills[i] != currentData)
+            {
+                lastSyncedSkills[i] = currentData;
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            UpdateAvailableSlotsCount();
+        }
+    }
+
+    // ========================================
+    // ← → 키로 등록 스킬 선택
+    // ========================================
+
+    private void HandleSlotKeyboardNavigation()
+    {
+        if (currentSelectedIndex == -1)
+            return;
+
+        if (skillSlots == null || skillSlots.Length == 0)
+            return;
+
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            SelectNextOccupiedSlot(-1);
+        }
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            SelectNextOccupiedSlot(1);
+        }
+    }
+
+    private void SelectNextOccupiedSlot(int direction)
+    {
+        if (skillSlots == null || skillSlots.Length == 0)
+            return;
+
+        int nextIndex = currentSelectedIndex;
+
+        for (int i = 0; i < skillSlots.Length; i++)
+        {
+            nextIndex += direction;
+
+            if (nextIndex < 0)
+                nextIndex = skillSlots.Length - 1;
+
+            if (nextIndex >= skillSlots.Length)
+                nextIndex = 0;
+
+            SkillSlotUI slot = skillSlots[nextIndex];
+
+            if (slot != null &&
+                !slot.IsLocked &&
+                slot.skillData != null)
+            {
+                SelectSlotByIndex(nextIndex);
+                return;
+            }
+        }
+    }
+
+    // ========================================
+    // 현재 등록 슬롯 → 실제 게임 스킬 동기화
+    // ========================================
+
+    public void UpdateAvailableSlotsCount()
+    {
+        if (skillSlots == null)
+            return;
+
+        SkillData[] currentSlotSkills =
+            new SkillData[skillSlots.Length];
+
+        for (int i = 0; i < skillSlots.Length; i++)
+        {
+            if (skillSlots[i] != null)
+            {
+                currentSlotSkills[i] =
+                    skillSlots[i].skillData;
+            }
+        }
+
+        // 실제 전투 스킬 시스템과 동기화
+        if (skillRotationManager != null)
+        {
+            try
+            {
+                skillRotationManager.SyncSkills(
+                    currentSlotSkills
+                );
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning(
+                    "스킬 슬롯 동기화 중 오류 : " +
+                    e.Message
+                );
+            }
+        }
+
+        // 변경 감지 캐시도 같이 최신화
+        if (lastSyncedSkills == null ||
+            lastSyncedSkills.Length != skillSlots.Length)
+        {
+            lastSyncedSkills =
+                new SkillData[skillSlots.Length];
+        }
+
+        for (int i = 0; i < skillSlots.Length; i++)
+        {
+            lastSyncedSkills[i] =
+                skillSlots[i] != null
+                ? skillSlots[i].skillData
+                : null;
+        }
+    }
+
+    // ========================================
+    // 슬롯 선택
+    // ========================================
+
     public void SelectSlot(SkillSlotUI selectedSlot)
     {
+        if (selectedSlot == null ||
+            selectedSlot.IsLocked ||
+            skillSlots == null)
+        {
+            return;
+        }
+
         for (int i = 0; i < skillSlots.Length; i++)
         {
             if (skillSlots[i] == selectedSlot)
@@ -149,144 +239,167 @@ public class SkillUIManager : MonoBehaviour
 
     private void SelectSlotByIndex(int index)
     {
+        if (skillSlots == null)
+            return;
+
+        if (index < 0 || index >= skillSlots.Length)
+            return;
+
+        SkillSlotUI currentSlot = skillSlots[index];
+
+        if (currentSlot == null ||
+            currentSlot.IsLocked ||
+            currentSlot.skillData == null)
+        {
+            return;
+        }
+
+        // 왼쪽 Active 스킬 목록의 선택 해제
         if (activeSkillManager != null)
         {
             activeSkillManager.ClearSelection();
         }
 
-        if (currentSelectedIndex != -1 && currentSelectedIndex < skillSlots.Length)
+        // 기존 선택 슬롯 해제
+        if (currentSelectedIndex != -1 &&
+            currentSelectedIndex < skillSlots.Length &&
+            skillSlots[currentSelectedIndex] != null)
         {
-            skillSlots[currentSelectedIndex].SetSelectState(false);
+            skillSlots[currentSelectedIndex]
+                .SetSelectState(false);
         }
 
         currentSelectedIndex = index;
-        SkillSlotUI currentSlot = skillSlots[currentSelectedIndex];
+
         currentSlot.SetSelectState(true);
 
-        if (skillCostText != null && currentSlot.skillData != null)
+        ShowSkillInfo(currentSlot.skillData);
+    }
+
+    // ========================================
+    // 상세정보 표시
+    // ========================================
+
+    private void ShowSkillInfo(SkillData data)
+    {
+        if (data == null)
+            return;
+
+        if (skillInfoPanel != null)
         {
-            skillCostText.text = "스킬 코스트 <size=" + costFontSize + ">: " + currentSlot.skillData.cost + "</size>";
+            skillInfoPanel.SetActive(true);
         }
 
-        if (currentSlot.skillData != null)
+        if (infoSkillNameText != null)
         {
-            if (skillInfoPanel != null) skillInfoPanel.SetActive(true);
+            infoSkillNameText.text = data.skillName;
+        }
 
-            if (infoSkillNameText != null) infoSkillNameText.text = currentSlot.skillData.skillName;
-            if (infoSkillDescText != null) infoSkillDescText.text = currentSlot.skillData.description;
-            if (infoSkillTypeText != null) infoSkillTypeText.text = currentSlot.skillData.skilltype.ToString();
+        if (infoSkillTypeText != null)
+        {
+            infoSkillTypeText.text =
+                data.skilltype.ToString();
+        }
 
-            if (infoRequireFaithText != null) infoRequireFaithText.text = "요구 신앙심 수치 : -";
-            if (infoRequireSPText != null) infoRequireSPText.text = "강화 SP : -";
+        if (infoSkillDescText != null)
+        {
+            infoSkillDescText.text =
+                data.description;
+        }
 
-            if (infoSkillCostText != null) infoSkillCostText.text = "스킬 코스트 : " + currentSlot.skillData.cost.ToString();
-            if (infoUsedSlotText != null) infoUsedSlotText.text = "사용 슬롯 수 : " + currentSlot.skillData.usedslot.ToString();
+        if (infoRequireFaithText != null)
+        {
+            infoRequireFaithText.text =
+                "요구 신앙심 수치 : -";
+        }
 
-            if (infoSkillIconImage != null && currentSlot.skillData.skillIcon != null)
+        if (infoRequireSPText != null)
+        {
+            infoRequireSPText.text =
+                "강화 SP : -";
+        }
+
+        if (infoSkillCostText != null)
+        {
+            infoSkillCostText.text =
+                "스킬 코스트 : " + data.cost;
+        }
+
+        if (infoUsedSlotText != null)
+        {
+            infoUsedSlotText.text =
+                "사용 슬롯 수 : " + data.usedslot;
+        }
+
+        if (infoSkillIconImage != null)
+        {
+            if (data.skillIcon != null)
             {
-                infoSkillIconImage.sprite = currentSlot.skillData.skillIcon;
+                infoSkillIconImage.sprite =
+                    data.skillIcon;
+
                 infoSkillIconImage.enabled = true;
+            }
+            else
+            {
+                infoSkillIconImage.sprite = null;
+                infoSkillIconImage.enabled = false;
             }
         }
     }
 
+    // ========================================
+    // 선택 해제
+    // ========================================
+
     public void ClearSelection()
     {
-        if (currentSelectedIndex != -1 && currentSelectedIndex < skillSlots.Length)
+        if (skillSlots != null &&
+            currentSelectedIndex != -1 &&
+            currentSelectedIndex < skillSlots.Length &&
+            skillSlots[currentSelectedIndex] != null)
         {
-            skillSlots[currentSelectedIndex].SetSelectState(false);
+            skillSlots[currentSelectedIndex]
+                .SetSelectState(false);
         }
+
         currentSelectedIndex = -1;
 
-        if (skillCostText != null)
+        if (skillInfoPanel != null)
         {
-            skillCostText.text = "스킬 코스트 <size=" + costFontSize + ">: -</size>";
+            skillInfoPanel.SetActive(false);
         }
 
-        if (infoSkillNameText != null) infoSkillNameText.text = "-";
-        if (infoSkillTypeText != null) infoSkillTypeText.text = "-";
-        if (infoSkillDescText != null) infoSkillDescText.text = "선택된 스킬이 없습니다.";
+        if (infoSkillNameText != null)
+            infoSkillNameText.text = "-";
 
-        if (infoRequireFaithText != null) infoRequireFaithText.text = "요구 신앙심 수치 : -";
-        if (infoRequireSPText != null) infoRequireSPText.text = "강화 SP : -";
-        if (infoSkillCostText != null) infoSkillCostText.text = "스킬 코스트 : -";
-        if (infoUsedSlotText != null) infoUsedSlotText.text = "사용 슬롯 수 : -";
+        if (infoSkillTypeText != null)
+            infoSkillTypeText.text = "-";
+
+        if (infoSkillDescText != null)
+            infoSkillDescText.text =
+                "선택된 스킬이 없습니다.";
+
+        if (infoRequireFaithText != null)
+            infoRequireFaithText.text =
+                "요구 신앙심 수치 : -";
+
+        if (infoRequireSPText != null)
+            infoRequireSPText.text =
+                "강화 SP : -";
+
+        if (infoSkillCostText != null)
+            infoSkillCostText.text =
+                "스킬 코스트 : -";
+
+        if (infoUsedSlotText != null)
+            infoUsedSlotText.text =
+                "사용 슬롯 수 : -";
 
         if (infoSkillIconImage != null)
         {
             infoSkillIconImage.sprite = null;
             infoSkillIconImage.enabled = false;
-        }
-    }
-
-    public void OnConfirmButtonClick()
-    {
-        if (inGameUIPanel != null) inGameUIPanel.SetActive(true);
-        if (skillUIPanel != null) skillUIPanel.SetActive(false);
-
-        // ⭐ [수정된 부분] 가장 가까운 체크포인트를 찾아서 닫고, 메인 메뉴를 다시 켭니다.
-        if (checkpointSkillHandlers != null && checkpointSkillHandlers.Length > 0)
-        {
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
-            {
-                CheckpointSkillHandler closestHandler = null;
-                float minDistance = float.MaxValue;
-
-                // 배열에 있는 모든 체크포인트 핸들러와 플레이어 사이의 거리를 계산
-                foreach (var handler in checkpointSkillHandlers)
-                {
-                    if (handler != null)
-                    {
-                        float dist = Vector2.Distance(player.transform.position, handler.transform.position);
-                        if (dist < minDistance)
-                        {
-                            minDistance = dist;
-                            closestHandler = handler; // 가장 가까운 녀석 갱신
-                        }
-                    }
-                }
-
-                // 현재 플레이어가 서 있는(가장 가까운) 체크포인트 처리
-                if (closestHandler != null)
-                {
-                    // 1. 기존에 작성하신 핸들러의 닫기 동작 실행
-                    closestHandler.CloseSkillMenu();
-
-                    // 🔥 2. [핵심 추가] 해당 핸들러와 같은 오브젝트에 있는 Checkpoint 컴포넌트를 찾아 메인 메뉴를 켭니다.
-                    Checkpoint closestCheckpoint = closestHandler.GetComponent<Checkpoint>();
-
-                    // 만약 자식/부모 오브젝트에 있다면 아래 코드로 찾아냅니다.
-                    if (closestCheckpoint == null)
-                        closestCheckpoint = closestHandler.GetComponentInParent<Checkpoint>();
-
-                    // 체크포인트의 메인 메뉴 UI를 다시 활성화!
-                    if (closestCheckpoint != null && closestCheckpoint.menuUI != null)
-                    {
-                        closestCheckpoint.menuUI.SetActive(true);
-                    }
-                }
-            }
-        }
-
-        // 빈 스킬 데이터가 넘어와도 에러 없이 UI가 꺼지도록 방어(Try-Catch)
-        if (skillRotationManager != null && skillSlots != null)
-        {
-            try
-            {
-                for (int i = 0; i < skillRotationManager.skills.Length; i++)
-                {
-                    if (i < skillSlots.Length && skillSlots[i] != null)
-                    {
-                        skillRotationManager.skills[i] = skillSlots[i].skillData;
-                    }
-                }
-                skillRotationManager.UpdateAllSlotsUI();
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogWarning("빈 스킬 슬롯으로 인한 아이콘 갱신 무시됨 : " + e.Message);
-            }
         }
     }
 }

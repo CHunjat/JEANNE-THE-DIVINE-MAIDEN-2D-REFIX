@@ -17,6 +17,12 @@ public class Active_Skill : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     [Range(0f, 1f)]
     public float dragAlpha = 0.5f;
 
+    [Header("Drag Visual")]
+    public RectTransform dragVisual;
+
+    [Header("Selection Effect")]
+    [SerializeField] private SkillSelectionEffect selectionEffect;
+
     // 💡 중앙 통제실과 소통하기 위한 변수 (인펙터에 노출 안 됨)
     [HideInInspector] public ActiveSkillManager manager;
     [HideInInspector] public int skillIndex;
@@ -30,7 +36,14 @@ public class Active_Skill : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     {
         canvasGroup = GetComponent<CanvasGroup>();
         mainCanvas = GetComponentInParent<Canvas>();
+
         UpdateSlotUI();
+
+        // 처음에는 선택 연출 숨김
+        if (selectionEffect != null)
+        {
+            selectionEffect.Hide();
+        }
     }
 
     public void UpdateSlotUI()
@@ -45,8 +58,25 @@ public class Active_Skill : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     // ⭐ 매니저가 이 버튼의 선택 상태를 강제로 제어할 때 쓸 함수
     public void SetSelectState(bool isSelected)
     {
-        if (checkmark != null) checkmark.SetActive(isSelected);
-        if (tooltipText != null) tooltipText.SetActive(isSelected);
+        // 새 선택 테두리 연출
+        if (selectionEffect != null)
+        {
+            if (isSelected)
+            {
+                selectionEffect.Show();
+            }
+            else
+            {
+                selectionEffect.Hide();
+            }
+        }
+
+        // 기존 기능은 일단 유지
+        if (checkmark != null)
+            checkmark.SetActive(isSelected);
+
+        if (tooltipText != null)
+            tooltipText.SetActive(isSelected);
     }
 
     // --- 1. 마우스 호버 기능 ---
@@ -67,73 +97,169 @@ public class Active_Skill : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     // --- 2. 클릭 기능 ---
     public void OnPointerClick(PointerEventData eventData)
     {
-        // 💡 직접 켜지 않고, 매니저에게 "저 클릭됐어요! 다른 애들 끄고 저만 켜주세요"라고 요청합니다.
+        Debug.Log($"[스킬 클릭] {gameObject.name}");
+
         if (manager != null)
         {
             manager.SelectSkill(skillIndex);
+        }
+        else
+        {
+            Debug.LogWarning($"{gameObject.name} : ActiveSkillManager가 아직 연결되지 않았습니다.");
         }
     }
 
     // --- 3. 드래그 앤 드롭 기능 (유지) ---
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (canvasGroup != null) canvasGroup.alpha = dragAlpha;
-
-        if (mainCanvas != null) dragClone = Instantiate(gameObject, mainCanvas.transform);
-        else dragClone = Instantiate(gameObject, transform.root);
-
-        dragClone.transform.localScale = Vector3.one;
-        cloneRect = dragClone.GetComponent<RectTransform>();
-
-        CanvasGroup cloneCanvasGroup = dragClone.GetComponent<CanvasGroup>();
-        if (cloneCanvasGroup != null)
+        // ★ 드래그 시작 시에도 해당 스킬 선택
+        if (manager != null)
         {
-            cloneCanvasGroup.blocksRaycasts = false;
-            cloneCanvasGroup.alpha = 0.8f;
+            manager.SelectSkill(skillIndex);
         }
 
-        Active_Skill cloneScript = dragClone.GetComponent<Active_Skill>();
-        if (cloneScript != null) Destroy(cloneScript);
+        if (canvasGroup != null)
+            canvasGroup.alpha = dragAlpha;
+
+        if (dragVisual == null || mainCanvas == null)
+            return;
+
+        // 원형 프레임 + 아이콘 복제
+        dragClone = Instantiate(
+            dragVisual.gameObject,
+            mainCanvas.transform
+        );
+
+        dragClone.name = "DragSkillVisual";
+
+        cloneRect = dragClone.GetComponent<RectTransform>();
+
+        Vector3 originalLossyScale = dragVisual.lossyScale;
+        Vector3 canvasLossyScale = mainCanvas.transform.lossyScale;
+
+        cloneRect.localScale = new Vector3(
+            originalLossyScale.x / canvasLossyScale.x,
+            originalLossyScale.y / canvasLossyScale.y,
+            1f
+        );
+
+        // ★ 복제본 안의 모든 Graphic Raycast 차단
+        Graphic[] graphics =
+            dragClone.GetComponentsInChildren<Graphic>(true);
+
+        foreach (Graphic graphic in graphics)
+        {
+            graphic.raycastTarget = false;
+        }
+
+        // ★ CanvasGroup으로도 한 번 더 완전히 차단
+        CanvasGroup cloneCanvasGroup =
+            dragClone.GetComponent<CanvasGroup>();
+
+        if (cloneCanvasGroup == null)
+        {
+            cloneCanvasGroup =
+                dragClone.AddComponent<CanvasGroup>();
+        }
+
+        cloneCanvasGroup.blocksRaycasts = false;
+        cloneCanvasGroup.interactable = false;
+        cloneCanvasGroup.ignoreParentGroups = true;
+        cloneCanvasGroup.alpha = 0.85f;
+
+        UpdateDragIconPosition(eventData);
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (dragClone != null && cloneRect != null && mainCanvas != null)
-        {
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                mainCanvas.transform as RectTransform, eventData.position, mainCanvas.worldCamera, out Vector2 localPoint))
-            {
-                cloneRect.anchoredPosition = localPoint;
-            }
-        }
+        UpdateDragIconPosition(eventData);
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (canvasGroup != null) canvasGroup.alpha = 1f;
+        if (canvasGroup != null)
+            canvasGroup.alpha = 1f;
 
-        if (eventData.pointerCurrentRaycast.gameObject != null)
+        GameObject hitObject = eventData.pointerCurrentRaycast.gameObject;
+
+        if (hitObject != null)
         {
-            SkillSlotUI targetSlot = eventData.pointerCurrentRaycast.gameObject.GetComponentInParent<SkillSlotUI>();
+            SkillSlotUI targetSlot =
+                hitObject.GetComponentInParent<SkillSlotUI>();
 
-            if (targetSlot != null && targetSlot.skillData == null)
+            if (targetSlot != null)
             {
-                // 1. 툴팁 텍스트 추출
-                string myTooltipString = "";
-                if (tooltipText != null)
+                Debug.Log(
+                    $"[드롭 슬롯] {targetSlot.name} / " +
+                    $"기존 SkillData: {(targetSlot.skillData != null ? targetSlot.skillData.name : "None")} / " +
+                    $"드래그 SkillData: {(skillData != null ? skillData.name : "None")}"
+                );
+
+                if (targetSlot.skillData == null)
                 {
-                    Text tText = tooltipText.GetComponentInChildren<Text>();
-                    if (tText != null) myTooltipString = tText.text;
+                    Sprite myIconSprite =
+                        skillIconImage != null
+                            ? skillIconImage.sprite
+                            : null;
+
+                    Debug.Log($"[등록 호출] {skillData?.name} → {targetSlot.name}");
+
+                    targetSlot.RegisterSkill(
+                        skillData,
+                        myIconSprite
+                    );
+
+                    Debug.Log(
+                        $"[등록 후] {targetSlot.name} SkillData = " +
+                        $"{(targetSlot.skillData != null ? targetSlot.skillData.name : "None")}"
+                    );
                 }
-
-                // 2. ⭐ [핵심 추가] 원본 이미지 아이콘 직접 추출
-                Sprite myIconSprite = (skillIconImage != null) ? skillIconImage.sprite : null;
-
-                // 데이터, 이미지, 텍스트를 삼위일체로 슬롯에 등록합니다.
-                targetSlot.RegisterSkill(this.skillData, myIconSprite, myTooltipString);
+                else
+                {
+                    Debug.LogWarning(
+                        $"[등록 실패] {targetSlot.name}은 이미 스킬이 등록되어 있음"
+                    );
+                }
+            }
+            else
+            {
+                Debug.LogWarning(
+                    $"[등록 실패] {hitObject.name}에서 SkillSlotUI를 찾지 못함"
+                );
             }
         }
 
-        if (dragClone != null) Destroy(dragClone);
+        if (dragClone != null)
+            Destroy(dragClone);
+    }
+
+    private void UpdateDragIconPosition(PointerEventData eventData)
+    {
+        if (dragClone == null || cloneRect == null || mainCanvas == null)
+            return;
+
+        RectTransform canvasRect = mainCanvas.transform as RectTransform;
+
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            canvasRect,
+            eventData.position,
+            mainCanvas.worldCamera,
+            out Vector2 localPoint))
+        {
+            cloneRect.anchoredPosition = localPoint;
+        }
+    }
+
+    private string GetHierarchyPath(Transform target)
+    {
+        string path = target.name;
+
+        while (target.parent != null)
+        {
+            target = target.parent;
+            path = target.name + "/" + path;
+        }
+
+        return path;
     }
 }
