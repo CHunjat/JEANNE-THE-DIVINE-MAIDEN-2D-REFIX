@@ -7064,9 +7064,6 @@ MonoBehaviour:
   - {fileID: 1986199687}
   - {fileID: 1454028593}
   - {fileID: 1365180294}
-  skillCostText: {fileID: 726802134}
-  availableSlotsText: {fileID: 1698096032}
-  costFontSize: 57
   skillInfoPanel: {fileID: 1193989983}
   infoSkillIconImage: {fileID: 51315206}
   infoSkillNameText: {fileID: 2014136163}
@@ -7078,12 +7075,6 @@ MonoBehaviour:
   infoUsedSlotText: {fileID: 2112749373}
   activeSkillManager: {fileID: 1291931926}
   skillRotationManager: {fileID: 1495872300}
-  inGameUIPanel: {fileID: 969350915}
-  skillUIPanel: {fileID: 290623463}
-  checkpointSkillHandlers:
-  - {fileID: 1595374111}
-  - {fileID: 919890408}
-  - {fileID: 1083267230}
 --- !u!1 &186362608
 GameObject:
   m_ObjectHideFlags: 0
@@ -27546,6 +27537,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22374018e76e23e4b85b82a32bdc38b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SkillUIManager
+  totalAnima: 0
+  allSkillDatas: []
   skillGroupTransform: {fileID: 296808028}
   playerStats: {fileID: 1595899235}
   centerTopText: {fileID: 1698096032}
@@ -33908,6 +33901,8 @@ MonoBehaviour:
   checkmark: {fileID: 1960705509}
   skillData: {fileID: 11400000, guid: 77b878ca85617e54799ee754d9ea316d, type: 2}
   dragAlpha: 0.5
+  dragVisual: {fileID: 0}
+  selectionEffect: {fileID: 0}
   manager: {fileID: 0}
   skillIndex: 0
 --- !u!1 &885821406
@@ -35180,17 +35175,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 911864500}
   m_CullTransparentMesh: 1
---- !u!114 &919890408 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3632625307283068085, guid: 0d208a8483fe751418463a743dd1f20d, type: 3}
-  m_PrefabInstance: {fileID: 1781585045}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 268eb5d9cbb8ca842b326874f65bd25e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CheckpointSkillHandler
 --- !u!114 &919890409 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 840789990498276205, guid: 0d208a8483fe751418463a743dd1f20d, type: 3}
@@ -42737,17 +42721,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1066112142}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1083267230 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3632625307283068085, guid: 0d208a8483fe751418463a743dd1f20d, type: 3}
-  m_PrefabInstance: {fileID: 2063127836}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 268eb5d9cbb8ca842b326874f65bd25e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CheckpointSkillHandler
 --- !u!114 &1083267231 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 840789990498276205, guid: 0d208a8483fe751418463a743dd1f20d, type: 3}
@@ -56644,6 +56617,7 @@ MonoBehaviour:
   - {fileID: 1814538344}
   - {fileID: 878420837}
   skillUIManager: {fileID: 185006469}
+  detailPanelUI: {fileID: 0}
 --- !u!1 &1293465766
 GameObject:
   m_ObjectHideFlags: 0
@@ -58507,6 +58481,7 @@ MonoBehaviour:
   Pause: {fileID: 1823352731}
   Option: {fileID: 229998989}
   uiInputReader: {fileID: 11400000, guid: dba5946685d87664a872476235f8d760, type: 2}
+  playerController: {fileID: 0}
 --- !u!4 &1332477822
 Transform:
   m_ObjectHideFlags: 0
@@ -59441,10 +59416,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f9d7cd6eab0d5746903d9c289219c64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SkillSlotUI
-  tooltipText: {fileID: 1084640104}
-  checkmark: {fileID: 1930710765}
   skillIconImage: {fileID: 1429383104}
-  skillCostText: {fileID: 0}
+  selectionEffect: {fileID: 0}
+  registerEffect: {fileID: 0}
+  isLocked: 0
+  lockObject: {fileID: 0}
   skillData: {fileID: 0}
 --- !u!1 &1365954589
 GameObject:
@@ -62835,10 +62811,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f9d7cd6eab0d5746903d9c289219c64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SkillSlotUI
-  tooltipText: {fileID: 605056193}
-  checkmark: {fileID: 609576369}
   skillIconImage: {fileID: 1703906040}
-  skillCostText: {fileID: 0}
+  selectionEffect: {fileID: 0}
+  registerEffect: {fileID: 0}
+  isLocked: 0
+  lockObject: {fileID: 0}
   skillData: {fileID: 0}
 --- !u!1 &1458798959
 GameObject:
@@ -65832,6 +65809,8 @@ MonoBehaviour:
   checkmark: {fileID: 186362608}
   skillData: {fileID: 11400000, guid: 994c43341899d5e41b027a87bccbf3db, type: 2}
   dragAlpha: 0.5
+  dragVisual: {fileID: 0}
+  selectionEffect: {fileID: 0}
   manager: {fileID: 0}
   skillIndex: 0
 --- !u!1 &1541880451
@@ -67688,17 +67667,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dff0c35ae360ef84b8ad1f609cede395, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Checkpoint
---- !u!114 &1595374111 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3632625307283068085, guid: 0d208a8483fe751418463a743dd1f20d, type: 3}
-  m_PrefabInstance: {fileID: 1874501219}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 268eb5d9cbb8ca842b326874f65bd25e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CheckpointSkillHandler
 --- !u!1 &1595899231
 GameObject:
   m_ObjectHideFlags: 0
@@ -67764,9 +67732,15 @@ MonoBehaviour:
   ParryVFX: {fileID: 624630286}
   parryVFXPoolSize: 3
   parryVFXDuration: 0.5
+  ParryShockwaveVFX: {fileID: 0}
+  parryShockwaveVFXPoolSize: 3
+  parryShockwaveVFXDuration: 0.5
   ParryCountHardVFX: {fileID: 606628672}
   parryCountHardVFXPoolSize: 3
   parryCountHardVFXDuration: 0.5
+  ParryCountLightVFX: {fileID: 0}
+  parryCountLightVFXPoolSize: 3
+  parryCountLightVFXDuration: 0.5
 --- !u!114 &1595899234
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -68109,6 +68083,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8012b6f2619d96f429cb2457067e5d27, type: 2}
   - {fileID: 11400000, guid: 354babe6fd5edc94ba5a228d9045b2b0, type: 2}
   - {fileID: 11400000, guid: 7ea2b2aeb84813249b24c9368d1602cf, type: 2}
+  skillLibrary: []
   useLiveGizmoOnly: 1
   grappleLine: {fileID: 358541449}
   shieldPoint: {fileID: 1830322340}
@@ -68139,6 +68114,7 @@ MonoBehaviour:
   anim_DieAir: AirDie
   coyoteTime: 0.1
   lastGroundedWasSlope: 0
+  canControl: 1
 --- !u!95 &1595899240
 Animator:
   serializedVersion: 7
@@ -79136,6 +79112,8 @@ MonoBehaviour:
   checkmark: {fileID: 2128034135}
   skillData: {fileID: 11400000, guid: b4eb3c7023043e549a6038935766d9b8, type: 2}
   dragAlpha: 0.5
+  dragVisual: {fileID: 0}
+  selectionEffect: {fileID: 0}
   manager: {fileID: 0}
   skillIndex: 0
 --- !u!1001 &1814618384
@@ -278658,10 +278636,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f9d7cd6eab0d5746903d9c289219c64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SkillSlotUI
-  tooltipText: {fileID: 52692426}
-  checkmark: {fileID: 107380027}
   skillIconImage: {fileID: 1905617331}
-  skillCostText: {fileID: 0}
+  selectionEffect: {fileID: 0}
+  registerEffect: {fileID: 0}
+  isLocked: 0
+  lockObject: {fileID: 0}
   skillData: {fileID: 0}
 --- !u!1 &1986204042
 GameObject:
