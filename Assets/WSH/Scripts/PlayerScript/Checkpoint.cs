@@ -132,12 +132,12 @@ public class Checkpoint : MonoBehaviour
         // 1순위: 메인 메뉴가 열려있을 때
         if (menuUI.activeSelf)
         {
-            if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
+            if (Input.GetKeyDown(KeyCode.UpArrow))
             {
                 currentMenuIndex = (currentMenuIndex == 0) ? menuCursors.Length - 1 : currentMenuIndex - 1;
                 UpdateCursorUI();
             }
-            else if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
+            else if (Input.GetKeyDown(KeyCode.DownArrow))
             {
                 currentMenuIndex = (currentMenuIndex == menuCursors.Length - 1) ? 0 : currentMenuIndex + 1;
                 UpdateCursorUI();
@@ -157,6 +157,7 @@ public class Checkpoint : MonoBehaviour
                 interactPromptUI.SetActive(true);
                 playerObj.StateMachine.ChangeState(playerObj.StandUpState);
                 StartCoroutine(FadeAlpha(0f));
+                playerObj.canControl = true;
             }
         }
         // 2순위: 메뉴가 닫혀있고, 플레이어가 범위 내에 있을 때
@@ -192,6 +193,7 @@ public class Checkpoint : MonoBehaviour
 
     private IEnumerator OpenMenuRoutine()
     {
+        playerObj.canControl = false;
         interactPromptUI.SetActive(false);
 
         if (dimmerSprite != null)
@@ -241,7 +243,7 @@ public class Checkpoint : MonoBehaviour
             if (teleportCursors[i] != null) teleportCursors[i].SetActive(i == currentTeleportIndex);
     }
 
-    // 🔥 [핵심 연출 로직] 번쩍임 방지 + 완벽한 타이밍
+    //  번쩍임 방지 + 완벽한 타이밍
     private IEnumerator TeleportRoutine(Checkpoint destination)
     {
         // 텔로포트 SFX 소리 추가
@@ -260,7 +262,7 @@ public class Checkpoint : MonoBehaviour
         // 2. 화면이 다 까매지고 나서 대기 (여운 주기)
         yield return new WaitForSeconds(0.5f);
 
-        // 🔥 3. 이동 직전에 '목적지'의 암전막을 카메라 렌즈에 딱 붙이고 까맣게 켜버림! 
+        // 3. 이동 직전에 '목적지'의 암전막을 카메라 렌즈에 딱 붙이고 까맣게 켜버림! 
         // (카메라가 날아가는 동안 화면을 원천 차단)
         if (destination.dimmerSprite != null && Camera.main != null)
         {
@@ -300,7 +302,7 @@ public class Checkpoint : MonoBehaviour
         isPlayerInRange = true;
         isUnlocked = true;
 
-        // 🔥 1. 이동 완료 후 암전(까만 화면) 상태 유지하며 카메라 안정화 대기!
+        // 1. 이동 완료 후 암전(까만 화면) 상태 유지하며 카메라 안정화 대기!
         yield return new WaitForSeconds(1.0f);
 
         if (dimmerSprite != null)
@@ -308,7 +310,7 @@ public class Checkpoint : MonoBehaviour
             // 2. 1초 대기 후 화면 서서히 밝아짐
             yield return StartCoroutine(FadeAlpha(0f));
 
-            // 🔥 3. 다 밝아지면 렌즈에 붙였던 암전막을 원래 자리(목적지 체크포인트)로 복구!
+            // 3. 다 밝아지면 렌즈에 붙였던 암전막을 원래 자리(목적지 체크포인트)로 복구!
             dimmerSprite.transform.SetParent(this.transform);
             dimmerSprite.transform.localPosition = originalDimmerPos;
 
@@ -348,9 +350,10 @@ public class Checkpoint : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         if (dimmerSprite != null) dimmerSprite.sortingOrder = -5;
-        yield return StartCoroutine(FadeAlpha(0f));
+        yield return StartCoroutine(FadeAlpha(0.6f));
 
-        playerObj.StateMachine.ChangeState(playerObj.StandUpState);
+        //playerObj.StateMachine.ChangeState(playerObj.StandUpState);
+        menuUI.SetActive(true); // 메뉴창 다시 온!
         isRestingProcess = false;
     }
 

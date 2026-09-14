@@ -479,6 +479,7 @@ public class PlayerController : MonoBehaviour
     [HideInInspector]
     [Header("변수 선언부")]
 
+   
     public bool hasUsedAirDash;
 
     public bool CanDash
@@ -525,6 +526,10 @@ public class PlayerController : MonoBehaviour
     public float coyoteTime = 0.1f; // 낭떠러지에서 떨어져도 이 시간 동안은 지상으로 판정
     private float lastGroundedTime; // 클래스 멤버 변수로 반드시 선언되어 있어야 함
     public bool lastGroundedWasSlope;
+
+    [HideInInspector]
+    [Header("입력 제어 스위치")]
+    public bool canControl = true;
 
     // 1. 순수 물리 판독기
 
@@ -651,6 +656,8 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        
+
         //테스트용 자살버튼 ㅋㅋ
         if (Input.GetKeyDown(KeyCode.K))
         {
@@ -718,17 +725,32 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        //딱 idle, move에서만 가능
-        //키보드 버튼은 하나인데, 땅이냐 공중이냐에 따라 다른 스킬을 나가게 해주는 분배기" 역할이 필요
-        //평타는 콤보가 꼬이면 안 되니까 State 안에서만 부르고, 저건 언제든 튀어나가야 하는 스킬이니까 밖으로 뺌
-        HandleGuardInput(); //가드입력을 최상단 감시하여 모든 공격상태를 캔슬
-        HandleThrustAttackInput(); //강공찌르기 판독기 추가
-        HandleActiveSkillInput();  // [수정] E키(OnSkill) 하나로 슬롯에 따라 스킬을 분배하는 통합 판독기
-
-
-
-
-        StateMachine.CurrentState.HandleInput();
+        ////딱 idle, move에서만 가능
+        ////키보드 버튼은 하나인데, 땅이냐 공중이냐에 따라 다른 스킬을 나가게 해주는 분배기" 역할이 필요
+        ////평타는 콤보가 꼬이면 안 되니까 State 안에서만 부르고, 저건 언제든 튀어나가야 하는 스킬이니까 밖으로 뺌
+        //HandleGuardInput(); //가드입력을 최상단 감시하여 모든 공격상태를 캔슬
+        //HandleThrustAttackInput(); //강공찌르기 판독기 추가
+        //HandleActiveSkillInput();  // [수정] E키(OnSkill) 하나로 슬롯에 따라 스킬을 분배하는 통합 판독기
+        
+        //조작 가능할 때만 키보드 마우스 입력 받도록.. 뚱왕 2025.9.14. 
+        if (canControl)
+        {
+            HandleGuardInput();        // 방어 차단
+            HandleThrustAttackInput(); // 강공 찌르기 차단
+            HandleActiveSkillInput();  // 각종 스킬 차단
+            // 이동, 대쉬, 점프 등 각 상태(State) 내부의 조작도 모두 차단
+            StateMachine.CurrentState.HandleInput();
+        }
+        else
+        {
+            //조작이 막혀있을 때는 플레이어가 키를 눌러도 전부초기화
+            inputReader.DashPressed = false;
+            inputReader.AttackPressed = false;
+            inputReader.HAttackPressed = false;
+            inputReader.ThrustAttackPressed = false;
+            inputReader.GrapplePressed = false;
+            inputReader.JumpPressed = false;
+        }
         StateMachine.CurrentState.LogicUpdate();
 
     }
