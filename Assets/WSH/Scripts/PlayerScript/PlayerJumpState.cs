@@ -91,6 +91,7 @@ public class PlayerJumpState : PlayerState
         else
         {
             player.rb.linearVelocity = new Vector2(0f, finalJumpForce);
+            Debug.Log($"<color=orange>[Jump Enter]</color> y={player.rb.linearVelocity.y:F2} slope={player.OnSlope()} lastSlope={player.lastGroundedWasSlope}");
         }
     }
 
@@ -119,8 +120,9 @@ public class PlayerJumpState : PlayerState
 
         if (stateTimer > 0.05f && player.IsGrounded())
         {
-            if (player.rb.linearVelocity.y < 0.1f || player.OnSlope())
+            if (player.rb.linearVelocity.y < 0.1f)
             {
+                Debug.Log($"<color=orange>[Jump→Air] grounded]</color> t={stateTimer:F2} y={player.rb.linearVelocity.y:F2} slope={player.OnSlope()}");
                 stateMachine.ChangeState(player.AirState);
                 return;
             }
@@ -128,7 +130,9 @@ public class PlayerJumpState : PlayerState
 
         if (player.rb.linearVelocity.y < -0.1f)
         {
+            Debug.Log($"<color=orange>[Jump→Air] falling]</color> y={player.rb.linearVelocity.y:F2}");
             stateMachine.ChangeState(player.AirState);
+
         }
     }
 
