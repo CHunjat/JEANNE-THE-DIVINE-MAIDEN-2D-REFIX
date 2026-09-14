@@ -13120,7 +13120,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 107.37988, y: 23.859985}
+  m_AnchoredPosition: {x: 107.37982, y: 23.859985}
   m_SizeDelta: {x: 1200, y: 600}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &362431772
@@ -50689,6 +50689,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19e9115f2dc829f4bb03a0c271865128, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IntroTitleScreen
+  playerController: {fileID: 0}
   mainScreen: {fileID: 1605863312}
   entireScreenCanvasGroup: {fileID: 1330365838}
   logoCanvasGroup: {fileID: 2027215103}
@@ -50756,6 +50757,7 @@ MonoBehaviour:
   Pause: {fileID: 1823352731}
   Option: {fileID: 229998989}
   uiInputReader: {fileID: 11400000, guid: dba5946685d87664a872476235f8d760, type: 2}
+  playerController: {fileID: 1595899239}
 --- !u!4 &1332477822
 Transform:
   m_ObjectHideFlags: 0
@@ -58337,7 +58339,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -5.0095215, y: -498.37994}
+  m_AnchoredPosition: {x: -5.0095215, y: -498.37988}
   m_SizeDelta: {x: -241.36, y: -1023.92}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1563531618
@@ -59718,6 +59720,7 @@ MonoBehaviour:
   anim_DieAir: AirDie
   coyoteTime: 0.1
   lastGroundedWasSlope: 0
+  canControl: 1
 --- !u!95 &1595899240
 Animator:
   serializedVersion: 7

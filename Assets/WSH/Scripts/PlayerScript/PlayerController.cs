@@ -1650,7 +1650,28 @@ public class PlayerController : MonoBehaviour
     }
 
 
+    public void SetCanControl(bool value) //외부에서 입력 막는 함수
+    {
+        canControl = value;
 
+        if (!canControl)
+        {
+            // 남아 있던 1회성 입력 제거
+            inputReader.DashPressed = false;
+            inputReader.AttackPressed = false;
+            inputReader.HAttackPressed = false;
+            inputReader.ThrustAttackPressed = false;
+            inputReader.GrapplePressed = false;
+            inputReader.JumpPressed = false;
+
+            // UI를 여는 순간 좌우로 미끄러지는 것 방지
+            if (rb != null)
+            {
+                rb.linearVelocity =
+                    new Vector2(0f, rb.linearVelocity.y);
+            }
+        }
+    }
 
 
 

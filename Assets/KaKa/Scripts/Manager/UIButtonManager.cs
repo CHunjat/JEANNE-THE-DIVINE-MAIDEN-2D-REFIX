@@ -12,16 +12,14 @@ public class UIButtonManager : MonoBehaviour
     // 내가 새로 만든 UI 전용 인풋 리더 에셋 연결용
     public UIInputReader uiInputReader;
 
+    [Header("플레이어 조작")]
+    [SerializeField] private PlayerController playerController;
+
     private void Start()
     {
-        // ========================================================
-        // ★ [씬 재로드 시 UI 처리]
-        // ========================================================
-        // 사망 후 부활하거나 새 게임을 눌러 씬이 새로 로드된 상태인 경우
         if (GameOverManager.skipMainMenu)
         {
-
-            GameOverManager.skipMainMenu = false; // 플래그는 사용 후 즉시 리셋
+            GameOverManager.skipMainMenu = false;
 
             if (IntroScreen != null)
                 IntroScreen.SetActive(false);
@@ -32,21 +30,22 @@ public class UIButtonManager : MonoBehaviour
             if (MainScreen != null)
                 MainScreen.SetActive(false);
 
-            // 혹시 남아있는 UI가 있으면 모두 닫기
             if (Pause != null)
                 Pause.SetActive(false);
 
             if (Option != null)
                 Option.SetActive(false);
-            
+
             if (GameplayHUD != null)
                 GameplayHUD.SetActive(true);
 
             Time.timeScale = 1f;
+
+            // ★ 실제 게임 플레이 가능
+            SetPlayerControl(true);
         }
         else
         {
-            // 게임 최초 실행
             if (InGame != null)
                 InGame.SetActive(false);
 
@@ -62,11 +61,13 @@ public class UIButtonManager : MonoBehaviour
             if (GameplayHUD != null)
                 GameplayHUD.SetActive(false);
 
-            // 최초에는 메인 메뉴가 아니라 Intro 표시
             if (IntroScreen != null)
                 IntroScreen.SetActive(true);
 
             Time.timeScale = 0f;
+
+            // ★ 인트로에서는 조작 불가
+            SetPlayerControl(false);
         }
     }
 
@@ -144,19 +145,18 @@ public class UIButtonManager : MonoBehaviour
 
         bool isPauseActive = !Pause.activeSelf;
 
-        // Pause 화면
         Pause.SetActive(isPauseActive);
 
-        // 게임 HUD는 Pause와 반대로
         if (GameplayHUD != null)
         {
             GameplayHUD.SetActive(!isPauseActive);
         }
 
-        // 게임 정지
         Time.timeScale = isPauseActive ? 0f : 1f;
-    }
 
+        // ★ Pause 중 플레이어 조작 차단
+        SetPlayerControl(!isPauseActive);
+    }
     public void NewGameButton()
     {
 
@@ -206,6 +206,9 @@ public class UIButtonManager : MonoBehaviour
         }
 
         Time.timeScale = 1f;
+
+        // ★ 게임으로 복귀
+        SetPlayerControl(true);
     }
 
     public void ReturnToTitleButton()
@@ -214,19 +217,26 @@ public class UIButtonManager : MonoBehaviour
         {
             Pause.SetActive(false);
         }
+
         if (InGame != null)
         {
             InGame.SetActive(false);
         }
+
         if (MainScreen != null)
         {
             MainScreen.SetActive(true);
         }
+
         if (GameplayHUD != null)
         {
             GameplayHUD.SetActive(false);
         }
+
         Time.timeScale = 0f;
+
+        // ★ 메인 화면이므로 조작 금지
+        SetPlayerControl(false);
     }
 
     public void ExitGameButton()
@@ -255,6 +265,8 @@ public class UIButtonManager : MonoBehaviour
         {
             Option.SetActive(true);
         }
+
+        SetPlayerControl(false);
     }
 
     public void OptionBackButton()
@@ -269,10 +281,32 @@ public class UIButtonManager : MonoBehaviour
             Pause.SetActive(true);
         }
 
-        // Pause로 돌아오는 거니까 HUD는 계속 숨김
         if (GameplayHUD != null)
         {
             GameplayHUD.SetActive(false);
+        }
+
+        // ★ 아직 Pause 화면
+        SetPlayerControl(false);
+    }
+
+    private void SetPlayerControl(bool canControl)
+    {
+        if (playerController == null)
+        {
+            playerController = FindFirstObjectByType<PlayerController>();
+        }
+
+        if (playerController != null)
+        {
+            playerController.canControl = canControl;
+
+            // UI가 열리는 순간 기존 이동 관성 제거
+            if (!canControl && playerController.rb != null)
+            {
+                playerController.rb.linearVelocity =
+                    new Vector2(0f, playerController.rb.linearVelocity.y);
+            }
         }
     }
 }

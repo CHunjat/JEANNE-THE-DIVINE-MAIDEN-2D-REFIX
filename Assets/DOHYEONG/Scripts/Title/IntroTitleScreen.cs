@@ -4,6 +4,9 @@ using DG.Tweening;
 
 public class IntroTitleScreen : MonoBehaviour
 {
+    [Header("플레이어")]
+    [SerializeField] private PlayerController playerController;
+
     [Header("다음 화면")]
     [SerializeField] private GameObject mainScreen;
 
@@ -45,8 +48,26 @@ public class IntroTitleScreen : MonoBehaviour
     private bool canInput;
     private bool isClosing;
 
+    private void Awake()
+    {
+        // Inspector에서 안 넣었을 경우 자동 탐색
+        if (playerController == null)
+        {
+            playerController =
+                FindFirstObjectByType<PlayerController>();
+        }
+    }
+
     private void OnEnable()
     {
+        // =========================
+        // 인트로에서는 플레이어 조작 차단
+        // =========================
+        if (playerController != null)
+        {
+            playerController.canControl = false;
+        }
+
         PlayIntro();
     }
 
@@ -55,8 +76,28 @@ public class IntroTitleScreen : MonoBehaviour
         if (!canInput || isClosing)
             return;
 
-        if (Keyboard.current != null &&
-            Keyboard.current.anyKey.wasPressedThisFrame)
+        // =========================
+        // 키보드 입력
+        // =========================
+        bool keyboardInput =
+            Keyboard.current != null &&
+            Keyboard.current.anyKey.wasPressedThisFrame;
+
+        // =========================
+        // 마우스 클릭
+        // =========================
+        bool mouseInput =
+            Mouse.current != null &&
+            Mouse.current.leftButton.wasPressedThisFrame;
+
+        // =========================
+        // 터치 입력
+        // =========================
+        bool touchInput =
+            Touchscreen.current != null &&
+            Touchscreen.current.primaryTouch.press.wasPressedThisFrame;
+
+        if (keyboardInput || mouseInput || touchInput)
         {
             CloseIntro();
         }
@@ -110,7 +151,6 @@ public class IntroTitleScreen : MonoBehaviour
 
         // =========================
         // 로고 후광
-        // 로고와 동시에 시작하지만 더 천천히 등장
         // =========================
 
         if (logoGlowCanvasGroup != null)
@@ -142,7 +182,7 @@ public class IntroTitleScreen : MonoBehaviour
 
         introSequence = DOTween.Sequence();
 
-        // 1. 로고가 제자리에서 천천히 등장
+        // 1. 로고 등장
         if (logoCanvasGroup != null)
         {
             introSequence.Append(
@@ -155,7 +195,6 @@ public class IntroTitleScreen : MonoBehaviour
             );
         }
 
-        // 로고가 아주 미세하게 커짐
         if (logoRect != null)
         {
             introSequence.Join(
@@ -168,7 +207,7 @@ public class IntroTitleScreen : MonoBehaviour
             );
         }
 
-        // 2. 로고 등장 후 잠시 대기
+        // 2. 잠시 대기
         introSequence.AppendInterval(
             pressDelay
         );
@@ -186,7 +225,7 @@ public class IntroTitleScreen : MonoBehaviour
             );
         }
 
-        // 4. PRESS 등장 완료 후 입력 허용
+        // 4. 입력 허용
         introSequence.AppendCallback(() =>
         {
             canInput = true;
@@ -194,7 +233,6 @@ public class IntroTitleScreen : MonoBehaviour
             StartPressBlink();
         });
 
-        // 게임이 Time.timeScale = 0이어도 실행
         introSequence.SetUpdate(true);
     }
 
@@ -227,16 +265,21 @@ public class IntroTitleScreen : MonoBehaviour
 
         logoGlowCanvasGroup.DOKill();
 
-        // 처음에는 가장 밝은 상태
         logoGlowCanvasGroup.alpha = glowMaxAlpha;
 
-        // 천천히 어두워졌다 다시 밝아짐
         logoGlowCanvasGroup
-            .DOFade(glowMinAlpha, glowBlinkDuration)
+            .DOFade(
+                glowMinAlpha,
+                glowBlinkDuration
+            )
             .SetEase(Ease.InOutSine)
-            .SetLoops(-1, LoopType.Yoyo)
+            .SetLoops(
+                -1,
+                LoopType.Yoyo
+            )
             .SetUpdate(true);
     }
+
     private void CloseIntro()
     {
         if (isClosing)
@@ -248,7 +291,7 @@ public class IntroTitleScreen : MonoBehaviour
         KillTweens();
 
         // =========================
-        // 메인 화면을 먼저 뒤에 켜둠
+        // 메인 화면 활성화
         // =========================
 
         if (mainScreen != null)
@@ -256,7 +299,10 @@ public class IntroTitleScreen : MonoBehaviour
             mainScreen.SetActive(true);
         }
 
-        // CanvasGroup이 없으면 즉시 종료
+        // 중요:
+        // 메인화면도 UI이므로
+        // 여기서는 canControl을 true로 돌리지 않는다.
+
         if (entireScreenCanvasGroup == null)
         {
             gameObject.SetActive(false);
@@ -282,17 +328,14 @@ public class IntroTitleScreen : MonoBehaviour
 
     private void KillTweens()
     {
-        // Sequence 제거
         introSequence?.Kill();
         introSequence = null;
 
-        // 전체 화면
         if (entireScreenCanvasGroup != null)
         {
             entireScreenCanvasGroup.DOKill();
         }
 
-        // 로고
         if (logoCanvasGroup != null)
         {
             logoCanvasGroup.DOKill();
@@ -303,7 +346,6 @@ public class IntroTitleScreen : MonoBehaviour
             logoRect.DOKill();
         }
 
-        // 로고 후광
         if (logoGlowCanvasGroup != null)
         {
             logoGlowCanvasGroup.DOKill();
@@ -314,7 +356,6 @@ public class IntroTitleScreen : MonoBehaviour
             logoGlowRect.DOKill();
         }
 
-        // PRESS
         if (pressAnyKeyCanvasGroup != null)
         {
             pressAnyKeyCanvasGroup.DOKill();
