@@ -796,7 +796,25 @@ public class PlayerController : MonoBehaviour
                 }
                 else
                 {
-                    ToggleStairsCollision(rb.linearVelocity.y <= 0.1f);
+                    if (lastGroundedWasSlope)
+                    {
+                        ToggleStairsCollision(rb.linearVelocity.y <= 0.1f);
+                    }
+                    else
+                    {
+                        bool calfMount = false;
+                        if (rb.linearVelocity.y <= 0.1f)
+                        {
+                            Vector2 calfPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.10f);
+                            RaycastHit2D calfHit = Physics2D.BoxCast(
+                                calfPos, new Vector2(cd.bounds.size.x * 0.45f, 0.08f),
+                                0f, Vector2.down, 0.10f, stairsLayer);
+                            calfMount = calfHit.collider != null
+                                && calfHit.collider != ignoredDropCollider
+                                && calfHit.point.y <= cd.bounds.min.y + 0.18f;
+                        }
+                        ToggleStairsCollision(calfMount);
+                    }
                 }
             }
         }
@@ -1311,11 +1329,11 @@ public class PlayerController : MonoBehaviour
         // 2. 장애물 차단 검사 (bestTarget이 있을 때만 수행)
         if (bestTarget != null)
         {
-            // --- 스프린트 상태에 따른 판정 수치 구분 ---
-            // 스프린트면: 더 넓고(1.5f) 깊게(1.5f) 검사해서 깐깐하게 막음
-            // 일반이면: 조금 좁고(0.95f) 얕게(0.9f) 검사해서 관대하게 허용
-            float widthFactor = isSprinting ? 1.0f : 0.3f;
-            float checkDistance = isSprinting ? 1.0f : 0.3f;
+            // --- 스프린트 상태에 따른 판정 수치 구분 --- 절대 건들지 말것
+            // 스프린트면: 더 넓고(0.6f) 깊게(0.5f) 검사해서 깐깐하게 막음
+            // 일반이면: 조금 좁고(0.6f) 얕게(0.9f) 검사해서 관대하게 허용
+            float widthFactor = isSprinting ? 0.7f : 0.3f;
+            float checkDistance = isSprinting ? 0.7f : 0.3f;
 
             Vector2 footPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y);
             Vector2 checkSize = new Vector2(cd.bounds.size.x * widthFactor, 0.1f);

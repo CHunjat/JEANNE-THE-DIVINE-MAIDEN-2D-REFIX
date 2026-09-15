@@ -157,7 +157,7 @@ public class Checkpoint : MonoBehaviour
                 interactPromptUI.SetActive(true);
                 playerObj.StateMachine.ChangeState(playerObj.StandUpState);
                 StartCoroutine(FadeAlpha(0f));
-                playerObj.canControl = true;
+                playerObj.SetCanControl(true);
             }
         }
         // 2순위: 메뉴가 닫혀있고, 플레이어가 범위 내에 있을 때
@@ -193,7 +193,7 @@ public class Checkpoint : MonoBehaviour
 
     private IEnumerator OpenMenuRoutine()
     {
-        playerObj.canControl = false;
+        playerObj.SetCanControl(false);
         interactPromptUI.SetActive(false);
 
         if (dimmerSprite != null)
