@@ -656,94 +656,84 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        
-
-        //테스트용 자살버튼 ㅋㅋ
         if (Input.GetKeyDown(KeyCode.K))
         {
             Debug.Log("<color=magenta>테스트용 자살 버튼 작동!</color>");
-
-            // 만약 체력 UI도 같이 깎이는 걸 보고 싶다면 아래 주석 해제
             if (playerStats != null) playerStats.currentHp = 0;
-
             StateMachine.ChangeState(DieState);
             return;
         }
-        //테스트용 쳐맞기버튼 ㅋㅋ
         if (Input.GetKeyDown(KeyCode.L))
         {
             Debug.Log("<color=magenta>테스트: 가상의 적에게 10 데미지 피격!</color>");
-
-            // 플레이어의 살짝 앞(오른쪽을 보면 오른쪽, 왼쪽을 보면 왼쪽)에 가짜 적 위치를 만듦
             float dir = isFacingRight ? 1f : -1f;
             Vector2 fakeEnemyPos = transform.position + new Vector3(dir * 2f, 0f, 0f);
-
-            // 이제 순수 계산기(TakeDamage) 대신, 통합 판독기(EvaluateAttack)로 데미지를 보냄!
             EvaluateAttack(10f, fakeEnemyPos);
         }
-
-
         if (sprintJumpCooldownTimer > 0)
             sprintJumpCooldownTimer -= Time.deltaTime;
-
-        //지상에서점프시 벽판정쿨타임
         if (wallGrabTimer > 0)
-        { wallGrabTimer -= Time.deltaTime; }
-
+            wallGrabTimer -= Time.deltaTime;
         if (dashCooltimer > 0)
             dashCooltimer -= Time.deltaTime;
         if (landTimer > 0) landTimer -= Time.deltaTime;
+
+        if (isSprinting && animator != null
+    && (StateMachine.CurrentState == JumpState || StateMachine.CurrentState == AirState))
+        {
+            var clips = animator.GetCurrentAnimatorClipInfo(0);
+            bool falling = clips.Length > 0 && clips[0].clip != null
+                && clips[0].clip.name == anim_SprintJump;
+            if (falling)
+            {
+                float frac = animator.GetCurrentAnimatorStateInfo(0).normalizedTime % 1f;
+                animator.fireEvents = frac > 0.05f && frac < 0.98f;
+            }
+            else
+            {
+                animator.fireEvents = true;
+            }
+        }
+ 
+        else if (animator != null)
+        {
+            animator.fireEvents = true;
+        }
 
         if (inputReader.DashPressed && !CanDash)
         {
             inputReader.DashPressed = false;
         }
-        //테스트 공격중일떄는 대시 입력을 강제로 차단
         if (StateMachine.CurrentState is PlayerAttackState && inputReader.DashPressed)
         {
             inputReader.DashPressed = false;
         }
-
         if (IsGrounded() && rb.linearVelocity.y <= 0.1f)
         {
             RestJumpCount();
         }
-
         if (IsGrounded() && rb.linearVelocity.y <= 0.1f)
         {
             RestJumpCount();
-            ResetAirActions(); // 바닥에 닿으면 공중 공격 횟수 초기화
+            ResetAirActions();
         }
-
-
         if (gizmoDisplayTimer > 0)
         {
             gizmoDisplayTimer -= Time.deltaTime;
             if (gizmoDisplayTimer <= 0)
             {
-                currentActiveData = null; // 시간이 다 되면 데이터를 비워 기즈모를 끕니다.
+                currentActiveData = null;
             }
         }
-
-        ////딱 idle, move에서만 가능
-        ////키보드 버튼은 하나인데, 땅이냐 공중이냐에 따라 다른 스킬을 나가게 해주는 분배기" 역할이 필요
-        ////평타는 콤보가 꼬이면 안 되니까 State 안에서만 부르고, 저건 언제든 튀어나가야 하는 스킬이니까 밖으로 뺌
-        //HandleGuardInput(); //가드입력을 최상단 감시하여 모든 공격상태를 캔슬
-        //HandleThrustAttackInput(); //강공찌르기 판독기 추가
-        //HandleActiveSkillInput();  // [수정] E키(OnSkill) 하나로 슬롯에 따라 스킬을 분배하는 통합 판독기
-        
-        //조작 가능할 때만 키보드 마우스 입력 받도록.. 뚱왕 2025.9.14. 
         if (canControl)
         {
-            HandleGuardInput();        // 방어 차단
-            HandleThrustAttackInput(); // 강공 찌르기 차단
-            HandleActiveSkillInput();  // 각종 스킬 차단
-            // 이동, 대쉬, 점프 등 각 상태(State) 내부의 조작도 모두 차단
+            HandleGuardInput();
+            HandleThrustAttackInput();
+            HandleActiveSkillInput();
             StateMachine.CurrentState.HandleInput();
         }
         else
         {
-            //조작이 막혀있을 때는 플레이어가 키를 눌러도 전부초기화
             inputReader.DashPressed = false;
             inputReader.AttackPressed = false;
             inputReader.HAttackPressed = false;
@@ -752,7 +742,6 @@ public class PlayerController : MonoBehaviour
             inputReader.JumpPressed = false;
         }
         StateMachine.CurrentState.LogicUpdate();
-
     }
     public void ResetDashCooldown() => dashCooltimer = dashcooltime;
     public void ResetLandTimer() => landTimer = landDashDelay;
@@ -760,9 +749,10 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (StateMachine.CurrentState != DropState && ignoredDropCollider != null)
+        if (ignoredDropCollider != null && StateMachine.CurrentState != DropState)
         {
-            ignoredDropCollider = null;
+            if (cd != null && !Physics2D.Distance(cd, ignoredDropCollider).isOverlapped)
+                ignoredDropCollider = null;
         }
 
         if (StateMachine.CurrentState == DropState)
