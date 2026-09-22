@@ -80284,6 +80284,7 @@ MonoBehaviour:
   thrustInstantDamageRate: 1
   thrustFullChargeDamageRate: 1.4
   anim_WallSlide: walling
+  anim_ToWallGrab: ToWallGrab
   anim_WallJump: WallJump
   wallGrabCooldown: 0.3
   wallGrabTimer: 0
@@ -80403,6 +80404,7 @@ MonoBehaviour:
   thrustChargeFxPrefab: {fileID: 5107921000559936895, guid: 1bdd5be339e01f14a9e27f1f04a11960, type: 3}
   thrustChargeFxSpawnPoint: {fileID: 1131218495}
   hasUsedAirDash: 0
+  defaultGravityScale: 0
   isThrustCharged: 0
   isDashGracePeriod: 0
   diveDropData: {fileID: 11400000, guid: 5ed5b6189047afb48a1272bad16bc44d, type: 2}

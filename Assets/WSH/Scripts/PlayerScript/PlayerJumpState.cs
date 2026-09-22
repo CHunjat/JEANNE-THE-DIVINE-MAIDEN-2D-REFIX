@@ -3,6 +3,7 @@ public class PlayerJumpState : PlayerState
 {
     public PlayerJumpState(PlayerController player, PlayerStateMachine stateMachine, string animName)
         : base(player, stateMachine, animName) { }
+
     public override void Enter()
     {
         bool isFirstSprintJump = player.isSprinting && player.IsGrounded();
@@ -65,17 +66,21 @@ public class PlayerJumpState : PlayerState
         }
         else
         {
-            player.rb.linearVelocity = new Vector2(0f, finalJumpForce);
+            // 벽 중립 점프에서 넣어 둔 미세 X 유지 (평지는 0)
+            float keepX = player.rb.linearVelocity.x;
+           
+            player.rb.linearVelocity = new Vector2(keepX, finalJumpForce);
             Debug.Log($"<color=orange>[Jump Enter]</color> y={player.rb.linearVelocity.y:F2} slope={player.OnSlope()} lastSlope={player.lastGroundedWasSlope}");
         }
     }
+
     public override void LogicUpdate()
     {
         base.LogicUpdate();
         player.HandleAttackInput();
         player.HandleGrappleInput();
         if (stateMachine.CurrentState == player.GrappleState) return;
-        if (player.inputReader.JumpPressed && player.CanJump)
+        if (stateTimer > 0.25f && player.inputReader.JumpPressed && player.CanJump) //2026.9.22 점프 입력 너무 빨리나가서 수정
         {
             player.inputReader.JumpPressed = false;
             stateMachine.ChangeState(player.JumpState);
@@ -105,6 +110,7 @@ public class PlayerJumpState : PlayerState
             stateMachine.ChangeState(player.AirState);
         }
     }
+
     public override void PhysicsUpdate()
     {
         base.PhysicsUpdate();
@@ -116,8 +122,16 @@ public class PlayerJumpState : PlayerState
         }
         else if (Mathf.Abs(xInput) < 0.1f)
         {
-            float stoppingSpeed = Mathf.Lerp(currentXVelocity, 0f, Time.fixedDeltaTime * 10f);
-            player.SetVelocity(stoppingSpeed, player.rb.linearVelocity.y);
+            // 초반 0.15초는 벽 중립 밀림 유지
+            if (stateTimer < 0.15f)
+            {
+                player.SetVelocity(currentXVelocity, player.rb.linearVelocity.y);
+            }
+            else
+            {
+                float stoppingSpeed = Mathf.Lerp(currentXVelocity, 0f, Time.fixedDeltaTime * 10f);
+                player.SetVelocity(stoppingSpeed, player.rb.linearVelocity.y);
+            }
         }
         else if (Mathf.Abs(currentXVelocity) > player.moveSpeed)
         {

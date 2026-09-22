@@ -1,47 +1,48 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class PlayerWallSlideState : PlayerState
 {
-    private float wallDir; // º® ¹æÇâ ±â¾ïÇÏ±â
+    private float wallDir; // ë²½ ë°©í–¥ ê¸°ì–µí•˜ê¸°
 
+    private float wallDetachTimer;
+    private const float WALL_DETACH_BUFFER = 1.0f; // 1ì´ˆ ëŒ€ê¸°
+
+    // ğŸ”¥ [ì¶”ê°€] í˜„ì¬ ë¯¸ë„ëŸ¬ì§€ëŠ” ì¤‘ì¸ì§€ ìƒíƒœë¥¼ ê¸°ì–µí•˜ëŠ” ìŠ¤ìœ„ì¹˜
+    private bool isSlidingDown;
 
     public PlayerWallSlideState(PlayerController player, PlayerStateMachine stateMachine, string animName)
         : base(player, stateMachine, animName) { }
 
     public override void Enter()
     {
+        // base.Enter(); ì ˆëŒ€ ì‚¬ìš© ê¸ˆì§€ (ê¸°ë³¸ ì• ë‹ˆ ì‹¤í–‰ ë°©ì§€)
         stateTimer = 0f;
         player.isSprinting = false;
-        player.SetVelocity(0f, player.rb.linearVelocity.y);
 
-        // 1. º® ¹æÇâ ½Ç½Ã°£ È®Á¤
+        player.rb.gravityScale = 0f;
+        player.SetVelocity(0f, 0f);
+
+        // 1. ë²½ ë°©í–¥ ì‹¤ì‹œê°„ í™•ì •
         if (player.IsTouchingWall(1f)) wallDir = 1f;
         else if (player.IsTouchingWall(-1f)) wallDir = -1f;
         else wallDir = player.inputReader.MoveValue.x > 0 ? 1f : -1f;
 
-        // 2. [¼öÁ¤] ¸ö µ¹¸®±â ·ÎÁ÷ °­È­
-        // ´Ü¼øÈ÷ -wallDirÀ» ³Ö´Â °Ô ¾Æ´Ï¶ó, 
-        // Ä³¸¯ÅÍ°¡ ¹«Á¶°Ç º®ÀÇ '¹İ´ëÆí'À» ¹Ù¶óº¸µµ·Ï °­Á¦·Î È¸Àü°ªÀ» ²È¾Æ³Ö¾î¾ß ÇÕ´Ï´Ù.
-        // wallDirÀÌ -1(¿ŞÂÊ)ÀÌ¸é FlipController(1) -> ¿À¸¥ÂÊ º¸±â
-        // wallDirÀÌ 1(¿À¸¥ÂÊ)ÀÌ¸é FlipController(-1) -> ¿ŞÂÊ º¸±â
+        // 2. ìºë¦­í„°ê°€ ë¬´ì¡°ê±´ ë²½ì˜ 'ë°˜ëŒ€í¸'ì„ ë°”ë¼ë³´ë„ë¡ ê°•ì œ íšŒì „
         player.FlipController(-wallDir);
 
-        // ¡Ú [Ãß°¡] ¸¸¾à FlipController°¡ Á¦´ë·Î ¾È ¸Ô´Â´Ù¸é °­Á¦·Î rotationÀ» Á¶Àı
-        // float targetY = (wallDir == -1f) ? 0f : 180f; // ¿ŞÂÊ º®ÀÌ¸é ¿À¸¥ÂÊ(0µµ), ¿À¸¥ÂÊ º®ÀÌ¸é ¿ŞÂÊ(180µµ)
-        // player.transform.rotation = Quaternion.Euler(0, targetY, 0);
+        // íƒ€ì´ë¨¸ ì´ˆê¸°í™”
+        wallDetachTimer = WALL_DETACH_BUFFER;
 
-        player.animator.Play(player.anim_WallSlide, 0, 0f);
+        // ğŸ”¥ ì²˜ìŒ ë²½ì— ë¶™ì—ˆì„ ë•ŒëŠ” ë¬´ì¡°ê±´ ì •ì§€(ë§¤ë‹¬ë¦¬ê¸°) ìƒíƒœ!
+        isSlidingDown = false;
+        player.animator.Play(player.anim_ToWallGrab, 0, 0f); // ë§¤ë‹¬ë¦¬ê¸° ì• ë‹ˆ ì¬ìƒ
     }
 
     public override void Exit()
     {
         base.Exit();
 
-        // º®À» ºüÁ®³ª°¡´Â ¼ø°£, º® ÂÊÀ¸·Î ¹Ğ°í ÀÖ´ø ¼öÆò ¼Óµµ¸¦ 0À¸·Î ÃÊ±âÈ­ÇÕ´Ï´Ù.
-        // ÀÌ°É ¾È ÇÏ¸é ¶¥¿¡ ´ê¾ÒÀ» ¶§ ¹Ì¼¼ÇÏ°Ô ¿·À¸·Î ¹Ğ¸³´Ï´Ù.
-        player.SetVelocity(0f, player.rb.linearVelocity.y);
-
-
+        player.rb.gravityScale = player.defaultGravityScale;
     }
 
     public override void LogicUpdate()
@@ -49,44 +50,88 @@ public class PlayerWallSlideState : PlayerState
         player.FlipController(-wallDir);
         base.LogicUpdate();
 
-        // 1. Á¡ÇÁ Å° ´©¸£¸é º® Á¡ÇÁ!
         if (player.inputReader.JumpPressed)
         {
             player.inputReader.JumpPressed = false;
+
+            float jInput = player.inputReader.MoveValue.x;
+
+            // ì¤‘ë¦½ â†’ ì¼ë°˜ ì í”„
+            if (Mathf.Abs(jInput) < 0.1f)
+            {
+                player.RestJumpCount(); // ë²½ ì¤‘ë¦½ -> 2ë‹¨ê°€ëŠ¥
+                player.SetVelocity(-wallDir * player.wallJumpForce.x * 0.2f, player.rb.linearVelocity.y);
+                stateMachine.ChangeState(player.JumpState);
+                return;
+            }
+
+            // ë²½ ìª½ / ë°˜ëŒ€ ìª½ â†’ WallJump (ì•ˆì—ì„œ í˜ë§Œ êµ¬ë¶„)
             stateMachine.ChangeState(player.WallJumpState);
             return;
         }
 
-        // 2. ¹Ù´Ú¿¡ ´êÀ¸¸é ÂøÁö
         if (player.IsGrounded())
         {
             stateMachine.ChangeState(player.IdleState);
             return;
         }
 
-        float xInput = player.inputReader.MoveValue.x;
-
-        // 3. [ÇØ°á ¿Ï·á] Å° ¶¼¸é ¶³¾îÁö±â
-        // xInputÀÌ wallDir°ú ´Ù¸£¸é ¹«Á¶°Ç Ãß¶ôÇÕ´Ï´Ù.
-        // Áï, ¹æÇâÅ°¿¡¼­ ¼ÕÀ» ¶¼¼­ 0ÀÌ µÇ°Å³ª, ¹İ´ë ¹æÇâÀ» ´©¸£¸é ¹Ù·Î ¶³¾îÁı´Ï´Ù!
-
-        //==Ãß°¡==
-
-        //º¯°æµÈ ºÎºĞ: xInput != wallDir ´ë½Å¿¡ °öÇÏ±â ¹æ½ÄÀ» ¾¹´Ï´Ù.
-        // xInput(0.707) * wallDir(1) = 0.707 (0.1º¸´Ù Å©´Ï±î ¾È ¶³¾îÁü)
-        // ¸¸¾à ¼ÕÀ» ¶¼¸é 0 * 1 = 0 (0.1º¸´Ù ÀÛÀ¸´Ï Ãß¶ô)
-        // ¹İ´ë ¹æÇâ ´©¸£¸é -1 * 1 = -1 (0.1º¸´Ù ÀÛÀ¸´Ï Ãß¶ô)
-        if (!player.IsTouchingWall(wallDir) || (xInput * wallDir) < 0.1f)
+        if (!player.IsTouchingWall(wallDir))
         {
             stateMachine.ChangeState(player.AirState);
+            return;
+        }
+
+        float xInput = player.inputReader.MoveValue.x;
+        float yInput = player.inputReader.MoveValue.y;
+
+       
+        // ==========================================
+        if (yInput < -0.1f)
+        {
+            // ë¯¸ë„ëŸ¬ì§€ê¸° ì‹œì‘í•  ë•Œ "í•œ ë²ˆë§Œ" ìŠ¬ë¼ì´ë“œ ì• ë‹ˆë©”ì´ì…˜ í‹€ê¸°
+            if (!isSlidingDown)
+            {
+                isSlidingDown = true;
+                player.animator.Play(player.anim_WallSlide);
+            }
+        }
+        else
+        {
+            // ë©ˆì¶œ ë•Œ "í•œ ë²ˆë§Œ" ë§¤ë‹¬ë¦¬ê¸° ì• ë‹ˆë©”ì´ì…˜ í‹€ê¸°
+            if (isSlidingDown)
+            {
+                isSlidingDown = false;
+                player.animator.Play(player.anim_ToWallGrab);
+            }
+        }
+
+        // ==========================================
+        // [ìš”êµ¬ì‚¬í•­ 5-1] ë°˜ëŒ€ ë°©í–¥í‚¤ ì…ë ¥ ì‹œ 1ì´ˆ ë²„í¼ ì ìš© í›„ ë–¨ì–´ì§
+        // ==========================================
+        if (Mathf.Abs(xInput) > 0.1f && Mathf.Sign(xInput) != wallDir)
+        {
+            wallDetachTimer -= Time.deltaTime;
+
+            if (wallDetachTimer <= 0f)
+            {
+                stateMachine.ChangeState(player.AirState);
+            }
+        }
+        else
+        {
+            wallDetachTimer = WALL_DETACH_BUFFER;
         }
     }
 
     public override void PhysicsUpdate()
     {
         base.PhysicsUpdate();
-        // XÃà ¼Óµµ¸¦ 0À¸·Î ¸ØÃßÁö ¸»°í, º® ¹æÇâ(wallDir)À¸·Î ¼Óµµ¸¦ °è¼Ó Áİ´Ï´Ù! (¿¹: 2f)
-        // ZeroFriction ¸ÓÆ¼¸®¾ó ´öºĞ¿¡ ²öÀûÀÌÁö ¾Ê°í, º®¿¡ ºóÆ´¾øÀÌ 100% µü ºÙ¾î¼­ ±Ü°í ³»·Á¿É´Ï´Ù.
-        player.SetVelocity(wallDir * 2f, -player.wallSlideSpeed);
+
+        float yInput = player.inputReader.MoveValue.y;
+        float targetY = (yInput < -0.1f) ? -player.wallSlideSpeed : 0f;
+
+        // Xì¶• ì†ë„ë¥¼ 0ìœ¼ë¡œ ë©ˆì¶”ì§€ ë§ê³ , ë²½ ë°©í–¥(wallDir)ìœ¼ë¡œ ì†ë„ë¥¼ ê³„ì† ì¤ë‹ˆë‹¤
+        player.SetVelocity(wallDir * 2f, targetY);
     }
 }

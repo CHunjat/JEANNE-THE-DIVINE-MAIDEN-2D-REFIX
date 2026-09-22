@@ -122,6 +122,8 @@ public class PlayerController : MonoBehaviour
     [HideInInspector]
     public string anim_WallSlide = "walling";
     [HideInInspector]
+    public string anim_ToWallGrab = "ToWallGrab";
+    [HideInInspector]
     public string anim_WallJump = "WallJump";
 
     [HideInInspector]
@@ -497,7 +499,7 @@ public class PlayerController : MonoBehaviour
     }
 
     // 1. 비탈길인지 확인하고 경사면 정보(slopeHit)를 업데이트함
-    private float defaultGravityScale;
+    public float defaultGravityScale;
     public bool IsActionLocked => StateMachine.CurrentState == HealState;
     [HideInInspector]
     public bool isThrustCharged = false;
@@ -890,6 +892,7 @@ public class PlayerController : MonoBehaviour
         if (StateMachine.CurrentState == HitState) return;
         if (StateMachine.CurrentState == GuardState) return;
         if (StateMachine.CurrentState == GuardOffState) return;
+        if (StateMachine.CurrentState == WallSlideState) return;
         #endregion
 
         // 5. 중력 등 기타 보정 로직
@@ -1029,12 +1032,15 @@ public class PlayerController : MonoBehaviour
     {
         if (cd == null) return false;
 
-        Vector2 origin = cd.bounds.center;
+        // 박스 높이를 25프로 수준으로 더 콤팩트하게 축소
+        Vector2 checkSize = new Vector2(WallCheckSize.x, cd.bounds.size.y * 0.15f);
 
-        // BoxCast (시작점, 박스크기/2, 각도, 방향, 거리, 레이어)
+        // 중심점을 위로 더 끌어올림 (+0.1f -> +0.2f)
+        Vector2 origin = new Vector2(cd.bounds.center.x, cd.bounds.center.y + (cd.bounds.size.y * 0.19f));
+
         float checkDist = cd.bounds.extents.x + wallCheckDistance;
 
-        return Physics2D.BoxCast(origin, WallCheckSize, 0f, Vector2.right * dir, checkDist, wallLayer).collider != null;
+        return Physics2D.BoxCast(origin, checkSize, 0f, Vector2.right * dir, checkDist, wallLayer).collider != null;
     }
 
     //4.29 시작, 공격 분배기 함수
@@ -1613,10 +1619,15 @@ public class PlayerController : MonoBehaviour
 
     private void DrawWallGizmo(float dir)
     {
-        Vector2 origin = cd.bounds.center;
+        if (cd == null) return;
+
+        Vector2 checkSize = new Vector2(WallCheckSize.x, cd.bounds.size.y * 0.35f);
+        Vector2 origin = new Vector2(cd.bounds.center.x, cd.bounds.center.y + (cd.bounds.size.y * 0.1f));
+
         float checkDist = cd.bounds.extents.x + wallCheckDistance;
         Vector2 hitCenter = origin + (Vector2.right * dir * checkDist);
-        Gizmos.DrawWireCube(hitCenter, WallCheckSize);
+
+        Gizmos.DrawWireCube(hitCenter, checkSize);
     }
 
 
