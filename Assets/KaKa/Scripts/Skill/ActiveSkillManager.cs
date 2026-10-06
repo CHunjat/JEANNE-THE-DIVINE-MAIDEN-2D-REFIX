@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 
 public class ActiveSkillManager : MonoBehaviour
 {
@@ -11,6 +12,11 @@ public class ActiveSkillManager : MonoBehaviour
 
     [Header("Detail Panel")]
     [SerializeField] private SkillDetailPanelUI detailPanelUI;
+
+    [Header("선택된 스킬 이름")]
+    [SerializeField] private TMP_Text selectedSkillNameText;
+
+    [SerializeField] private string defaultSkillNameText = "스킬을 선택하세요.";
 
     private int currentSelectedIndex = -1;
     public int CurrentSelectedIndex => currentSelectedIndex;
@@ -75,10 +81,20 @@ public class ActiveSkillManager : MonoBehaviour
         {
             activeSkills[currentSelectedIndex].SetSelectState(true);
 
-            // ★ 디테일 패널에 스킬명 표시
+            SkillData selectedSkill =
+                activeSkills[currentSelectedIndex].skillData;
+
+            // ★ 위쪽 선택 스킬 이름 변경
+            if (selectedSkillNameText != null && selectedSkill != null)
+            {
+                selectedSkillNameText.text =
+                    selectedSkill.skillName;
+            }
+
+            // 디테일 패널
             if (detailPanelUI != null)
             {
-                detailPanelUI.ShowSkill(activeSkills[currentSelectedIndex].skillData);
+                detailPanelUI.ShowSkill(selectedSkill);
             }
         }
     }
@@ -92,6 +108,13 @@ public class ActiveSkillManager : MonoBehaviour
         }
 
         currentSelectedIndex = -1;
+
+        // ★ 기본 문구로 복귀
+        if (selectedSkillNameText != null)
+        {
+            selectedSkillNameText.text =
+                defaultSkillNameText;
+        }
 
         if (detailPanelUI != null)
         {
