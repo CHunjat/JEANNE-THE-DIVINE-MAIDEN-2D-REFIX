@@ -48,6 +48,10 @@ public class MidBoss : EnemyFSM
     public GameObject hitBox_BackKick;
     public GameObject webFirePoint;
 
+    [Header("VFX 방향 반전용 연결 (새로 추가됨!)")]
+    [Tooltip("여기에 Stamp_2, Dust, Landing, Spit 등 이펙트 오브젝트들을 끌어다 넣으세요")]
+    public GameObject[] vfxObjectsToFlip;
+
     [Header("입 위치 수동 보정 (완결판)")]
     public Vector2 mouthRightPos = new Vector2(0.34f, 2.58f);
     public Vector2 mouthLeftPos = new Vector2(-3.5f, 2.58f);
@@ -64,9 +68,10 @@ public class MidBoss : EnemyFSM
 
     private bool isDeadProcessed = false;
 
-    // 수정 : 히트박스의 Transform X값과 Collider Offset X값을 따로따로 완벽하게 기억
+    // 수정 : 히트박스와 VFX의 위치, 콜라이더 오프셋 값을 따로따로 완벽하게 기억
     private Dictionary<GameObject, float> hitboxBaseX = new Dictionary<GameObject, float>();
     private Dictionary<Collider2D, float> colliderBaseOffsetX = new Dictionary<Collider2D, float>();
+    private Dictionary<GameObject, float> vfxBaseX = new Dictionary<GameObject, float>();
 
     protected override void Awake()
     {
@@ -114,15 +119,14 @@ public class MidBoss : EnemyFSM
 
     private void CacheHitboxPositions()
     {
+        // 1. 히트박스 초기값 기억
         GameObject[] hitboxes = { hitBox_Stamp, hitBox_Landing, hitBox_Clearing, hitBox_Slash, hitBox_BackKick };
         foreach (var hb in hitboxes)
         {
             if (hb != null)
             {
-                // 절대값(Mathf.Abs) 제거: 기획자가 세팅한 고유의 좌우 위치값을 그대로 저장
                 hitboxBaseX[hb] = hb.transform.localPosition.x;
 
-                // 콜라이더 오프셋 값도 캐싱
                 Collider2D col = hb.GetComponent<Collider2D>();
                 if (col != null)
                 {
@@ -130,11 +134,23 @@ public class MidBoss : EnemyFSM
                 }
             }
         }
+
+        // 2. VFX 초기값 기억 (새로 추가)
+        if (vfxObjectsToFlip != null)
+        {
+            foreach (var vfx in vfxObjectsToFlip)
+            {
+                if (vfx != null)
+                {
+                    vfxBaseX[vfx] = vfx.transform.localPosition.x;
+                }
+            }
+        }
     }
 
     protected override void OnFacingChanged(bool facingLeft)
     {
-        // 1. Transform 위치 반전
+        // 1. 히트박스 Transform 위치 반전
         foreach (var kvp in hitboxBaseX)
         {
             GameObject hb = kvp.Key;
@@ -144,7 +160,7 @@ public class MidBoss : EnemyFSM
             hb.transform.localPosition = pos;
         }
 
-        // 2. Collider 오프셋 반전 (몸 안쪽에 박히던 문제 해결)
+        // 2. 히트박스 Collider 오프셋 반전
         foreach (var kvp in colliderBaseOffsetX)
         {
             Collider2D col = kvp.Key;
@@ -154,12 +170,29 @@ public class MidBoss : EnemyFSM
             col.offset = offset;
         }
 
+        // 3. 거미줄 발사구 위치 & 방향 회전
         if (webFirePoint != null)
         {
             Vector3 webPos = webFirePoint.transform.localPosition;
             webPos.x = facingLeft ? mouthLeftPos.x : mouthRightPos.x;
             webPos.y = facingLeft ? mouthLeftPos.y : mouthRightPos.y;
             webFirePoint.transform.localPosition = webPos;
+
+            // 왼쪽을 볼 때 발사구를 Y축 180도 돌림
+            webFirePoint.transform.localRotation = facingLeft ? Quaternion.Euler(0, 180f, 0) : Quaternion.identity;
+        }
+
+        // 4. VFX 오브젝트 위치 반전 & Y축 회전 (왼쪽으로 파티클 쏘기)
+        foreach (var kvp in vfxBaseX)
+        {
+            GameObject vfx = kvp.Key;
+            float baseX = kvp.Value;
+            Vector3 pos = vfx.transform.localPosition;
+            pos.x = facingLeft ? -baseX : baseX;
+            vfx.transform.localPosition = pos;
+
+            // 핵심: 파티클 포구를 왼쪽으로 180도 돌려버림
+            vfx.transform.localRotation = facingLeft ? Quaternion.Euler(0, 180f, 0) : Quaternion.identity;
         }
     }
 

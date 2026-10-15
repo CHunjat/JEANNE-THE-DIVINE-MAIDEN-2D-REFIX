@@ -47,7 +47,7 @@ public class MidBossPattern7 : BossPatternBase
 
     public void AnimEvent_SlashReturn()
     {
-        // 형 말대로 분리하지 않고 동일한 slashHitbox를 그대로 다시 사용함.
+        // 분리하지 않고 동일한 slashHitbox를 그대로 다시 사용함.
         if (slashHitbox != null)
         {
             if (currentHitboxCoroutine != null) StopCoroutine(currentHitboxCoroutine);

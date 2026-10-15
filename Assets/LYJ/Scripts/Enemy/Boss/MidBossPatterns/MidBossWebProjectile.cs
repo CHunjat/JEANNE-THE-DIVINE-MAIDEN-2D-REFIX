@@ -1,130 +1,192 @@
+ï»¿
 using UnityEngine;
 
-// =====================================================
-// MidBossWebProjectile.cs
-// ·¹ÀÌ¾î ¹æ¾î ·ÎÁ÷ º¹±¸ (Çã°ø¿¡¼­ Áõ¹ßÇÏ´Â ¹ö±× ¿Ïº® ÇØ°á)
-// µ¥¹ÌÁö´Â ÇÁ¸®ÆÕÀÇ EnemyHitbox°¡ ¾Ë¾Æ¼­ Ã³¸®ÇÏµµ·Ï °£¼· ¾È ÇÔ
-// =====================================================
 public class MidBossWebProjectile : MonoBehaviour
 {
-    [Header("À¯µµÅº ¼³Á¤ (±âÈ¹ÀÚ Á¶Àı)")]
-    [SerializeField] private bool enableHoming = false;
-    [SerializeField] private float homingSensitivity = 2f;
-    [SerializeField] private float playerYOffset = 0f;
+    [Header("Visual Settings")]
+    [SerializeField] private Transform visual;
+    [SerializeField] private bool visualFacesRight = true;
 
-    [Header("È¸Àü ¼³Á¤")]
-    [SerializeField] private bool rotateToDirection = true;
-    [SerializeField] private float rotationAngleOffset = 0f;
+    [Header("Debug")]
+    [SerializeField] private bool showDebugLog = true;
 
     private float speed;
     private float maxRange;
     private float bindDuration;
+
     private Vector2 startPos;
-    private Transform target;
     private Vector2 currentDir;
+
+    private Animator anim;
     private SpriteRenderer visualRenderer;
-    private CircleCollider2D myCollider;
 
-    private Vector2 originalColliderOffset;
-    private Vector3 originalVisualLocalPos;
+    private Vector3 originalVisualScale;
+    private bool isHit;
+    private bool facingLeft;
 
-    public void Initialize(Vector2 dir, float spd, float range, float bind)
+    private void Awake()
+    {
+        // Visual ì˜¤ë¸Œì íŠ¸ ìë™ ê²€ìƒ‰
+        if (visual == null)
+        {
+            Transform[] children =
+                GetComponentsInChildren<Transform>(true);
+
+            foreach (Transform child in children)
+            {
+                if (child.name == "Visual")
+                {
+                    visual = child;
+                    break;
+                }
+            }
+        }
+
+        if (visual != null)
+        {
+            originalVisualScale = visual.localScale;
+
+            visualRenderer =
+                visual.GetComponent<SpriteRenderer>();
+
+            anim = visual.GetComponent<Animator>();
+        }
+        else
+        {
+            Debug.LogError(
+                "[MidBossWebProjectile] Visualì„ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.",
+                this
+            );
+        }
+    }
+
+    public void Initialize(
+        Vector2 dir,
+        float spd,
+        float range,
+        float bind)
     {
         speed = spd;
         maxRange = range;
         bindDuration = bind;
+
         startPos = transform.position;
         currentDir = dir.normalized;
 
-        visualRenderer = GetComponentInChildren<SpriteRenderer>();
-        myCollider = GetComponent<CircleCollider2D>();
+        isHit = false;
+        facingLeft = currentDir.x < 0f;
 
-        if (myCollider != null) originalColliderOffset = myCollider.offset;
-        if (visualRenderer != null) originalVisualLocalPos = visualRenderer.transform.localPosition;
+        // Visualë§Œ ë°©í–¥ ë°˜ì „
+        ApplyVisualDirection();
 
-        ApplyRotation();
+        if (showDebugLog)
+        {
+            Debug.Log(
+                "[MidBossWebProjectile] ë°œì‚¬ ë°©í–¥: " +
+                (facingLeft ? "ì™¼ìª½" : "ì˜¤ë¥¸ìª½") +
+                " / ì´ë™ ë²¡í„°: " + currentDir +
+                " / ë¶€ëª¨ íšŒì „: " + transform.eulerAngles,
+                this
+            );
+        }
+    }
 
-        GameObject playerObj = GameObject.FindWithTag("Player");
-        if (playerObj != null) target = playerObj.transform;
+    private void ApplyVisualDirection()
+    {
+        if (visual == null)
+            return;
+
+        // ê¸°ë³¸ ìŠ¤í”„ë¼ì´íŠ¸ ë°©í–¥ì— ë”°ë¼ ë°˜ì „ ì—¬ë¶€ ê²°ì •
+        bool shouldFlip =
+            visualFacesRight ? facingLeft : !facingLeft;
+
+        Vector3 newScale = originalVisualScale;
+
+        newScale.x =
+            Mathf.Abs(originalVisualScale.x) *
+            (shouldFlip ? -1f : 1f);
+
+        visual.localScale = newScale;
+
+        // ì´ì „ ë°©ì‹ê³¼ ì¤‘ë³µ ë°˜ì „ ë°©ì§€
+        if (visualRenderer != null)
+        {
+            visualRenderer.flipX = false;
+        }
+    }
+
+    private void LateUpdate()
+    {
+        // Animatorê°€ ë°˜ì „ ê°’ì„ ë³€ê²½í•˜ëŠ” ê²½ìš° ëŒ€ë¹„
+        if (visual != null)
+        {
+            ApplyVisualDirection();
+        }
     }
 
     private void Update()
     {
-        if (enableHoming && target != null)
-        {
-            Vector2 targetPos = (Vector2)target.position + new Vector2(0, playerYOffset);
-            Vector2 dirToTarget = (targetPos - (Vector2)transform.position).normalized;
-            currentDir = Vector2.Lerp(currentDir, dirToTarget, homingSensitivity * Time.deltaTime).normalized;
+        if (isHit)
+            return;
 
-            ApplyRotation();
-        }
+        transform.Translate(
+            currentDir * speed * Time.deltaTime,
+            Space.World
+        );
 
-        transform.position += (Vector3)(currentDir * speed * Time.deltaTime);
+        float traveledDistance =
+            Vector2.Distance(startPos, transform.position);
 
-        if (Vector2.Distance(startPos, transform.position) >= maxRange)
+        if (traveledDistance >= maxRange)
         {
             Destroy(gameObject);
         }
     }
 
-    private void ApplyRotation()
-    {
-        if (!rotateToDirection) return;
-
-        bool facingLeft = currentDir.x < 0f;
-
-        float tiltAngle = Mathf.Atan2(currentDir.y, Mathf.Abs(currentDir.x)) * Mathf.Rad2Deg;
-        float rotationZ = facingLeft ? -tiltAngle : tiltAngle;
-        transform.rotation = Quaternion.Euler(0f, 0f, rotationZ + rotationAngleOffset);
-
-        if (visualRenderer != null)
-        {
-            visualRenderer.flipX = facingLeft;
-
-            Vector3 localPos = originalVisualLocalPos;
-            localPos.x = facingLeft ? -localPos.x : localPos.x;
-            visualRenderer.transform.localPosition = localPos;
-        }
-
-        if (myCollider != null)
-        {
-            Vector2 offset = originalColliderOffset;
-            offset.x = facingLeft ? -offset.x : offset.x;
-            myCollider.offset = offset;
-        }
-    }
-
-    private void OnDrawGizmos()
-    {
-        if (myCollider != null)
-        {
-            Vector3 worldCenter = transform.TransformPoint(myCollider.offset);
-            float worldRadius = myCollider.radius * Mathf.Max(transform.lossyScale.x, transform.lossyScale.y);
-            Gizmos.color = Color.magenta;
-            Gizmos.DrawWireSphere(worldCenter, worldRadius);
-        }
-        if (visualRenderer != null)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireCube(visualRenderer.bounds.center, visualRenderer.bounds.size);
-        }
-    }
-
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // ¹æ¾î ÄÚµå º¹±¸
-        // ÇÃ·¹ÀÌ¾îÀÇ ¹«±â³ª °¨Áö±â °°Àº ²®µ¥±â°¡ ¾Æ´Ï¶ó, ÁøÂ¥ 'Player' ·¹ÀÌ¾î(¸öÅë)¿¡¸¸ ¹İÀÀÇÔ
-        if (other.gameObject.layer != LayerMask.NameToLayer("Player")) return;
+        if (isHit)
+            return;
 
-        PlayerStats playerStats = other.GetComponentInParent<PlayerStats>();
-        PlayerController playerCtrl = other.GetComponentInParent<PlayerController>();
-
-        if (playerStats != null && playerCtrl != null)
+        if (other.gameObject.layer !=
+            LayerMask.NameToLayer("Player"))
         {
-            // playerCtrl.ApplyBind(bindDuration);
+            return;
         }
 
-        // ÁøÂ¥ ¸öÅë¿¡ ´ê¾ÒÀ» ¶§¸¸ ÆÄ±« (ÀÌ¶§ EnemyHitbox°¡ Á¤»óÀûÀ¸·Î µ¥¹ÌÁö¸¦ ÁÜ)
-        Destroy(gameObject);
+        isHit = true;
+        speed = 0f;
+
+        if (showDebugLog)
+        {
+            Debug.Log(
+                "[MidBossWebProjectile] í”Œë ˆì´ì–´ ì¶©ëŒ ê°ì§€",
+                this
+            );
+        }
+
+        if (anim != null && HasParameter(anim, "doSpread"))
+        {
+            anim.SetTrigger("doSpread");
+        }
+
+        Destroy(gameObject, 0.4f);
+    }
+
+    private bool HasParameter(
+        Animator animator,
+        string parameterName)
+    {
+        foreach (
+            AnimatorControllerParameter parameter
+            in animator.parameters)
+        {
+            if (parameter.name == parameterName)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

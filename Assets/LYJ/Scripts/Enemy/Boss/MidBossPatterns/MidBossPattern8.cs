@@ -1,14 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// 필살기 공중 찍기 패턴
 public class MidBossPattern8 : BossPatternBase
 {
     [SerializeField] private float clearingRange = 3f;
     [SerializeField] private float knockbackDistance = 10f;
     [SerializeField] private float clearingDuration = 0.5f;
-    [SerializeField] private float webSpeed = 6f;
-    [SerializeField] private float webRange = 12f;
+
+    [SerializeField] private float webSpeed = 75f;
+    [SerializeField] private float webRange = 50f;
     [SerializeField] private float bindDuration = 3f;
 
     [SerializeField] private float airTime = 1.8f;
@@ -27,9 +27,9 @@ public class MidBossPattern8 : BossPatternBase
 
     protected override void Awake()
     {
-        base.Awake(); // 부모 Awake 실행 (visualAnimator, rb 등 초기화)
+        base.Awake();
 
-        maxExecutionTime = 8f; // 8번 패턴 전용으로 안전장치 시간 8초로 늘림
+        maxExecutionTime = 8f;
 
         MidBoss parent = GetComponent<MidBoss>();
         if (parent != null)
@@ -77,17 +77,8 @@ public class MidBossPattern8 : BossPatternBase
 
             Vector3 spawnPos = mouthSpawnPoint != null ? mouthSpawnPoint.position : transform.position;
 
-            GameObject playerObj = GameObject.FindWithTag("Player");
-            Vector2 dir;
-            if (playerObj != null)
-            {
-                Vector3 targetPos = playerObj.transform.position + new Vector3(0, playerYOffset, 0);
-                dir = ((Vector2)(targetPos - spawnPos)).normalized;
-            }
-            else
-            {
-                dir = new Vector2(isFacingLeft ? -1f : 1f, 0f);
-            }
+            // 레일건 규격에 맞춰 X축 직선 발사로 고정
+            Vector2 dir = new Vector2(isFacingLeft ? -1f : 1f, 0f);
 
             GameObject web = Instantiate(webPrefab, spawnPos, Quaternion.identity);
             MidBossWebProjectile webScript = web.GetComponent<MidBossWebProjectile>();

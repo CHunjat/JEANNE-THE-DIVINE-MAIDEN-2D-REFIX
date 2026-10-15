@@ -1,11 +1,10 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
-// °Å¹ÌÁÙ ¹ñ±â ÆÐÅÏ (¿¡ÀÓº¿ ¹× ±Ëµµ ²¿ÀÓ ¿Ïº® ¹æÁö)
 public class MidBossPattern3 : BossPatternBase
 {
-    [Header("°Å¹ÌÁÙ ¹ñ±â ¼³Á¤")]
-    [SerializeField] private float webSpeed = 6f;
-    [SerializeField] private float webRange = 12f;
+    [Header("Railgun Settings")]
+    [SerializeField] private float webSpeed = 75f;
+    [SerializeField] private float webRange = 30f;
     [SerializeField] private float bindDuration = 3f;
     [SerializeField] private float playerYOffset = 0f;
 
@@ -15,15 +14,10 @@ public class MidBossPattern3 : BossPatternBase
     private Transform owner;
     private bool hasFiredThisTurn = false;
 
-    // ¹ß»çÇÒ '°¢µµ'°¡ ¾Æ´Ï¶ó, ÇÃ·¹ÀÌ¾îÀÇ '¸ñÇ¥ ÁÂÇ¥'¸¦ ¶ô¿Â(Lock)ÇÏ´Â º¯¼ö
-    private Vector3 lockedTargetPos;
-    private bool isTargetLocked = false;
-
     protected override void Awake()
     {
         base.Awake();
         owner = transform;
-
         cooldown = 6f;
         priority = 3;
         distanceType = DistanceType.Far;
@@ -33,19 +27,6 @@ public class MidBossPattern3 : BossPatternBase
     protected override void OnExecute()
     {
         hasFiredThisTurn = false;
-
-        // ÆÐÅÏ ½ÃÀÛ ½Ã, ÇÃ·¹ÀÌ¾îÀÇ 'ÇöÀç À§Ä¡(ÁÂÇ¥)'¸¦ ¶ô¿Â! (¿¡ÀÓº¿ ¹æÁö)
-        GameObject playerObj = GameObject.FindWithTag("Player");
-        if (playerObj != null)
-        {
-            lockedTargetPos = playerObj.transform.position + new Vector3(0, playerYOffset, 0);
-            isTargetLocked = true;
-        }
-        else
-        {
-            isTargetLocked = false;
-        }
-
         if (visualAnimator != null) visualAnimator.SetTrigger("doSpit");
     }
 
@@ -53,46 +34,32 @@ public class MidBossPattern3 : BossPatternBase
     {
         if (!isExecuting || hasFiredThisTurn) return;
         hasFiredThisTurn = true;
+
         if (webPrefab == null) return;
 
-        // ÇÉÀ» ¹âÀº ÇöÀç ½ÃÁ¡ÀÇ ¹ß»ç±¸ À§Ä¡
-        Vector3 spawnPos = webSpawnPoint != null ? webSpawnPoint.position : owner.position;
+        GameObject playerObj = GameObject.FindWithTag("Player");
+        if (playerObj == null) return;
 
-        // º¸½º°¡ ÇöÀç ¹Ù¶óº¸°í ÀÖ´Â Á¤¸é ¹æÇâ ±¸ÇÏ±â
-        SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
-        bool isFacingLeft = (sr != null && sr.flipX);
-        float forwardX = isFacingLeft ? -1f : 1f;
+        float bossY = webSpawnPoint != null ? webSpawnPoint.position.y : owner.position.y;
+        float playerY = playerObj.transform.position.y + playerYOffset;
+        float yDiff = Mathf.Abs(playerY - bossY);
 
-        Vector2 finalDir;
-
-        if (isTargetLocked)
+        if (yDiff < 6.0f)
         {
-            // ¹ß»ç±¸¿¡¼­ ¶ô¿ÂµÈ Å¸°Ù ÁÂÇ¥¸¦ ÇâÇÏ´Â ¹æÇâ °è»ê (±Ëµµ ²¿ÀÓ ÇØ°á)
-            Vector2 dirToTarget = ((Vector2)(lockedTargetPos - spawnPos)).normalized;
+            Vector3 spawnPos = webSpawnPoint != null ? webSpawnPoint.position : owner.position;
 
-            // [ÇÙ½É] ¸¸¾à ÇÃ·¹ÀÌ¾î°¡ Æû Àâ´Â µ¿¾È µî µÚ·Î ³Ñ¾î°¬´Ù¸é? (X ¹æÇâ ºÎÈ£°¡ ´Ù¸£¸é)
-            if (Mathf.Sign(dirToTarget.x) != Mathf.Sign(forwardX))
+            // í”Œë ˆì´ì–´ ìª½ ë¬´ì¡°ê±´ ì¡°ì¤€
+            float xDiff = playerObj.transform.position.x - owner.position.x;
+            Vector2 finalDir = new Vector2(xDiff < 0 ? -1f : 1f, 0f);
+
+            // ê°•ì œ 0ë„(Quaternion.identity) ì‚­ì œí•˜ê³ , í”„ë¦¬íŒ¹ ì›ë³¸ ê°ë„(Y=90) ê·¸ëŒ€ë¡œ ì‚´ë ¤ì„œ ë°œì‚¬
+            GameObject web = Instantiate(webPrefab, spawnPos, webPrefab.transform.rotation);
+
+            MidBossWebProjectile webScript = web.GetComponent<MidBossWebProjectile>();
+            if (webScript != null)
             {
-                // µî µÚ(¾ûµ¢ÀÌ)·Î ¾î»öÇÏ°Ô ½îÁö ¾Ê°í, ¿ø·¡ ¹Ù¶óº¸´ø Á¤¸éÀ¸·Î Çê½ºÀ® ¹ß»ç!
-                finalDir = new Vector2(forwardX, 0f);
+                webScript.Initialize(finalDir, webSpeed, webRange, bindDuration);
             }
-            else
-            {
-                finalDir = dirToTarget;
-            }
-        }
-        else
-        {
-            // Å¸°ÙÀ» ¸ø Ã£¾ÒÀ¸¸é ±×³É Á¤¸é ¹ß»ç
-            finalDir = new Vector2(forwardX, 0f);
-        }
-
-        GameObject web = Instantiate(webPrefab, spawnPos, Quaternion.identity);
-
-        MidBossWebProjectile webScript = web.GetComponent<MidBossWebProjectile>();
-        if (webScript != null)
-        {
-            webScript.Initialize(finalDir, webSpeed, webRange, bindDuration);
         }
     }
 
