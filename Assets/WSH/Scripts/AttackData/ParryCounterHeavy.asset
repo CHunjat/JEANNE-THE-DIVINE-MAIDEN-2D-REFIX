@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: ParryCounterHeavy
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   attackName: ParryCounterHeavy
-  attackCategory: 0
-  size: {x: 3.18, y: 1.64}
+  attackCategory: 5
+  size: {x: 3.08, y: 1.64}
   offset: {x: -0.7, y: 0.14}
   damageMultiplier: 2.3
   hitStopDuration: 0
   mpRecoveryRatio: 0.3
+  damageMultiplierByLevel: []
   lightAttackGroggyRatio: 1
   heavyAttackGroggyRatio: 1.5
   heavyChargeGroggyRatio: 2

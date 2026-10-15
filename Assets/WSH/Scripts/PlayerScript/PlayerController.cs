@@ -122,6 +122,8 @@ public class PlayerController : MonoBehaviour
     [HideInInspector]
     public string anim_WallSlide = "walling";
     [HideInInspector]
+    public string anim_ToWallGrab = "ToWallGrab";
+    [HideInInspector]
     public string anim_WallJump = "WallJump";
 
     [HideInInspector]
@@ -479,6 +481,7 @@ public class PlayerController : MonoBehaviour
     [HideInInspector]
     [Header("변수 선언부")]
 
+   
     public bool hasUsedAirDash;
 
     public bool CanDash
@@ -496,7 +499,7 @@ public class PlayerController : MonoBehaviour
     }
 
     // 1. 비탈길인지 확인하고 경사면 정보(slopeHit)를 업데이트함
-    private float defaultGravityScale;
+    public float defaultGravityScale;
     public bool IsActionLocked => StateMachine.CurrentState == HealState;
     [HideInInspector]
     public bool isThrustCharged = false;
@@ -525,6 +528,10 @@ public class PlayerController : MonoBehaviour
     public float coyoteTime = 0.1f; // 낭떠러지에서 떨어져도 이 시간 동안은 지상으로 판정
     private float lastGroundedTime; // 클래스 멤버 변수로 반드시 선언되어 있어야 함
     public bool lastGroundedWasSlope;
+
+    [HideInInspector]
+    [Header("입력 제어 스위치")]
+    public bool canControl = true;
 
     // 1. 순수 물리 판독기
 
@@ -651,86 +658,92 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        //테스트용 자살버튼 ㅋㅋ
         if (Input.GetKeyDown(KeyCode.K))
         {
             Debug.Log("<color=magenta>테스트용 자살 버튼 작동!</color>");
-
-            // 만약 체력 UI도 같이 깎이는 걸 보고 싶다면 아래 주석 해제
             if (playerStats != null) playerStats.currentHp = 0;
-
             StateMachine.ChangeState(DieState);
             return;
         }
-        //테스트용 쳐맞기버튼 ㅋㅋ
         if (Input.GetKeyDown(KeyCode.L))
         {
             Debug.Log("<color=magenta>테스트: 가상의 적에게 10 데미지 피격!</color>");
-
-            // 플레이어의 살짝 앞(오른쪽을 보면 오른쪽, 왼쪽을 보면 왼쪽)에 가짜 적 위치를 만듦
             float dir = isFacingRight ? 1f : -1f;
             Vector2 fakeEnemyPos = transform.position + new Vector3(dir * 2f, 0f, 0f);
-
-            // 이제 순수 계산기(TakeDamage) 대신, 통합 판독기(EvaluateAttack)로 데미지를 보냄!
             EvaluateAttack(10f, fakeEnemyPos);
         }
-
-
         if (sprintJumpCooldownTimer > 0)
             sprintJumpCooldownTimer -= Time.deltaTime;
-
-        //지상에서점프시 벽판정쿨타임
         if (wallGrabTimer > 0)
-        { wallGrabTimer -= Time.deltaTime; }
-
+            wallGrabTimer -= Time.deltaTime;
         if (dashCooltimer > 0)
             dashCooltimer -= Time.deltaTime;
         if (landTimer > 0) landTimer -= Time.deltaTime;
+
+        if (isSprinting && animator != null
+    && (StateMachine.CurrentState == JumpState || StateMachine.CurrentState == AirState))
+        {
+            var clips = animator.GetCurrentAnimatorClipInfo(0);
+            bool falling = clips.Length > 0 && clips[0].clip != null
+                && clips[0].clip.name == anim_SprintJump;
+            if (falling)
+            {
+                float frac = animator.GetCurrentAnimatorStateInfo(0).normalizedTime % 1f;
+                animator.fireEvents = frac > 0.05f && frac < 0.98f;
+            }
+            else
+            {
+                animator.fireEvents = true;
+            }
+        }
+ 
+        else if (animator != null)
+        {
+            animator.fireEvents = true;
+        }
 
         if (inputReader.DashPressed && !CanDash)
         {
             inputReader.DashPressed = false;
         }
-        //테스트 공격중일떄는 대시 입력을 강제로 차단
         if (StateMachine.CurrentState is PlayerAttackState && inputReader.DashPressed)
         {
             inputReader.DashPressed = false;
         }
-
         if (IsGrounded() && rb.linearVelocity.y <= 0.1f)
         {
             RestJumpCount();
         }
-
         if (IsGrounded() && rb.linearVelocity.y <= 0.1f)
         {
             RestJumpCount();
-            ResetAirActions(); // 바닥에 닿으면 공중 공격 횟수 초기화
+            ResetAirActions();
         }
-
-
         if (gizmoDisplayTimer > 0)
         {
             gizmoDisplayTimer -= Time.deltaTime;
             if (gizmoDisplayTimer <= 0)
             {
-                currentActiveData = null; // 시간이 다 되면 데이터를 비워 기즈모를 끕니다.
+                currentActiveData = null;
             }
         }
-
-        //딱 idle, move에서만 가능
-        //키보드 버튼은 하나인데, 땅이냐 공중이냐에 따라 다른 스킬을 나가게 해주는 분배기" 역할이 필요
-        //평타는 콤보가 꼬이면 안 되니까 State 안에서만 부르고, 저건 언제든 튀어나가야 하는 스킬이니까 밖으로 뺌
-        HandleGuardInput(); //가드입력을 최상단 감시하여 모든 공격상태를 캔슬
-        HandleThrustAttackInput(); //강공찌르기 판독기 추가
-        HandleActiveSkillInput();  // [수정] E키(OnSkill) 하나로 슬롯에 따라 스킬을 분배하는 통합 판독기
-
-
-
-
-        StateMachine.CurrentState.HandleInput();
+        if (canControl)
+        {
+            HandleGuardInput();
+            HandleThrustAttackInput();
+            HandleActiveSkillInput();
+            StateMachine.CurrentState.HandleInput();
+        }
+        else
+        {
+            inputReader.DashPressed = false;
+            inputReader.AttackPressed = false;
+            inputReader.HAttackPressed = false;
+            inputReader.ThrustAttackPressed = false;
+            inputReader.GrapplePressed = false;
+            inputReader.JumpPressed = false;
+        }
         StateMachine.CurrentState.LogicUpdate();
-
     }
     public void ResetDashCooldown() => dashCooltimer = dashcooltime;
     public void ResetLandTimer() => landTimer = landDashDelay;
@@ -738,9 +751,10 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (StateMachine.CurrentState != DropState && ignoredDropCollider != null)
+        if (ignoredDropCollider != null && StateMachine.CurrentState != DropState)
         {
-            ignoredDropCollider = null;
+            if (cd != null && !Physics2D.Distance(cd, ignoredDropCollider).isOverlapped)
+                ignoredDropCollider = null;
         }
 
         if (StateMachine.CurrentState == DropState)
@@ -774,7 +788,25 @@ public class PlayerController : MonoBehaviour
                 }
                 else
                 {
-                    ToggleStairsCollision(rb.linearVelocity.y <= 0.1f);
+                    if (lastGroundedWasSlope)
+                    {
+                        ToggleStairsCollision(rb.linearVelocity.y <= 0.1f);
+                    }
+                    else
+                    {
+                        bool calfMount = false;
+                        if (rb.linearVelocity.y <= 0.1f)
+                        {
+                            Vector2 calfPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.10f);
+                            RaycastHit2D calfHit = Physics2D.BoxCast(
+                                calfPos, new Vector2(cd.bounds.size.x * 0.45f, 0.08f),
+                                0f, Vector2.down, 0.10f, stairsLayer);
+                            calfMount = calfHit.collider != null
+                                && calfHit.collider != ignoredDropCollider
+                                && calfHit.point.y <= cd.bounds.min.y + 0.18f;
+                        }
+                        ToggleStairsCollision(calfMount);
+                    }
                 }
             }
         }
@@ -860,6 +892,7 @@ public class PlayerController : MonoBehaviour
         if (StateMachine.CurrentState == HitState) return;
         if (StateMachine.CurrentState == GuardState) return;
         if (StateMachine.CurrentState == GuardOffState) return;
+        if (StateMachine.CurrentState == WallSlideState) return;
         #endregion
 
         // 5. 중력 등 기타 보정 로직
@@ -999,12 +1032,15 @@ public class PlayerController : MonoBehaviour
     {
         if (cd == null) return false;
 
-        Vector2 origin = cd.bounds.center;
+        // 박스 높이를 25프로 수준으로 더 콤팩트하게 축소
+        Vector2 checkSize = new Vector2(WallCheckSize.x, cd.bounds.size.y * 0.15f);
 
-        // BoxCast (시작점, 박스크기/2, 각도, 방향, 거리, 레이어)
+        // 중심점을 위로 더 끌어올림 (+0.1f -> +0.2f)
+        Vector2 origin = new Vector2(cd.bounds.center.x, cd.bounds.center.y + (cd.bounds.size.y * 0.19f));
+
         float checkDist = cd.bounds.extents.x + wallCheckDistance;
 
-        return Physics2D.BoxCast(origin, WallCheckSize, 0f, Vector2.right * dir, checkDist, wallLayer).collider != null;
+        return Physics2D.BoxCast(origin, checkSize, 0f, Vector2.right * dir, checkDist, wallLayer).collider != null;
     }
 
     //4.29 시작, 공격 분배기 함수
@@ -1289,11 +1325,11 @@ public class PlayerController : MonoBehaviour
         // 2. 장애물 차단 검사 (bestTarget이 있을 때만 수행)
         if (bestTarget != null)
         {
-            // --- 스프린트 상태에 따른 판정 수치 구분 ---
-            // 스프린트면: 더 넓고(1.5f) 깊게(1.5f) 검사해서 깐깐하게 막음
-            // 일반이면: 조금 좁고(0.95f) 얕게(0.9f) 검사해서 관대하게 허용
-            float widthFactor = isSprinting ? 1.0f : 0.3f;
-            float checkDistance = isSprinting ? 1.0f : 0.3f;
+            // --- 스프린트 상태에 따른 판정 수치 구분 --- 절대 건들지 말것
+            // 스프린트면: 더 넓고(0.6f) 깊게(0.5f) 검사해서 깐깐하게 막음
+            // 일반이면: 조금 좁고(0.6f) 얕게(0.9f) 검사해서 관대하게 허용
+            float widthFactor = isSprinting ? 0.7f : 0.3f;
+            float checkDistance = isSprinting ? 0.7f : 0.3f;
 
             Vector2 footPos = new Vector2(cd.bounds.center.x, cd.bounds.min.y);
             Vector2 checkSize = new Vector2(cd.bounds.size.x * widthFactor, 0.1f);
@@ -1583,10 +1619,15 @@ public class PlayerController : MonoBehaviour
 
     private void DrawWallGizmo(float dir)
     {
-        Vector2 origin = cd.bounds.center;
+        if (cd == null) return;
+
+        Vector2 checkSize = new Vector2(WallCheckSize.x, cd.bounds.size.y * 0.35f);
+        Vector2 origin = new Vector2(cd.bounds.center.x, cd.bounds.center.y + (cd.bounds.size.y * 0.1f));
+
         float checkDist = cd.bounds.extents.x + wallCheckDistance;
         Vector2 hitCenter = origin + (Vector2.right * dir * checkDist);
-        Gizmos.DrawWireCube(hitCenter, WallCheckSize);
+
+        Gizmos.DrawWireCube(hitCenter, checkSize);
     }
 
 
@@ -1628,7 +1669,28 @@ public class PlayerController : MonoBehaviour
     }
 
 
+    public void SetCanControl(bool value) //외부에서 입력 막는 함수
+    {
+        canControl = value;
 
+        if (!canControl)
+        {
+            // 남아 있던 1회성 입력 제거
+            inputReader.DashPressed = false;
+            inputReader.AttackPressed = false;
+            inputReader.HAttackPressed = false;
+            inputReader.ThrustAttackPressed = false;
+            inputReader.GrapplePressed = false;
+            inputReader.JumpPressed = false;
+
+            // UI를 여는 순간 좌우로 미끄러지는 것 방지
+            if (rb != null)
+            {
+                rb.linearVelocity =
+                    new Vector2(0f, rb.linearVelocity.y);
+            }
+        }
+    }
 
 
 

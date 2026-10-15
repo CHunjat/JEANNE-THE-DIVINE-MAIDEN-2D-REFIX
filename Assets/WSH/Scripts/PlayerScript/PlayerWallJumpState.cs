@@ -1,33 +1,49 @@
-using UnityEngine;
-using UnityEngine.Windows;
+ï»¿using UnityEngine;
 
 public class PlayerWallJumpState : PlayerState
 {
-    private float wallJumpDir;
+    private float towardWallDir; // ë²½ ìª½
+    private float jumpAwayDir;   // íŠ•ê¸°ëŠ” ìª½ (ë²½ ë°˜ëŒ€)
+    private bool kickAway;       // ë°˜ëŒ€í‚¤ë¡œ ê°•í•˜ê²Œ ì´íƒˆí–ˆëŠ”ì§€
 
     public PlayerWallJumpState(PlayerController player, PlayerStateMachine stateMachine, string animName)
         : base(player, stateMachine, animName) { }
 
     public override void Enter()
     {
-        // base.Enter(); ±İÁö!
+        // base.Enter(); ê¸ˆì§€!
         stateTimer = 0f;
         player.UseJump();
-        // 2´Ü Á¡ÇÁ°¡ ÀÖ´Ù¸é ¿©±â¼­ È½¼ö(JumpCount)¸¦ ¸®¼ÂÇØ ÁÖ¸é ÁÁ½À´Ï´Ù.
-        //player.RestJumpCount();
 
-        // ¾Ö´Ï¸ŞÀÌ¼Ç °­Á¦ Àç»ı
         player.animator.Play(player.anim_WallJump, 0, 0f);
 
-        // ¹Ù¶óº¸´ø ¹İ´ë ¹æÇâ ±¸ÇÏ±â
-        float wallJumpDir = player.isFacingRight ? 1f : -1f;
+        // WallSlideì™€ ë™ì¼í•˜ê²Œ ë²½ ë°©í–¥ í™•ì •
+        if (player.IsTouchingWall(1f)) towardWallDir = 1f;
+        else if (player.IsTouchingWall(-1f)) towardWallDir = -1f;
+        else towardWallDir = player.isFacingRight ? -1f : 1f; // ë“±ì§€ê³  ìˆìœ¼ë¯€ë¡œ ë²½ì€ ë’¤
 
-        // Æ¨°Ü³ª°¡´Â ¹æÇâÀ¸·Î ¸ö µ¹¸®±â
-        player.FlipController(wallJumpDir);
+        jumpAwayDir = -towardWallDir;
 
-        // ´ë°¢¼±À¸·Î Á¡ÇÁ (Vector2·Î º¯°æ)
-        player.rb.linearVelocity = new Vector2(wallJumpDir * player.wallJumpForce.x,
-        player.wallJumpForce.y);
+        float xInput = player.inputReader.MoveValue.x;
+        // ë°˜ëŒ€ ë°©í–¥í‚¤ = ë²½ì—ì„œ ë©€ì–´ì§€ëŠ” ìª½
+        kickAway = Mathf.Abs(xInput) > 0.1f && Mathf.Sign(xInput) == Mathf.Sign(jumpAwayDir);
+
+        player.FlipController(jumpAwayDir);
+
+        if (kickAway)
+        {
+            // ë°˜ëŒ€í‚¤ â†’ ê°•í•˜ê²Œ ì´íƒˆ
+            player.rb.linearVelocity = new Vector2(
+                jumpAwayDir * player.wallJumpForce.x,
+                player.wallJumpForce.y);
+        }
+        else
+        {
+            // ë²½ ìª½ í‚¤ ìœ ì§€ â†’ ì•½í•˜ê²Œë§Œ ë–¨ì–´ì§ (ë‹¤ì‹œ ë¶™ê¸° ì‰¬ì›€)
+            player.rb.linearVelocity = new Vector2(
+                jumpAwayDir * player.wallJumpForce.x * 0.35f,
+                player.wallJumpForce.y);
+        }
     }
 
     public override void Exit()
@@ -37,11 +53,8 @@ public class PlayerWallJumpState : PlayerState
         float xInput = player.inputReader.MoveValue.x;
         float currentX = player.rb.linearVelocity.x;
 
-        // [ÇÙ½É] º® Á¡ÇÁ °ü¼º°ú À¯Àú ÀÔ·Â ¹æÇâÀÌ ¹İ´ë¶ó¸é?
-        // °ü¼ºÀ» Á×ÀÌ°í À¯Àú°¡ ´©¸£´Â ¹æÇâÀ¸·Î ¼Óµµ¸¦ Áï½Ã ÀüÈ¯ÇÒ ÁØºñ¸¦ ÇÕ´Ï´Ù.
         if (xInput != 0 && Mathf.Sign(xInput) != Mathf.Sign(currentX))
         {
-            // °ü¼ºÀ» Àı¹İ ÀÌÇÏ·Î ±ğ°Å³ª ÀÏ¹İ ÀÌµ¿ ¼Óµµ·Î µ¤¾î¹ö¸²
             player.SetVelocity(xInput * player.moveSpeed, player.rb.linearVelocity.y);
         }
     }
@@ -50,13 +63,21 @@ public class PlayerWallJumpState : PlayerState
     {
         base.LogicUpdate();
 
-        // ¡Ú ÄÁÆ®·Ñ ¾ÃÈû Àåº®! (ÀÌ°Ô ÀÖ¾î¾ß ÂËµæÇÏ°Ô Æ¨±é´Ï´Ù)
         if (stateTimer < 0.15f)
+            return;
+
+        float xInput = player.inputReader.MoveValue.x;
+
+        // ë¡ë§¨X: ë²½ ìª½ í‚¤ ìœ ì§€ + ë‹¤ì‹œ ë²½ ì ‘ì´‰ â†’ ë°”ë¡œ ìŠ¬ë¼ì´ë“œ
+        if (!kickAway
+            && Mathf.Abs(xInput) > 0.1f
+            && Mathf.Sign(xInput) == Mathf.Sign(towardWallDir)
+            && player.IsTouchingWall(towardWallDir))
         {
+            stateMachine.ChangeState(player.WallSlideState);
             return;
         }
 
-        // Á¤Á¡ Âï°í ¶³¾îÁö°Å³ª ½Ã°£ Áö³ª¸é ´Ù½Ã Á¶ÀÛ °¡´ÉÇÏ°Ô °øÁßÀ¸·Î ³Ñ±è
         if (player.rb.linearVelocity.y <= 0f || stateTimer > 0.2f)
         {
             stateMachine.ChangeState(player.AirState);

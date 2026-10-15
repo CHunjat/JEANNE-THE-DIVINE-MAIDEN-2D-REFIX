@@ -7,8 +7,11 @@ public class PlayerAirState : PlayerState
 
     public override void Enter()
     {
-        player.ToggleStairsCollision(true);
-        // base.Enter(); 절대 사용 금지!
+        var airClips = player.animator.GetCurrentAnimatorClipInfo(0);
+        string airClip = airClips.Length > 0 && airClips[0].clip != null
+            ? airClips[0].clip.name : "none";
+        Debug.Log($"<color=cyan>[Air Enter]</color> clip={airClip} ignored={(player.ignoredDropCollider != null)} y={player.rb.linearVelocity.y:F2}");
+        player.ToggleStairsCollision(player.ignoredDropCollider == null);        // base.Enter(); 절대 사용 금지!
         stateTimer = 0;
 
         if (player.isSprinting)
@@ -44,8 +47,10 @@ public class PlayerAirState : PlayerState
 
 
         // [착지 판정 및텔레포트]
-        if (player.IsGrounded())
+        if (player.rb.linearVelocity.y <= 0.1f && player.IsGrounded())
         {
+            if (player.rb.linearVelocity.y < -1.5f && !player.OnSlope())
+                return;
             // 🔥 [핵심 안전장치] 이미 LandState라면, 루프를 막기 위해 함수를 즉시 종료합니다.
             if (stateMachine.CurrentState == player.LandState) return;
 
@@ -77,7 +82,7 @@ public class PlayerAirState : PlayerState
                 player.rb.gravityScale = 0f;
                 player.SetVelocity(0f, 0f);
             }
-
+            Debug.Log($"<color=cyan>[Air→Land]</color> t={Time.time:F3} yVel={player.rb.linearVelocity.y:F2} grounded={player.IsGrounded()} slope={player.OnSlope()} lastSlope={player.lastGroundedWasSlope} hit={(hit.collider != null ? hit.collider.name : "null")}");
             stateMachine.ChangeState(player.LandState);
             return;
         }
