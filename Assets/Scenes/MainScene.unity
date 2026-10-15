@@ -45613,6 +45613,7 @@ GameObject:
   - component: {fileID: 973531599}
   - component: {fileID: 973531601}
   - component: {fileID: 973531600}
+  - component: {fileID: 973531602}
   m_Layer: 5
   m_Name: SkillUIPanel
   m_TagString: Untagged
@@ -45707,6 +45708,28 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &973531602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 973531596}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ce43e71d1f417948ab0fce051ba27b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkillRegistrationKeyboardController
+  activeSkillManager: {fileID: 1705092176}
+  skillUIManager: {fileID: 1810266849}
+  moveDuration: 0.15
+  skillActivationBridge: {fileID: 1595899232}
+  playerController: {fileID: 1595899239}
+  slotTargets:
+  - {fileID: 1414352135}
+  - {fileID: 1004544057}
+  - {fileID: 1553889765}
+  - {fileID: 1362946439}
 --- !u!1 &978532102
 GameObject:
   m_ObjectHideFlags: 0

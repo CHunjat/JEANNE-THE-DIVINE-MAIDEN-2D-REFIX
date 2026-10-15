@@ -11,14 +11,14 @@ public class CurrencyUI : MonoBehaviour
     [SerializeField] private TMP_Text animaText;
     [SerializeField] private TMP_Text goldText;
 
-    [Header("Icon (¼±ÅÃ)")]
+    [Header("Icon (ï¿½ï¿½ï¿½ï¿½)")]
     [SerializeField] private RectTransform animaIcon;
     [SerializeField] private RectTransform goldIcon;
 
-    [Header("¼ýÀÚ º¯È­ ¿¬Ãâ")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È­ ï¿½ï¿½ï¿½ï¿½")]
     [SerializeField] private float countDuration = 0.35f;
 
-    [Header("¾ÆÀÌÄÜ ¹ÝÀÀ")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     [SerializeField] private float punchScale = 0.12f;
     [SerializeField] private float punchDuration = 0.25f;
 
@@ -45,7 +45,7 @@ public class CurrencyUI : MonoBehaviour
 
     private void Start()
     {
-        // Inspector¿¡ ¿¬°á ¾È ÇßÀ» °æ¿ì ÀÚµ¿ Å½»ö
+        // Inspectorï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Úµï¿½ Å½ï¿½ï¿½
         if (playerCurrency == null)
         {
             playerCurrency = FindObjectOfType<PlayerCurrency>();
@@ -53,11 +53,11 @@ public class CurrencyUI : MonoBehaviour
 
         if (playerCurrency == null)
         {
-            Debug.LogWarning("[CurrencyUI] PlayerCurrency¸¦ Ã£Áö ¸øÇß½À´Ï´Ù.");
+            Debug.LogWarning("[CurrencyUI] PlayerCurrencyï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½.");
             return;
         }
 
-        // ÃÖÃÊ °ª Áï½Ã Ç¥½Ã
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ Ç¥ï¿½ï¿½
         lastAnima = playerCurrency.anima;
         lastGold = playerCurrency.gold;
 
@@ -73,7 +73,7 @@ public class CurrencyUI : MonoBehaviour
             return;
 
         // =========================
-        // ¾Æ´Ï¸¶ º¯°æ °¨Áö
+        // ï¿½Æ´Ï¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         // =========================
         if (lastAnima != playerCurrency.anima)
         {
@@ -85,7 +85,7 @@ public class CurrencyUI : MonoBehaviour
         }
 
         // =========================
-        // °ñµå º¯°æ °¨Áö
+        // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         // =========================
         if (lastGold != playerCurrency.gold)
         {
@@ -119,7 +119,7 @@ public class CurrencyUI : MonoBehaviour
             .SetUpdate(true)
             .OnComplete(() =>
             {
-                // ¡Ú ¸¶Áö¸· °ªÀº ¹Ýµå½Ã ½ÇÁ¦ ÀçÈ­ °ªÀ¸·Î º¸Á¤
+                // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ýµï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È­ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 displayedAnima = targetValue;
 
                 if (animaText != null)
@@ -151,7 +151,7 @@ public class CurrencyUI : MonoBehaviour
             .SetUpdate(true)
             .OnComplete(() =>
             {
-                // ¡Ú ¸¶Áö¸· °ª °­Á¦ º¸Á¤
+                // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 displayedGold = targetValue;
 
                 if (goldText != null)

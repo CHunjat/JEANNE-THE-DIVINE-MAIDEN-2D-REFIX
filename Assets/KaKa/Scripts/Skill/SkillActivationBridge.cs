@@ -47,7 +47,26 @@ public class SkillActivationBridge : MonoBehaviour
 
     private void Update()
     {
-        if (playerController == null || skillRotationManager == null) return;
+        if (playerController == null ||
+            skillRotationManager == null)
+            return;
+
+
+        // UI 등으로 플레이어 조작이 막힌 상태
+        if (!playerController.canControl)
+        {
+            // 들어온 스킬 입력 제거
+            if (playerController.inputReader != null)
+            {
+                playerController.inputReader.HAttackPressed = false;
+            }
+
+            // 이미 진행 중이던 스킬의 MP 처리 등은 유지
+            HandleDeferredMpConsumption();
+
+            return;
+        }
+
 
         HandleSlotRotation();
         HandleSkillActivation();
