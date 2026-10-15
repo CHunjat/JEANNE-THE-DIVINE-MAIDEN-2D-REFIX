@@ -4,7 +4,7 @@ public class PlayerCurrency : MonoBehaviour
 {
     public const int MAX_CURRENCY = 999_999_999;
 
-    [Header("ÀçÈ­ º¸À¯·®")]
+    [Header("ï¿½ï¿½È­ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
     public int anima = 0;
     public int gold = 0;
 
@@ -15,7 +15,7 @@ public class PlayerCurrency : MonoBehaviour
 
         anima = Mathf.Clamp(anima + amount,0,MAX_CURRENCY);
         Debug.Log(
-            $"¾Æ´Ï¸¶ È¹µæ! (+{amount}) ÇöÀç ¾Æ´Ï¸¶: {anima:N0}"
+            $"ï¿½Æ´Ï¸ï¿½ È¹ï¿½ï¿½! (+{amount}) ï¿½ï¿½ï¿½ï¿½ ï¿½Æ´Ï¸ï¿½: {anima:N0}"
         );
     }
 
@@ -27,7 +27,7 @@ public class PlayerCurrency : MonoBehaviour
         gold = Mathf.Clamp(gold + amount, 0, MAX_CURRENCY);
 
         Debug.Log(
-            $"°ñµå È¹µæ! (+{amount}) ÇöÀç °ñµå: {gold:N0}"
+            $"ï¿½ï¿½ï¿½ È¹ï¿½ï¿½! (+{amount}) ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½: {gold:N0}"
         );
     }
 
@@ -52,7 +52,7 @@ public class PlayerCurrency : MonoBehaviour
 
         if (targetSkill.currentLevel >=targetSkill.growthData.growthTable.Length)
         {
-            Debug.Log($"{targetSkill.skillName} ½ºÅ³Àº ÀÌ¹Ì ÃÖ°í ·¹º§ÀÔ´Ï´Ù.");
+            Debug.Log($"{targetSkill.skillName} ï¿½ï¿½Å³ï¿½ï¿½ ï¿½Ì¹ï¿½ ï¿½Ö°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½.");
 
             return false;
         }
@@ -64,16 +64,16 @@ public class PlayerCurrency : MonoBehaviour
             anima -= cost;
             targetSkill.currentLevel++;
 
-            Debug.Log( $"{targetSkill.skillName} ·¹º§¾÷ ¼º°ø! " + $"(ÇöÀç Lv.{targetSkill.currentLevel}/" +$"³²Àº ¾Æ´Ï¸¶: {anima:N0})");
+            Debug.Log( $"{targetSkill.skillName} ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½! " + $"(ï¿½ï¿½ï¿½ï¿½ Lv.{targetSkill.currentLevel}/" +$"ï¿½ï¿½ï¿½ï¿½ ï¿½Æ´Ï¸ï¿½: {anima:N0})");
 
             return true;
         }
 
-        Debug.Log( $"¾Æ´Ï¸¶°¡ ºÎÁ·ÇÕ´Ï´Ù! " +$"(ÇÊ¿ä: {cost:N0} / º¸À¯: {anima:N0})");
+        Debug.Log( $"ï¿½Æ´Ï¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½! " +$"(ï¿½Ê¿ï¿½: {cost:N0} / ï¿½ï¿½ï¿½ï¿½: {anima:N0})");
         return false;
     }
 
-#if UNITY_EDITOR //ÀÎ½ºÆåÅÍ¿¡¼­ ÃÖ´ë¼ö·®º¸´Ù ¸¹ÀÌ Àû´õ¶óµµ ÃÖ´ë¼ö·®À¸·Î °íÁ¤
+#if UNITY_EDITOR //ï¿½Î½ï¿½ï¿½ï¿½ï¿½Í¿ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     private void OnValidate()
     {
         anima = Mathf.Clamp(

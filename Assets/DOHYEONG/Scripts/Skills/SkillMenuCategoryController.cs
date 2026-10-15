@@ -10,24 +10,24 @@ public class SkillMenuCategoryController : MonoBehaviour
         Active
     }
 
-    [Header("¸ÞÀÎ ÅÇ ¹öÆ°")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Æ°")]
     [SerializeField] private Button passiveButton;
     [SerializeField] private Button activeButton;
 
-    [Header("¸ÞÀÎ ÆÐ³Î")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½")]
     [SerializeField] private GameObject passivePanel;
     [SerializeField] private GameObject activePanel;
 
-    [Header("¼±ÅÃ ÇÁ·¹ÀÓ")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
     [SerializeField] private RectTransform selectorFrame;
 
     [SerializeField] private RectTransform passiveTarget;
     [SerializeField] private RectTransform activeTarget;
 
-    [Header("ÇÁ·¹ÀÓ ÀÌµ¿")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½")]
     [SerializeField] private float selectorDuration = 0.22f;
 
-    [Header("Ã³À½ ¿­¾úÀ» ¶§")]
+    [Header("Ã³ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½")]
     [SerializeField]
     private MainCategory defaultMainCategory
         = MainCategory.Passive;

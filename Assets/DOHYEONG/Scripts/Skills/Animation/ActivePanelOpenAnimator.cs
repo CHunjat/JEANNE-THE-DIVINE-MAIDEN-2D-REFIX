@@ -3,16 +3,16 @@ using UnityEngine;
 
 public class ActivePanelOpenAnimator : MonoBehaviour
 {
-    [Header("¿ÞÂÊ ½ºÅ³ ¸ñ·Ï")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å³ ï¿½ï¿½ï¿½")]
     [SerializeField] private RectTransform[] skillItems;
 
-    [Header("°¡¿îµ¥ µî·Ï ½½·Ô")]
+    [Header("ï¿½ï¿½ï¿½îµ¥ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     [SerializeField] private RectTransform[] equipSlots;
 
-    [Header("¿À¸¥ÂÊ »ó¼¼ ÆÐ³Î")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ð³ï¿½")]
     [SerializeField] private RectTransform detailPanel;
 
-    [Header("¼³Á¤")]
+    [Header("ï¿½ï¿½ï¿½ï¿½")]
     [SerializeField] private float skillMoveOffset = 18f;
     [SerializeField] private float detailMoveOffset = 22f;
 
@@ -41,7 +41,7 @@ public class ActivePanelOpenAnimator : MonoBehaviour
     private void Awake()
     {
         // =========================
-        // ½ºÅ³ ¸ñ·Ï ¿øº» ÀúÀå
+        // ï¿½ï¿½Å³ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         // =========================
 
         skillOrigins = new Vector2[skillItems.Length];
@@ -60,7 +60,7 @@ public class ActivePanelOpenAnimator : MonoBehaviour
         }
 
         // =========================
-        // µî·Ï ½½·Ô ¿øº» ÀúÀå
+        // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         // =========================
 
         slotOrigins = new Vector2[equipSlots.Length];
@@ -104,7 +104,7 @@ public class ActivePanelOpenAnimator : MonoBehaviour
             .SetUpdate(true);
 
         // =========================
-        // ½ºÅ³ ¸ñ·Ï
+        // ï¿½ï¿½Å³ ï¿½ï¿½ï¿½
         // =========================
 
         for (int i = 0; i < skillItems.Length; i++)
@@ -140,7 +140,7 @@ public class ActivePanelOpenAnimator : MonoBehaviour
         }
 
         // =========================
-        // µî·Ï ½½·Ô
+        // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         // =========================
 
         float slotStart =
