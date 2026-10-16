@@ -29061,7 +29061,7 @@ Transform:
   m_GameObject: {fileID: 360136392}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 333.7, y: 5.097846, z: -10}
+  m_LocalPosition: {x: 7.2399955, y: 117.697845, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -176645,6 +176645,7 @@ GameObject:
   - component: {fileID: 1196478891}
   - component: {fileID: 1196478890}
   - component: {fileID: 1196478892}
+  - component: {fileID: 1196478893}
   m_Layer: 5
   m_Name: ActivePanel
   m_TagString: Untagged
@@ -176744,6 +176745,28 @@ MonoBehaviour:
   detailDuration: 0.28
   skillInterval: 0.045
   slotInterval: 0.055
+--- !u!114 &1196478893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1196478888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ce43e71d1f417948ab0fce051ba27b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkillRegistrationKeyboardController
+  activeSkillManager: {fileID: 1705092176}
+  skillUIManager: {fileID: 1810266849}
+  moveDuration: 0.15
+  skillActivationBridge: {fileID: 1595899232}
+  playerController: {fileID: 1595899239}
+  slotTargets:
+  - {fileID: 1414352135}
+  - {fileID: 1004544057}
+  - {fileID: 1553889765}
+  - {fileID: 1362946439}
 --- !u!1 &1197901187
 GameObject:
   m_ObjectHideFlags: 0
@@ -298854,7 +298877,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 798674330}
   m_Direction: 2
   m_Value: 1
-  m_Size: 0.54469234
+  m_Size: 0.5446924
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -306307,7 +306330,7 @@ Transform:
   m_GameObject: {fileID: 1595899231}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 333.7, y: 2.3, z: 0}
+  m_LocalPosition: {x: 7.24, y: 114.9, z: 0}
   m_LocalScale: {x: 0.6, y: 0.6, z: 0.6}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -311297,7 +311320,7 @@ Transform:
   m_GameObject: {fileID: 1665308096}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.0000000037252907, z: 2.3283067e-10, w: 1}
-  m_LocalPosition: {x: 318.78015, y: -0.8535838, z: -10}
+  m_LocalPosition: {x: -7.6798644, y: 111.746414, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
