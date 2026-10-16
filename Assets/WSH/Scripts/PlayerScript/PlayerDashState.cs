@@ -57,7 +57,7 @@ public class PlayerDashState : PlayerState
         }
 
         // =========================================================
-        // 🔥 [2. 지상 대쉬 & 비탈길 대쉬 로직]
+        // [2. 지상 대쉬 & 비탈길 대쉬 로직]
         // =========================================================
         
         bool detectedFlatGround = false;
@@ -78,48 +78,74 @@ public class PlayerDashState : PlayerState
         // 🚨 [가장 중요한 핵심 마법] 
         // 대쉬 속도(20f) 때문에 틱이 씹혀서 바닥을 잃어버리는 현상 방지!
         // 평지가 안 잡히는 찰나에 밑으로 1.5f 짜리 초장거리 레이더를 쏴서 앞의 내리막을 낚아챕니다.
+        //if (!detectedFlatGround && !player.lastGroundedWasSlope && player.rb.linearVelocity.y <= 0.1f)
+        //{
+        //    RaycastHit2D deepSlopeHit = Physics2D.Raycast(player.cd.bounds.center, Vector2.down, 1.5f, player.stairsLayer);
+        //    if (deepSlopeHit.collider != null)
+        //    {
+        //        // 내 발 아래 깊숙한 곳에 비탈길이 감지되었다면 즉시 썰매 스위치 ON & 물리벽 생성!
+        //        player.lastGroundedWasSlope = true;
+        //        player.ToggleStairsCollision(true);
+        //    }
+        //}
+
         if (!detectedFlatGround && !player.lastGroundedWasSlope && player.rb.linearVelocity.y <= 0.1f)
         {
-            RaycastHit2D deepSlopeHit = Physics2D.Raycast(player.cd.bounds.center, Vector2.down, 1.5f, player.stairsLayer);
-            if (deepSlopeHit.collider != null)
+            RaycastHit2D deepSlopeHit = Physics2D.Raycast(player.cd.bounds.center, Vector2.down, 1.5f, player.groundLayer | player.stairsLayer);
+            if (deepSlopeHit.collider != null && deepSlopeHit.collider != player.ignoredDropCollider)
             {
-                // 내 발 아래 깊숙한 곳에 비탈길이 감지되었다면 즉시 썰매 스위치 ON & 물리벽 생성!
-                player.lastGroundedWasSlope = true;
-                player.ToggleStairsCollision(true);
+                float angle = Vector2.Angle(Vector2.up, deepSlopeHit.normal);
+                if (angle > 0.1f && angle <= player.maxSlopeAngle)
+                {
+                    // 내 발 아래 깊숙한 곳에 비탈길이 감지되었다면 즉시 썰매 스위치 ON & 물리벽 생성!
+                    player.lastGroundedWasSlope = true;
+                    if (((1 << deepSlopeHit.collider.gameObject.layer) & player.stairsLayer) != 0)
+                    {
+                        player.ToggleStairsCollision(true);
+                    }
+                }
             }
         }
 
         // 비탈길 썰매 탑승 로직
-        if (player.lastGroundedWasSlope)
+        if (player.lastGroundedWasSlope || player.OnSlope(true))
         {
-            // 기존 OnSlope()는 레이더가 짧아 틱이 씹히므로, 대쉬 전용 긴 레이더(1.5f)로 각도를 계산합니다.
-            RaycastHit2D slopeHit = Physics2D.Raycast(player.cd.bounds.center, Vector2.down, 1.5f, player.stairsLayer);
-            
-            if (slopeHit.collider != null)
+            // stairsLayer 대신 GetCurrentGroundMask()를 써서 groundLayer 비탈길도 동일하게 계산
+            RaycastHit2D slopeHit = Physics2D.Raycast(player.cd.bounds.center, Vector2.down, 1.5f, player.GetCurrentGroundMask());
+
+            if (slopeHit.collider != null && slopeHit.collider != player.ignoredDropCollider)
             {
-                Vector2 slopeDir = Vector2.Perpendicular(slopeHit.normal).normalized;
-                if (slopeDir.x * dashVec.x < 0) slopeDir = -slopeDir;
-
-                bool isDownhill = slopeDir.y < -0.01f;
-
-                if (detectedFlatGround && !isDownhill)
+                float angle = Vector2.Angle(Vector2.up, slopeHit.normal);
+                if (angle > 0.1f && angle <= player.maxSlopeAngle)
                 {
-                    dashVec.y = -0.1f;
+                    Vector2 slopeDir = Vector2.Perpendicular(slopeHit.normal).normalized;
+                    if (slopeDir.x * dashVec.x < 0) slopeDir = -slopeDir;
+
+                    bool isDownhill = slopeDir.y < -0.01f;
+
+                    if (detectedFlatGround && !isDownhill)
+                    {
+                        dashVec.y = -0.1f;
+                    }
+                    else
+                    {
+                        dashVec = slopeDir;
+
+                        if (isDownhill)
+                        {
+                            // [핵심] 내리막길에서 대쉬 속도 때문에 허공으로 날아가지 않도록,
+                            // 벡터 밑으로 힘을 강하게 찍어누르면서 달립니다! (절대 붕 뜨지 않음)
+                            dashVec.y -= 0.15f;
+                        }
+                        else if (dashVec.y > 0.05f)
+                        {
+                            finalDashSpeed *= 0.9f;
+                        }
+                    }
                 }
                 else
                 {
-                    dashVec = slopeDir;
-                    
-                    if (isDownhill)
-                    {
-                        // [핵심] 내리막길에서 대쉬 속도 때문에 허공으로 날아가지 않도록,
-                        // 벡터 밑으로 힘을 강하게 찍어누르면서 달립니다! (절대 붕 뜨지 않음)
-                        dashVec.y -= 0.15f; 
-                    }
-                    else if (dashVec.y > 0.05f)
-                    {
-                        finalDashSpeed *= 0.9f;
-                    }
+                    if (detectedFlatGround) dashVec.y = -0.05f;
                 }
             }
             else
@@ -127,6 +153,10 @@ public class PlayerDashState : PlayerState
                 // 롱 레이더로도 비탈길을 잃어버렸다면 평지 판정으로
                 if (detectedFlatGround) dashVec.y = -0.05f;
             }
+        }
+        else if (detectedFlatGround)
+        {
+            dashVec.y = -0.05f;
         }
         else if (detectedFlatGround)
         {

@@ -2,18 +2,18 @@ using UnityEngine;
 
 public class ManaTester : MonoBehaviour
 {
-    [Header("ÇÃ·¹ÀÌ¾î ½ºÅÈ")]
+    [Header("ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     [SerializeField] private PlayerStats playerStats;
 
-    [Header("¸¶³ª Áõ°¡ Å×½ºÆ®")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½×½ï¿½Æ®")]
     [SerializeField] private KeyCode increaseKey = KeyCode.Q;
     [SerializeField] private float increaseAmount = 25f;
 
-    [Header("¸¶³ª °¨¼Ò Å×½ºÆ®")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½×½ï¿½Æ®")]
     [SerializeField] private KeyCode decreaseKey = KeyCode.E;
     [SerializeField] private float decreaseAmount = 25f;
 
-    [Header("¸¶³ª Áï½Ã ¼³Á¤")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     [SerializeField] private KeyCode zeroKey = KeyCode.Alpha0;
     [SerializeField] private KeyCode fullKey = KeyCode.Alpha5;
 
@@ -26,7 +26,7 @@ public class ManaTester : MonoBehaviour
 
         if (playerStats == null)
         {
-            Debug.LogError("ManaTester : PlayerStats¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù.");
+            Debug.LogError("ManaTester : PlayerStatsï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
         }
     }
 
@@ -35,25 +35,25 @@ public class ManaTester : MonoBehaviour
         if (playerStats == null)
             return;
 
-        // ¸¶³ª Áõ°¡
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (Input.GetKeyDown(increaseKey))
         {
             AddMana(increaseAmount);
         }
 
-        // ¸¶³ª °¨¼Ò
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (Input.GetKeyDown(decreaseKey))
         {
             RemoveMana(decreaseAmount);
         }
 
-        // 0À¸·Î ÃÊ±âÈ­
+        // 0ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­
         if (Input.GetKeyDown(zeroKey))
         {
             SetMana(0f);
         }
 
-        // ÃÖ´ëÄ¡·Î ¼³Á¤
+        // ï¿½Ö´ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (Input.GetKeyDown(fullKey))
         {
             SetMana(playerStats.GetMaxMp());
@@ -68,7 +68,7 @@ public class ManaTester : MonoBehaviour
             playerStats.GetMaxMp()
         );
 
-        Debug.Log($"MP Áõ°¡ : {playerStats.currentMp}");
+        Debug.Log($"MP ï¿½ï¿½ï¿½ï¿½ : {playerStats.currentMp}");
     }
 
     private void RemoveMana(float amount)
@@ -79,7 +79,7 @@ public class ManaTester : MonoBehaviour
             playerStats.GetMaxMp()
         );
 
-        Debug.Log($"MP °¨¼Ò : {playerStats.currentMp}");
+        Debug.Log($"MP ï¿½ï¿½ï¿½ï¿½ : {playerStats.currentMp}");
     }
 
     private void SetMana(float amount)
@@ -90,6 +90,6 @@ public class ManaTester : MonoBehaviour
             playerStats.GetMaxMp()
         );
 
-        Debug.Log($"MP ¼³Á¤ : {playerStats.currentMp}");
+        Debug.Log($"MP ï¿½ï¿½ï¿½ï¿½ : {playerStats.currentMp}");
     }
 }
