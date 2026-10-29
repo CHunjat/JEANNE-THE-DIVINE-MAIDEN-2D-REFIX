@@ -184,6 +184,7 @@ public class PlayerSFXController : MonoBehaviour
     // ── 상호작용 ────────────────────────────────
     public void OnShieldParry() => Play("event:/Player/Interaction_Battle/Player_Shield_Parry");
     public void OnShieldParryCounter() => Play("event:/Player/Interaction_Battle/Player_Shield_Parry_Counter");
+    public void OnShieldParryCounterHeavy() => Play("event:/Player/Interaction_Battle/Player_Shield_Parry_Counter_Heavy");
     public void OnShieldGuard() => Play("event:/Player/Interaction_Battle/Player_Shield_Guard");
     public void OnPlayerAttackHit() => Play("event:/Player/Interaction_Battle/Player_Attack_Hit");
     public void OnPlayerDamagedHurtVoice() => Play("event:/Player/Interaction_Battle/Player_Damaged_Hurt_Voice");

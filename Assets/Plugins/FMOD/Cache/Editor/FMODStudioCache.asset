@@ -150,10 +150,10 @@ MonoBehaviour:
   Path: Assets/StreamingAssets/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639251000830407943
+  lastModified: 639288969884627605
   FileSizes:
   - Name: 
-    Value: 3564
+    Value: 3612
   Exists: 1
 --- !u!114 &-7416544577720656592
 MonoBehaviour:
@@ -791,13 +791,14 @@ MonoBehaviour:
   - {fileID: 1910129633478194347}
   - {fileID: 7857970835376940776}
   - {fileID: -931704493517254448}
+  - {fileID: 1122879651120966470}
   EditorParameters: []
   MasterBanks:
   - {fileID: 858878391108560638}
   StringsBanks:
   - {fileID: -8124024757644268347}
   cacheVersion: 131860
-  cacheTime: 639251000830407943
+  cacheTime: 639288969884627605
   SerializableEventsDict:
   - key: event:/Player/Player_Foot_Step_Sprint
     index: 0
@@ -905,6 +906,8 @@ MonoBehaviour:
     index: 51
   - key: event:/Player/Interaction_Function/Player_Rest
     index: 52
+  - key: event:/Player/Interaction_Battle/Player_Shield_Parry_Counter_Heavy
+    index: 53
 --- !u!114 &538423973531881020
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -974,9 +977,36 @@ MonoBehaviour:
   Path: Assets/StreamingAssets/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639251000830407943
+  lastModified: 639288969884602544
   FileSizes: []
   Exists: 1
+--- !u!114 &1122879651120966470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Player/Interaction_Battle/Player_Shield_Parry_Counter_Heavy
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Player/Interaction_Battle/Player_Shield_Parry_Counter_Heavy
+  Guid:
+    Data1: -1532514436
+    Data2: 1244616092
+    Data3: -1150016627
+    Data4: 1353796527
+  Banks:
+  - {fileID: 858878391108560638}
+  IsStream: 1
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 800
 --- !u!114 &1343899593308027300
 MonoBehaviour:
   m_ObjectHideFlags: 0
