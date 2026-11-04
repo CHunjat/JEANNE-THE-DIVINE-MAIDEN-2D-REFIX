@@ -42,7 +42,7 @@ public abstract class EnemyBase : MonoBehaviour
         if (playerObj != null) player = playerObj.transform;
     }
 
-    // [수정됨] 인수 2개(체력 데미지, 그로기 데미지) 받도록 추가
+    // 수정 : 인수 2개(체력 데미지, 그로기 데미지) 받도록 추가
     public virtual void TakeDamage(float amount, float groggyDamage = 0f)
     {
         currentHp -= amount;
@@ -71,7 +71,7 @@ public abstract class EnemyBase : MonoBehaviour
         return (player.position - transform.position).normalized;
     }
 
-    // [수정됨] 방향이 실제로 바뀔 때만 OnFacingChanged 훅을 호출하도록 변경
+    // 수정 : 방향이 실제로 바뀔 때만 OnFacingChanged 훅을 호출하도록 변경
     protected virtual void FlipTowardsPlayer()
     {
         if (player == null) FindPlayer();
@@ -88,7 +88,7 @@ public abstract class EnemyBase : MonoBehaviour
         }
     }
 
-    // [추가됨] 방향이 실제로 바뀔 때 호출되는 훅. 자식 클래스에서 히트박스 위치 조정 등에 사용.
+    // 추가 : 방향이 실제로 바뀔 때 호출되는 훅. 자식 클래스에서 히트박스 위치 조정 등에 사용.
     protected virtual void OnFacingChanged(bool facingLeft) { }
 
     protected void SetCollisionWithPlayer(bool enable)

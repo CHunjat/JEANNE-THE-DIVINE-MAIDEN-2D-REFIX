@@ -112,8 +112,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36b1296986c390f42b62c4d7e52c31fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MidBossWebProjectile
-  visual: {fileID: 1658966222029453393}
-  visualFacesRight: 1
+  spitParticle: {fileID: 4821982384084132915}
+  particleSpeed: 20
   showDebugLog: 1
 --- !u!114 &249854211461864793
 MonoBehaviour:
@@ -297,6 +297,14 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 3866257764938518309, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: SubModule.enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866257764938518309, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+      propertyPath: moveWithTransform
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866257764938518309, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: InitialModule.startSpeed.scalar
       value: 20
       objectReference: {fileID: 0}
@@ -350,7 +358,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4073482671374734898, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4073482671374734898, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_LocalRotation.y
@@ -358,7 +366,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4073482671374734898, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4073482671374734898, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -585,6 +593,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+--- !u!198 &4821982384084132915 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 3866257764938518309, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}
+  m_PrefabInstance: {fileID: 8596434483262466838}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &5749761322581966116 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4073482671374734898, guid: f4c7fbaf9d1d97f4ab6697705e5d9e0d, type: 3}

@@ -48,7 +48,7 @@ public class MidBoss : EnemyFSM
     public GameObject hitBox_BackKick;
     public GameObject webFirePoint;
 
-    [Header("VFX 방향 반전용 연결 (새로 추가됨!)")]
+    [Header("VFX 방향 반전용 연결")]
     [Tooltip("여기에 Stamp_2, Dust, Landing, Spit 등 이펙트 오브젝트들을 끌어다 넣으세요")]
     public GameObject[] vfxObjectsToFlip;
 

@@ -3,9 +3,11 @@ using UnityEngine;
 
 public class MidBossWebProjectile : MonoBehaviour
 {
-    [Header("Visual Settings")]
-    [SerializeField] private Transform visual;
-    [SerializeField] private bool visualFacesRight = true;
+    [Header("Laser VFX")]
+    [SerializeField] private ParticleSystem spitParticle;
+
+    [Header("Particle Settings")]
+    [SerializeField] private float particleSpeed = 20f;
 
     [Header("Debug")]
     [SerializeField] private bool showDebugLog = true;
@@ -17,46 +19,23 @@ public class MidBossWebProjectile : MonoBehaviour
     private Vector2 startPos;
     private Vector2 currentDir;
 
-    private Animator anim;
-    private SpriteRenderer visualRenderer;
-
-    private Vector3 originalVisualScale;
     private bool isHit;
-    private bool facingLeft;
 
     private void Awake()
     {
-        // Visual 오브젝트 자동 검색
-        if (visual == null)
+        if (spitParticle == null)
         {
-            Transform[] children =
-                GetComponentsInChildren<Transform>(true);
+            ParticleSystem[] particles =
+                GetComponentsInChildren<ParticleSystem>(true);
 
-            foreach (Transform child in children)
+            foreach (ParticleSystem particle in particles)
             {
-                if (child.name == "Visual")
+                if (particle.name == "Spit")
                 {
-                    visual = child;
+                    spitParticle = particle;
                     break;
                 }
             }
-        }
-
-        if (visual != null)
-        {
-            originalVisualScale = visual.localScale;
-
-            visualRenderer =
-                visual.GetComponent<SpriteRenderer>();
-
-            anim = visual.GetComponent<Animator>();
-        }
-        else
-        {
-            Debug.LogError(
-                "[MidBossWebProjectile] Visual을 찾지 못했습니다.",
-                this
-            );
         }
     }
 
@@ -74,53 +53,62 @@ public class MidBossWebProjectile : MonoBehaviour
         currentDir = dir.normalized;
 
         isHit = false;
-        facingLeft = currentDir.x < 0f;
 
-        // Visual만 방향 반전
-        ApplyVisualDirection();
+        SetupParticleDirection();
+    }
+
+    private void SetupParticleDirection()
+    {
+        if (spitParticle == null)
+        {
+            Debug.LogError(
+                "[MidBossWebProjectile] Spit을 찾지 못했습니다.",
+                this
+            );
+            return;
+        }
+
+        spitParticle.Stop(
+            true,
+            ParticleSystemStopBehavior.StopEmittingAndClear
+        );
+
+        // 파티클을 월드 좌표 기준으로 이동
+        var main = spitParticle.main;
+        main.simulationSpace =
+            ParticleSystemSimulationSpace.World;
+
+        // 기존 방출 속도 제거
+        main.startSpeed = 0f;
+
+        // 기존 Velocity over Lifetime 설정을 덮어씀
+        var velocity = spitParticle.velocityOverLifetime;
+        velocity.enabled = true;
+        velocity.space =
+            ParticleSystemSimulationSpace.World;
+
+        velocity.x = new ParticleSystem.MinMaxCurve(
+            currentDir.x * particleSpeed
+        );
+
+        velocity.y = new ParticleSystem.MinMaxCurve(
+            currentDir.y * particleSpeed
+        );
+
+        velocity.z = new ParticleSystem.MinMaxCurve(0f);
+
+        // 기존 회전과는 무관하게 파티클 이동
+        spitParticle.Play(true);
 
         if (showDebugLog)
         {
             Debug.Log(
-                "[MidBossWebProjectile] 발사 방향: " +
-                (facingLeft ? "왼쪽" : "오른쪽") +
-                " / 이동 벡터: " + currentDir +
-                " / 부모 회전: " + transform.eulerAngles,
+                "[MidBossWebProjectile] 파티클 방향: " +
+                currentDir +
+                " / X속도: " +
+                currentDir.x * particleSpeed,
                 this
             );
-        }
-    }
-
-    private void ApplyVisualDirection()
-    {
-        if (visual == null)
-            return;
-
-        // 기본 스프라이트 방향에 따라 반전 여부 결정
-        bool shouldFlip =
-            visualFacesRight ? facingLeft : !facingLeft;
-
-        Vector3 newScale = originalVisualScale;
-
-        newScale.x =
-            Mathf.Abs(originalVisualScale.x) *
-            (shouldFlip ? -1f : 1f);
-
-        visual.localScale = newScale;
-
-        // 이전 방식과 중복 반전 방지
-        if (visualRenderer != null)
-        {
-            visualRenderer.flipX = false;
-        }
-    }
-
-    private void LateUpdate()
-    {
-        // Animator가 반전 값을 변경하는 경우 대비
-        if (visual != null)
-        {
-            ApplyVisualDirection();
         }
     }
 
@@ -134,10 +122,8 @@ public class MidBossWebProjectile : MonoBehaviour
             Space.World
         );
 
-        float traveledDistance =
-            Vector2.Distance(startPos, transform.position);
-
-        if (traveledDistance >= maxRange)
+        if (Vector2.Distance(startPos, transform.position)
+            >= maxRange)
         {
             Destroy(gameObject);
         }
@@ -165,28 +151,7 @@ public class MidBossWebProjectile : MonoBehaviour
             );
         }
 
-        if (anim != null && HasParameter(anim, "doSpread"))
-        {
-            anim.SetTrigger("doSpread");
-        }
-
+        // 실제 데미지는 EnemyHitbox에서 처리
         Destroy(gameObject, 0.4f);
-    }
-
-    private bool HasParameter(
-        Animator animator,
-        string parameterName)
-    {
-        foreach (
-            AnimatorControllerParameter parameter
-            in animator.parameters)
-        {
-            if (parameter.name == parameterName)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
