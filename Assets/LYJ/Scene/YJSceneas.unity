@@ -10608,7 +10608,7 @@ Transform:
   m_GameObject: {fileID: 1611806485}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -12.42915, y: 17.67017, z: 0}
+  m_LocalPosition: {x: -34.5, y: 10.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -10649,7 +10649,7 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -18.64, y: -7.02}
+  m_Offset: {x: -0.07, y: 0}
   m_Size: {x: 1, y: 1.27}
   m_Direction: 0
 --- !u!50 &1611806488
@@ -10698,16 +10698,22 @@ MonoBehaviour:
   detectRange: 100
   attackRange: 2.5
   currentState: 0
+  playerTarget: {fileID: 120716773}
   attackCooldown: 2
   damageRatio: 1
   playerLayer:
     serializedVersion: 2
     m_Bits: 64
+  attackHitHeight: 4
+  attackHitTiming: 0.5
   attack1Clip: {fileID: 7400000, guid: ada85becf0d866b408ae10d032f88eb5, type: 2}
   attack2Clip: {fileID: 7400000, guid: 4726e01a294f72047b8dfe0e1af697d5, type: 2}
-  attackHitTiming: 0.5
+  knockbackForce: 2
+  knockbackDuration: 0.15
   hitClip: {fileID: 7400000, guid: 9b0a62e32215e8240a6f5e8642984b68, type: 2}
   deathClip: {fileID: 7400000, guid: 85a2d262896b0cf41b0aac18c0706315, type: 2}
+  spriteFacesRightByDefault: 1
+  showDebugLog: 0
 --- !u!1 &1650993650
 GameObject:
   m_ObjectHideFlags: 0
@@ -10735,7 +10741,7 @@ Transform:
   m_GameObject: {fileID: 1650993650}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -18.74, y: -6.69, z: 0}
+  m_LocalPosition: {x: -0.21, y: 0.4, z: 0}
   m_LocalScale: {x: 3.78, y: 3.78, z: 3.78}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -12894,7 +12900,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5145147845001952587, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5235956993873760103, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_LocalScale.x
@@ -12911,6 +12917,14 @@ PrefabInstance:
     - target: {fileID: 5235956993873760103, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_LocalPosition.y
       value: 2.49
+      objectReference: {fileID: 0}
+    - target: {fileID: 6321677898908782830, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6698337221115474542, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7114147065876900842, guid: b74a5cda1a948094f9f423c908bf034b, type: 3}
       propertyPath: m_Name
