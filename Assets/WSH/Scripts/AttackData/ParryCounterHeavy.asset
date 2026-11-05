@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   attackName: ParryCounterHeavy
   attackCategory: 5
-  size: {x: 3.08, y: 1.64}
-  offset: {x: -0.7, y: 0.14}
+  size: {x: 6.2, y: 6.4}
+  offset: {x: -0.5, y: 0.09}
   damageMultiplier: 2.3
   hitStopDuration: 0
   mpRecoveryRatio: 0.3

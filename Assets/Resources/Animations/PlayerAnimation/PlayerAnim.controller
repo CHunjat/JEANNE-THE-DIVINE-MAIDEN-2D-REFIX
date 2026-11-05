@@ -282,7 +282,7 @@ AnimatorStateMachine:
     m_Position: {x: -450, y: -100, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -1022179702540280742}
-    m_Position: {x: -415, y: -35, z: 0}
+    m_Position: {x: -450, y: -180, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -2957310817820116091}
     m_Position: {x: 30, y: 730, z: 0}
@@ -1293,7 +1293,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: ParryCounterHeavy
+  m_Name: ParryCounterLight
   m_Speed: 2.5
   m_CycleOffset: 0
   m_Transitions: []
@@ -1423,7 +1423,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: ParryCounterLight
+  m_Name: ParryCounterHeavy
   m_Speed: 1.8
   m_CycleOffset: 0
   m_Transitions: []

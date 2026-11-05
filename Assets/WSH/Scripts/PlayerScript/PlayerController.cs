@@ -817,7 +817,9 @@ public class PlayerController : MonoBehaviour
             // =========================================================================
             Vector2 boxCenter = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.3f);
             Vector2 boxSize = new Vector2(cd.bounds.size.x * 0.8f, 0.6f);
+            //RaycastHit2D stairHit = Physics2D.BoxCast(boxCenter, boxSize, 0f, Vector2.down, 0.2f, stairsLayer);
             RaycastHit2D stairHit = Physics2D.BoxCast(boxCenter, boxSize, 0f, Vector2.down, 0.2f, stairsLayer);
+            if (stairHit.collider == null && OnSlope()) stairHit = slopeHit;
             bool pureGround = IsPureGrounded();
 
             bool shouldRideSlope = false;
@@ -936,7 +938,8 @@ public class PlayerController : MonoBehaviour
             if (Mathf.Abs(currentVelX) > 0.1f)
             {
                 Vector2 rayOrigin = new Vector2(cd.bounds.center.x, cd.bounds.min.y + 0.1f);
-                RaycastHit2D snapHit = Physics2D.BoxCast(rayOrigin, groundCheckSize, 0f, Vector2.down, 0.6f, stairsLayer);
+                //RaycastHit2D snapHit = Physics2D.BoxCast(rayOrigin, groundCheckSize, 0f, Vector2.down, 0.6f, stairsLayer);
+                RaycastHit2D snapHit = Physics2D.BoxCast(rayOrigin, groundCheckSize, 0f, Vector2.down, 0.6f, GetCurrentGroundMask());
 
                 if (snapHit.collider != null && snapHit.collider != ignoredDropCollider)
                 {
