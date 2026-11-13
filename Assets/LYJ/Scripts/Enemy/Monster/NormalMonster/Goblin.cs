@@ -85,6 +85,17 @@ public class Goblin : EnemyFSM
         return player != null;
     }
 
+    // 플레이어 사망 확인
+    private bool IsPlayerDead()
+    {
+        if (!HasPlayer())
+            return false;
+
+        PlayerStats stats = player.GetComponentInParent<PlayerStats>();
+
+        return stats != null && stats.currentHp <= 0f;
+    }
+
     // 플레이어와 X축 거리 계산
     private float GetHorizontalDistance()
     {
@@ -115,6 +126,30 @@ public class Goblin : EnemyFSM
             return;
 
         HasPlayer();
+
+        // 플레이어 사망 시 공격 및 추격 중단
+        if (IsPlayerDead())
+        {
+            if (attackCoroutine != null)
+            {
+                StopCoroutine(attackCoroutine);
+                attackCoroutine = null;
+            }
+
+            isAttacking = false;
+
+            if (GetCurrentState() != EnemyState.Idle)
+                ChangeState(EnemyState.Idle);
+
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+
+            animator.ResetTrigger("doAttack1");
+            animator.ResetTrigger("doAttack2");
+            animator.SetBool("isMoving", false);
+
+            return;
+        }
+
         base.Update();
         UpdateAnimator();
     }
