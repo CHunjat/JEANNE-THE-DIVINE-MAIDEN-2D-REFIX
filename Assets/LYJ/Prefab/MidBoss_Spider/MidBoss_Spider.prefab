@@ -335,6 +335,7 @@ GameObject:
   - component: {fileID: 4925484290603104269}
   - component: {fileID: 176479052352664105}
   - component: {fileID: 7437579554341549722}
+  - component: {fileID: 7645824687262134473}
   m_Layer: 0
   m_Name: MidBoss_Spider
   m_TagString: Enemy
@@ -465,6 +466,7 @@ MonoBehaviour:
   hitBox_Slash: {fileID: 9125756724598772400}
   hitBox_BackKick: {fileID: 1239616574114665858}
   webFirePoint: {fileID: 7293935277597671176}
+  vfxObjectsToFlip: []
   mouthRightPos: {x: 0.34, y: -5}
   mouthLeftPos: {x: -3, y: -4.5}
   chaseOffset: 5
@@ -523,8 +525,8 @@ MonoBehaviour:
   distanceType: 2
   canUseInChase: 0
   maxExecutionTime: 5
-  webSpeed: 6
-  webRange: 12
+  webSpeed: 50
+  webRange: 15
   bindDuration: 3
   playerYOffset: -5
   webPrefab: {fileID: 4332850933932333369, guid: 5ad71483f8e9a5246a0c0ae9a4733d43, type: 3}
@@ -658,6 +660,29 @@ MonoBehaviour:
   recoverDelayAfterHit: 2
   damageMultiplier: 2.5
   groggyTriggerName: doKnockDown
+--- !u!114 &7645824687262134473
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5145147845001952587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c30589f7d02a6a46ae1571879728a14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MidBossVFXFlip
+  bossSprite: {fileID: 9048727077953290674}
+  vfxObjects:
+  - {fileID: 6907393473887523990}
+  - {fileID: 9124842706253485332}
+  - {fileID: 5522411044853369746}
+  - {fileID: 8910855893424609142}
+  - {fileID: 4772163060705531290}
+  - {fileID: 8867002350245725934}
+  autoRegisterClones: 1
+  vfxRoot: {fileID: 646475382707450132}
+  showDebugLog: 0
 --- !u!1 &7114147065876900842
 GameObject:
   m_ObjectHideFlags: 0
@@ -670,7 +695,7 @@ GameObject:
   - component: {fileID: 3577488209630876407}
   - component: {fileID: 2265535091747254779}
   m_Layer: 17
-  m_Name: HitBox_Slash
+  m_Name: HitBox_Stamp
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -890,7 +915,7 @@ GameObject:
   - component: {fileID: 4955032158290105240}
   - component: {fileID: 6541097352673568587}
   m_Layer: 17
-  m_Name: Hitbox_Stamp
+  m_Name: Hitbox_Slash
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1465,6 +1490,10 @@ PrefabInstance:
     - target: {fileID: 6598516942386842637, guid: b4b45436270277f48a4de0b7d655ef79, type: 3}
       propertyPath: m_SortingLayerID
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598516942386842637, guid: b4b45436270277f48a4de0b7d655ef79, type: 3}
+      propertyPath: m_RenderAlignment
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2300,11 +2329,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7878350319992209165, guid: 2041a89f54b9b4b45ab1c04d6bfcfa4b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.8
+      value: -0.85
       objectReference: {fileID: 0}
     - target: {fileID: 7878350319992209165, guid: 2041a89f54b9b4b45ab1c04d6bfcfa4b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.09
+      value: 0.22
       objectReference: {fileID: 0}
     - target: {fileID: 7878350319992209165, guid: 2041a89f54b9b4b45ab1c04d6bfcfa4b, type: 3}
       propertyPath: m_LocalPosition.z
