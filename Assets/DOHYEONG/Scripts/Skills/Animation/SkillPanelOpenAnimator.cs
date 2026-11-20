@@ -5,24 +5,34 @@ using UnityEngine;
 [RequireComponent(typeof(CanvasGroup))]
 public class SkillPanelOpenAnimator : MonoBehaviour
 {
-    [Header("»ó´Ü UI")]
+    [Header("ìƒë‹¨ UI")]
     [SerializeField] private RectTransform title;
     [SerializeField] private RectTransform currency;
     [SerializeField] private RectTransform mainTab;
 
-    [Header("ÇöÀç Ã³À½ º¸¿©ÁÙ ÄÜÅÙÃ÷")]
-    [Tooltip("Ã³À½ ½ºÅ³Ã¢À» ¿­¾úÀ» ¶§ ÄÑÁ®ÀÖ´Â PassivePanel ¶Ç´Â ActivePanel")]
+    [Header("ìŠ¤í‚¬ ì½˜í…ì¸ ")]
+    [Tooltip("ì²˜ìŒ ìŠ¤í‚¬ì°½ì„ ì—´ì—ˆì„ ë•Œ ë³´ì—¬ì§€ëŠ” PassivePanel ë˜ëŠ” ActivePanel")]
     [SerializeField] private RectTransform contentRoot;
 
-    [Header("ÇÏ´Ü UI")]
+    [Header("í•˜ë‹¨ UI")]
     [SerializeField] private RectTransform exitGuide;
 
-    [Header("Animation")]
+    [Header("ê¸°ë³¸ Animation")]
     [SerializeField] private float fadeDuration = 0.18f;
     [SerializeField] private float moveDuration = 0.32f;
 
     [SerializeField] private float horizontalOffset = 35f;
     [SerializeField] private float verticalOffset = 20f;
+
+    [Header("Content Slide Animation")]
+    [Tooltip("ìŠ¤í‚¬ ì½˜í…ì¸ ê°€ ì•„ë˜ì—ì„œ ì˜¬ë¼ì˜¤ëŠ” ê±°ë¦¬")]
+    [SerializeField] private float contentSlideDistance = 850f;
+
+    [Tooltip("ìŠ¤í‚¬ ì½˜í…ì¸ ê°€ ì˜¬ë¼ì˜¤ëŠ” ì‹œê°„")]
+    [SerializeField] private float contentMoveDuration = 0.45f;
+
+    [Tooltip("ìŠ¤í‚¬ ì½˜í…ì¸  í˜ì´ë“œ ì‹œê°„")]
+    [SerializeField] private float contentFadeDuration = 0.35f;
 
     private CanvasGroup rootCanvasGroup;
 
@@ -73,8 +83,8 @@ public class SkillPanelOpenAnimator : MonoBehaviour
 
     private IEnumerator PlayNextFrame()
     {
-        // SkillMenuCategoryControllerÀÇ OnEnable Ã³¸®°¡
-        // ³¡³­ µÚ ¿¬Ãâ ½ÃÀÛ
+        // SkillMenuCategoryControllerì˜ OnEnableì´
+        // ë¨¼ì € Passive / Active íŒ¨ë„ ìƒíƒœë¥¼ ê²°ì •í•˜ë„ë¡ í•œ í”„ë ˆì„ ëŒ€ê¸°
         yield return null;
 
         PlayOpenAnimation();
@@ -85,13 +95,14 @@ public class SkillPanelOpenAnimator : MonoBehaviour
         openSequence?.Kill();
 
         // =========================
-        // ½ÃÀÛ »óÅÂ
+        // ì´ˆê¸° ìƒíƒœ
         // =========================
 
         rootCanvasGroup.alpha = 0f;
         rootCanvasGroup.interactable = true;
         rootCanvasGroup.blocksRaycasts = true;
 
+        // Skills ì œëª©
         if (title != null)
         {
             title.anchoredPosition =
@@ -100,6 +111,7 @@ public class SkillPanelOpenAnimator : MonoBehaviour
             titleGroup.alpha = 0f;
         }
 
+        // ì¬í™”
         if (currency != null)
         {
             currency.anchoredPosition =
@@ -108,6 +120,7 @@ public class SkillPanelOpenAnimator : MonoBehaviour
             currencyGroup.alpha = 0f;
         }
 
+        // Passive / Active íƒ­
         if (mainTab != null)
         {
             mainTab.anchoredPosition =
@@ -116,10 +129,12 @@ public class SkillPanelOpenAnimator : MonoBehaviour
             tabGroup.alpha = 0f;
         }
 
+        // ìŠ¤í‚¬ ì½˜í…ì¸ 
+        // í™”ë©´ ì•„ë˜ìª½ì—ì„œ ì‹œì‘
         if (contentRoot != null)
         {
             contentRoot.anchoredPosition =
-                contentOrigin + Vector2.down * verticalOffset;
+                contentOrigin + Vector2.down * contentSlideDistance;
 
             contentGroup.alpha = 0f;
         }
@@ -127,29 +142,30 @@ public class SkillPanelOpenAnimator : MonoBehaviour
         if (exitGuide != null)
         {
             exitGuide.anchoredPosition = exitOrigin;
-            exitGroup.alpha = 0f;
+            exitGroup.alpha = 1f;
         }
 
         // =========================
-        // µîÀå Sequence
+        // ì˜¤í”ˆ Sequence
         // =========================
 
         openSequence = DOTween.Sequence()
             .SetUpdate(true);
 
-        // ÀüÃ¼ È­¸é
+        // ì „ì²´ í™”ë©´ Fade In
         openSequence.Append(
             rootCanvasGroup
                 .DOFade(1f, fadeDuration)
                 .SetEase(Ease.OutQuad)
         );
 
-        // Skills Á¦¸ñ
+        // Skills ì œëª©
         if (title != null)
         {
             openSequence.Insert(
                 0.06f,
-                title.DOAnchorPos(titleOrigin, moveDuration)
+                title
+                    .DOAnchorPos(titleOrigin, moveDuration)
                     .SetEase(Ease.OutCubic)
             );
 
@@ -159,12 +175,13 @@ public class SkillPanelOpenAnimator : MonoBehaviour
             );
         }
 
-        // ÀçÈ­
+        // ì¬í™”
         if (currency != null)
         {
             openSequence.Insert(
                 0.09f,
-                currency.DOAnchorPos(currencyOrigin, moveDuration)
+                currency
+                    .DOAnchorPos(currencyOrigin, moveDuration)
                     .SetEase(Ease.OutCubic)
             );
 
@@ -174,12 +191,13 @@ public class SkillPanelOpenAnimator : MonoBehaviour
             );
         }
 
-        // Passive / Active
+        // Passive / Active íƒ­
         if (mainTab != null)
         {
             openSequence.Insert(
                 0.14f,
-                mainTab.DOAnchorPos(tabOrigin, moveDuration)
+                mainTab
+                    .DOAnchorPos(tabOrigin, moveDuration)
                     .SetEase(Ease.OutCubic)
             );
 
@@ -189,29 +207,28 @@ public class SkillPanelOpenAnimator : MonoBehaviour
             );
         }
 
-        // ¸ŞÀÎ ÄÜÅÙÃ÷
+        // =========================
+        // ìŠ¤í‚¬ ì½˜í…ì¸ 
+        // ì•„ë˜ â†’ ìœ„ë¡œ ë¶€ë“œëŸ½ê²Œ ë“±ì¥
+        // =========================
+
         if (contentRoot != null)
         {
             openSequence.Insert(
-                0.22f,
-                contentRoot.DOAnchorPos(contentOrigin, 0.38f)
-                    .SetEase(Ease.OutCubic)
+                0.20f,
+                contentRoot
+                    .DOAnchorPos(contentOrigin, contentMoveDuration)
+                    .SetEase(Ease.OutQuart)
             );
 
             openSequence.Insert(
-                0.22f,
-                contentGroup.DOFade(1f, 0.28f)
+                0.20f,
+                contentGroup
+                    .DOFade(1f, contentFadeDuration)
+                    .SetEase(Ease.OutQuad)
             );
         }
 
-        // ESC
-        if (exitGuide != null)
-        {
-            openSequence.Insert(
-                0.34f,
-                exitGroup.DOFade(1f, 0.22f)
-            );
-        }
     }
 
     private CanvasGroup GetOrAddCanvasGroup(RectTransform target)
@@ -233,5 +250,21 @@ public class SkillPanelOpenAnimator : MonoBehaviour
 
         openSequence?.Kill();
         openSequence = null;
+
+        // ë‹¤ì‹œ ì—´ì—ˆì„ ë•Œ ìœ„ì¹˜ê°€ ê¼¬ì´ì§€ ì•Šë„ë¡ ì›ë˜ ìœ„ì¹˜ ë³µêµ¬
+        if (title != null)
+            title.anchoredPosition = titleOrigin;
+
+        if (currency != null)
+            currency.anchoredPosition = currencyOrigin;
+
+        if (mainTab != null)
+            mainTab.anchoredPosition = tabOrigin;
+
+        if (contentRoot != null)
+            contentRoot.anchoredPosition = contentOrigin;
+
+        if (exitGuide != null)
+            exitGuide.anchoredPosition = exitOrigin;
     }
 }
